@@ -149,6 +149,7 @@ See LICENSE for the full license text.
 ---
 
 <div align="center">
-Support the project → [saweria.co/AetherDev](https://saweria.co/AetherDev)
+
+Support the Project : [saweria.co/AetherDev](https://saweria.co/AetherDev)
 
 </div>
