@@ -25,10 +25,10 @@ Aether Manager is a root module that brings a full-featured performance manager 
 
 | Chipset | Support |
 |---|---|
-| **Snapdragon** | ✅ Full (KGSL · CPU Boost · SchedBoost · LMK · ZRAM · TCP) |
-| **MediaTek** | ✅ Full (GPU GED · HPS · CCI Mode · ZRAM · VM) |
-| **Exynos** | ✅ Partial (Mali · CPU · VM · ZRAM · TCP — KGSL/MTK skipped) |
-| **Kirin** | ✅ Partial (Mali · CPU · VM · ZRAM — KGSL/MTK skipped) |
+| **Snapdragon** | Full (KGSL · CPU Boost · SchedBoost · LMK · ZRAM · TCP) |
+| **MediaTek** | Full (GPU GED · HPS · CCI Mode · ZRAM · VM) |
+| **Exynos** | Partial (Mali · CPU · VM · ZRAM · TCP — KGSL/MTK skipped) |
+| **Kirin** | Partial (Mali · CPU · VM · ZRAM — KGSL/MTK skipped) |
 
 > SOC is auto-detected on install from `ro.board.platform`, `ro.hardware`, and `ro.soc.model`.
 
@@ -37,8 +37,8 @@ Aether Manager is a root module that brings a full-featured performance manager 
 ## Requirements
 
 - **Root Manager:** Magisk · KernelSU · APatch
-- **Android:** 9.0+ (API 28+)
-- **Architecture:** ARM64
+- **Android:** 11.0+ (API 30+)
+- **Architecture:** ARM/ARM64
 
 ---
 
@@ -48,10 +48,10 @@ Aether Manager is a root module that brings a full-featured performance manager 
 
 | Profile | Governor | Description |
 |---|---|---|
-| ⚖️ Balance | `schedutil` | Smart balance between power and performance |
-| ⚡ Performance | `performance` | Max CPU/GPU frequency, no throttling |
-| 🎮 Gaming | `schedutil + boost` | Sched boost, TCP fastopen, GPU max, MTK CCI |
-| 🔋 Battery Saver | `powersave` | Caps CPU freq to ~60%, reduces GPU OPP |
+| Balance | `schedutil` | Smart balance between power and performance |
+| Performance | `performance` | Max CPU/GPU frequency, no throttling |
+| Gaming | `schedutil + boost` | Sched boost, TCP fastopen, GPU max, MTK CCI |
+| Battery Saver | `powersave` | Caps CPU freq to ~60%, reduces GPU OPP |
 
 ### CPU & Kernel
 - **Sched Boost** — CPU scheduler priority boost (Snapdragon)
@@ -95,7 +95,6 @@ Aether Manager ships with a standalone WebUI accessible via **KernelSU**, **APat
 - System log viewer with OK / FAIL filter
 - Reboot / Reboot Recovery shortcut
 - Safe mode toggle for bootloop recovery
-- Full Material Design 3 with dark mode and Monet dynamic color support
 
 > All changes apply instantly without requiring a reboot.
 
@@ -131,8 +130,8 @@ See [changelog.md](changelog.md) for the full version history.
 
 | Project | Role |
 |---|---|
-| [Magisk](https://github.com/topjohnwu/Magisk) | Module framework & installer |
-| [KernelSU WebUI](https://github.com/tiann/KernelSU) | WebUI bridge (`ksu.exec`) |
+| [Magisk](https://github.com/topjohnwu/Magisk) | Module Installer |
+| [KernelSU WebUI](https://github.com/tiann/KernelSU) | WebUI |
 | Open Source Community | Guidance and support |
 
 ---
@@ -150,8 +149,6 @@ See LICENSE for the full license text.
 ---
 
 <div align="center">
-
-Made with ❤️ by [@AetherDev22](https://t.me/get01projects)  
 Support the project → [saweria.co/AetherDev](https://saweria.co/AetherDev)
 
 </div>
