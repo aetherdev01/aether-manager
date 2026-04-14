@@ -2,12 +2,15 @@ name: Build Release APK
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [main, master]
     tags:
-      - 'v*'
+      - "v*"
   pull_request:
-    branches: [ main, master ]
+    branches: [main, master]
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -15,72 +18,48 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # ── 1. Checkout ────────────────────────────────────────────────────────
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # ── 2. JDK 17 ─────────────────────────────────────────────────────────
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
-          java-version: '17'
-          distribution: 'temurin'
+          java-version: "17"
+          distribution: temurin
           cache: gradle
 
-      # ── 3. Android SDK (built-in di ubuntu-latest) ─────────────────────────
-      - name: Setup Android SDK
-        run: |
-          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
-          sdkmanager --update
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
 
-      # ── 4. Install NDK 27 & CMake 3.22 ────────────────────────────────────
       - name: Install NDK & CMake
         run: |
-          sdkmanager \
-            "ndk;27.0.12077973" \
-            "cmake;3.22.1"
+          sdkmanager --install "ndk;27.0.12077973" "cmake;3.22.1"
+          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
           echo "ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk/27.0.12077973" >> $GITHUB_ENV
           echo "NDK_VERSION=27.0.12077973" >> $GITHUB_ENV
 
-      # ── 5. Cache Gradle ────────────────────────────────────────────────────
       - name: Cache Gradle packages
         uses: actions/cache@v4
         with:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
-          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts','**/libs.versions.toml','**/gradle-wrapper.properties') }}
+          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts', '**/libs.versions.toml', '**/gradle-wrapper.properties') }}
           restore-keys: |
             gradle-${{ runner.os }}-
 
-      # ── 6. Grant execute permission ────────────────────────────────────────
       - name: Make gradlew executable
-        run: chmod +x gradlew
+        run: chmod +x ./gradlew
 
-      # ── 7. Build Release APK (minify + DEX + NDK .so) ─────────────────────
       - name: Build Release APK
         run: |
-          ./gradlew assembleRelease \
-            --no-daemon \
-            --stacktrace \
-            -Pandroid.ndkVersion=${{ env.NDK_VERSION }}
+          ./gradlew assembleRelease --no-daemon --stacktrace -Pandroid.ndkVersion=${{ env.NDK_VERSION }}
         env:
           ANDROID_SDK_ROOT: ${{ env.ANDROID_SDK_ROOT }}
           ANDROID_NDK_HOME: ${{ env.ANDROID_NDK_HOME }}
 
-      # ── 8. Sign APK (aktif jika secret KEYSTORE_BASE64 sudah diisi) ────────
-      #
-      #  Cara isi secret:
-      #  Repo → Settings → Secrets and variables → Actions → New repository secret
-      #    KEYSTORE_BASE64  : hasil dari:  base64 -w 0 key.jks
-      #    KEY_ALIAS        : alias key di keystore
-      #    KEY_PASSWORD     : password key
-      #    STORE_PASSWORD   : password keystore
-      #
       - name: Sign APK
-        if: env.KEYSTORE_BASE64_EXISTS == 'true'
-        env:
-          KEYSTORE_BASE64_EXISTS: ${{ secrets.KEYSTORE_BASE64 != '' && 'true' || 'false' }}
+        if: ${{ secrets.KEYSTORE_BASE64 != '' }}
         uses: ilharp/sign-android-release@v1
         with:
           releaseDir: app/build/outputs/apk/release
@@ -90,19 +69,19 @@ jobs:
           keyPassword: ${{ secrets.KEY_PASSWORD }}
           buildToolsVersion: "35.0.0"
 
-      # ── 9. Rename artefak ─────────────────────────────────────────────────
       - name: Rename APK
         run: |
           mkdir -p artifacts
-          APK=$(find app/build/outputs/apk/release -name "*.apk" | grep -v unsigned | head -1)
-          # fallback ke unsigned kalau belum sign
-          [ -z "$APK" ] && APK=$(find app/build/outputs/apk/release -name "*.apk" | head -1)
-          VERSION=$(grep 'versionName' app/build.gradle.kts | grep -oP '"\K[^"]+')
+          APK=$(find app/build/outputs/apk/release -name "*.apk" | grep -v unsigned | head -n 1)
+          [ -z "$APK" ] && APK=$(find app/build/outputs/apk/release -name "*.apk" | head -n 1)
+
+          VERSION=$(grep 'versionName' app/build.gradle.kts | head -n 1 | sed -E 's/.*"([^"]+)".*/\1/')
+          [ -z "$VERSION" ] && VERSION="unknown"
+
           cp "$APK" "artifacts/AetherManager-v${VERSION}-release.apk"
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           ls -lh artifacts/
 
-      # ── 10. Upload artifact ────────────────────────────────────────────────
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
@@ -110,7 +89,6 @@ jobs:
           path: artifacts/*.apk
           retention-days: 30
 
-      # ── 11. Build summary ──────────────────────────────────────────────────
       - name: Build summary
         run: |
           echo "## ✅ Build Selesai" >> $GITHUB_STEP_SUMMARY
@@ -123,14 +101,11 @@ jobs:
           echo "| ABI | arm64-v8a + armeabi-v7a |" >> $GITHUB_STEP_SUMMARY
           echo "| Native | libaether-x.so stripped |" >> $GITHUB_STEP_SUMMARY
 
-  # ── 12. Auto Release saat push tag v* ─────────────────────────────────────
   release:
     name: Create GitHub Release
     needs: build
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/v')
-    permissions:
-      contents: write
 
     steps:
       - name: Download artifact
@@ -156,3 +131,4 @@ jobs:
 
             ### Install
             Download APK di bawah dan install langsung ke device.
+            
