@@ -1,0 +1,4 @@
+-keep class dev.aether.manager.** { *; }
+-keepclassmembers class dev.aether.manager.** { *; }
+-keep class androidx.compose.** { *; }
+-dontwarn kotlinx.**

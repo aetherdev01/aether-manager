@@ -1,0 +1,245 @@
+package dev.aether.manager.data
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import dev.aether.manager.util.DeviceInfo
+import dev.aether.manager.util.RootUtils
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+
+data class TweaksState(
+    val schedboost: Boolean = false,
+    val cpuBoost: Boolean = false,
+    val gpuThrottleOff: Boolean = false,
+    val cpusetOpt: Boolean = false,
+    val mtkBoost: Boolean = false,
+    val lmkAggressive: Boolean = false,
+    val zram: Boolean = false,
+    val zramSize: String = "1073741824",
+    val zramAlgo: String = "lz4",
+    val vmDirtyOpt: Boolean = false,
+    val ioScheduler: String = "",
+    val ioLatencyOpt: Boolean = false,
+    val tcpBbr: Boolean = false,
+    val doh: Boolean = false,
+    val netBuffer: Boolean = false,
+    val doze: Boolean = false,
+    val fastAnim: Boolean = false,
+    val entropyBoost: Boolean = false,
+    val clearCache: Boolean = false,
+)
+
+data class MonitorState(
+    val cpuUsage: Int = 0,
+    val cpuFreq: String = "",
+    val gpuUsage: Int = 0,
+    val gpuFreq: String = "",
+    val ramUsedMb: Long = 0L,
+    val ramTotalMb: Long = 0L,
+    val cpuTemp: Float = 0f,
+    val batTemp: Float = 0f,
+    val storageUsedGb: Float = 0f,
+    val storageTotalGb: Float = 0f,
+    val uptime: String = "",
+    val batLevel: Int = 0,
+    val cpuGovernor: String = "",
+    val swapUsedMb: Long = 0L,
+    val swapTotalMb: Long = 0L,
+)
+
+sealed class UiState<out T> {
+    object Loading : UiState<Nothing>()
+    data class Success<T>(val data: T) : UiState<T>()
+    data class Error(val msg: String) : UiState<Nothing>()
+}
+
+class MainViewModel : ViewModel() {
+
+    private val _rootGranted = MutableStateFlow<Boolean?>(null)
+    val rootGranted: StateFlow<Boolean?> = _rootGranted.asStateFlow()
+
+    private val _deviceInfo = MutableStateFlow<UiState<DeviceInfo>>(UiState.Loading)
+    val deviceInfo: StateFlow<UiState<DeviceInfo>> = _deviceInfo.asStateFlow()
+
+    private val _tweaks = MutableStateFlow(TweaksState())
+    val tweaks: StateFlow<TweaksState> = _tweaks.asStateFlow()
+
+    private val _snackMessage = MutableStateFlow<String?>(null)
+    val snackMessage: StateFlow<String?> = _snackMessage.asStateFlow()
+
+    private val _applyingTweak = MutableStateFlow(false)
+    val applyingTweak: StateFlow<Boolean> = _applyingTweak.asStateFlow()
+
+    private val _monitorState = MutableStateFlow(MonitorState())
+    val monitorState: StateFlow<MonitorState> = _monitorState.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            try {
+                checkRoot()
+            } catch (e: Exception) {
+                _deviceInfo.value = UiState.Error("Initialization error: ${e.message}")
+            }
+        }
+    }
+
+    private suspend fun checkRoot() {
+        val hasRoot = RootUtils.hasRoot()
+        _rootGranted.value = hasRoot
+        if (hasRoot) {
+            loadAll()
+            startMonitorLoop()
+        } else {
+            _deviceInfo.value = UiState.Error("Root access denied.\nAether Manager requires root.")
+        }
+    }
+
+    fun refresh() = viewModelScope.launch {
+        _deviceInfo.value = UiState.Loading
+        loadAll()
+    }
+
+    fun refreshMonitor() = viewModelScope.launch {
+        _monitorState.value = RootUtils.getMonitorState()
+    }
+
+    private fun startMonitorLoop() = viewModelScope.launch(Dispatchers.IO) {
+        while (true) {
+            try {
+                val state = RootUtils.getMonitorState()
+                _monitorState.value = state
+            } catch (_: Exception) {}
+            delay(3000) // lebih responsif dari 5000ms
+        }
+    }
+
+    private suspend fun loadAll() {
+        try {
+            val info = RootUtils.getDeviceInfo()
+            _deviceInfo.value = UiState.Success(info)
+            loadTweaks()
+        } catch (e: Exception) {
+            _deviceInfo.value = UiState.Error(e.message ?: "Failed to load device info")
+        }
+    }
+
+    private suspend fun loadTweaks() {
+        val map = RootUtils.readTweaksConf()
+        _tweaks.value = mapToTweaksState(map)
+    }
+
+    private fun mapToTweaksState(map: Map<String, String>) = TweaksState(
+        schedboost    = map["schedboost"] == "1",
+        cpuBoost      = map["cpu_boost"] == "1",
+        gpuThrottleOff= map["gpu_throttle_off"] == "1",
+        cpusetOpt     = map["cpuset_opt"] == "1",
+        mtkBoost      = map["obb_noop"] == "1",
+        lmkAggressive = map["lmk_aggressive"] == "1",
+        zram          = map["zram"] == "1",
+        zramSize      = map["zram_size"] ?: "1073741824",
+        zramAlgo      = map["zram_algo"] ?: "lz4",
+        vmDirtyOpt    = map["vm_dirty_opt"] == "1",
+        ioScheduler   = map["io_scheduler"] ?: "",
+        ioLatencyOpt  = map["io_latency_opt"] == "1",
+        tcpBbr        = map["tcp_bbr"] == "1",
+        doh           = map["doh"] == "1",
+        netBuffer     = map["net_buffer"] == "1",
+        doze          = map["doze"] == "1",
+        fastAnim      = map["fast_anim"] == "1",
+        entropyBoost  = map["entropy_boost"] == "1",
+        clearCache    = map["clear_cache"] == "1",
+    )
+
+    /**
+     * FIX LAG: Optimistic update — UI berubah langsung tanpa tunggu shell.
+     * Apply tweak di background, reload state setelah selesai.
+     */
+    fun setTweak(key: String, value: Boolean) {
+        // 1. Update UI state langsung (optimistic)
+        val current = _tweaks.value
+        _tweaks.value = applyTweakToState(current, key, value)
+
+        // 2. Apply ke sistem di background
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                RootUtils.writeTweakConf(key, if (value) "1" else "0")
+                val map = RootUtils.readTweaksConf()
+                RootUtils.applyTweaksDirect(map)
+                // Sync balik dari file (verifikasi)
+                _tweaks.value = mapToTweaksState(map)
+            } catch (e: Exception) {
+                // Rollback kalau gagal
+                _tweaks.value = current
+                snack("Gagal apply: ${e.message}")
+            }
+        }
+    }
+
+    fun setTweakStr(key: String, value: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            RootUtils.writeTweakConf(key, value)
+            val map = RootUtils.readTweaksConf()
+            _tweaks.value = mapToTweaksState(map)
+        }
+    }
+
+    private fun applyTweakToState(state: TweaksState, key: String, value: Boolean): TweaksState =
+        when (key) {
+            "schedboost"      -> state.copy(schedboost = value)
+            "cpu_boost"       -> state.copy(cpuBoost = value)
+            "gpu_throttle_off"-> state.copy(gpuThrottleOff = value)
+            "cpuset_opt"      -> state.copy(cpusetOpt = value)
+            "obb_noop"        -> state.copy(mtkBoost = value)
+            "lmk_aggressive"  -> state.copy(lmkAggressive = value)
+            "zram"            -> state.copy(zram = value)
+            "vm_dirty_opt"    -> state.copy(vmDirtyOpt = value)
+            "io_latency_opt"  -> state.copy(ioLatencyOpt = value)
+            "tcp_bbr"         -> state.copy(tcpBbr = value)
+            "doh"             -> state.copy(doh = value)
+            "net_buffer"      -> state.copy(netBuffer = value)
+            "doze"            -> state.copy(doze = value)
+            "fast_anim"       -> state.copy(fastAnim = value)
+            "entropy_boost"   -> state.copy(entropyBoost = value)
+            "clear_cache"     -> state.copy(clearCache = value)
+            else              -> state
+        }
+
+    fun setProfile(profile: String) = viewModelScope.launch {
+        _applyingTweak.value = true
+        val ok = RootUtils.setProfileDirect(profile)
+        if (ok) {
+            delay(300)
+            val info = RootUtils.getDeviceInfo()
+            _deviceInfo.value = UiState.Success(info)
+            // Refresh governor setelah profile change
+            _monitorState.value = RootUtils.getMonitorState()
+            snack("Profile → ${profile.replaceFirstChar { it.uppercaseChar() }}")
+        }
+        _applyingTweak.value = false
+    }
+
+    fun applyAll() = viewModelScope.launch {
+        _applyingTweak.value = true
+        val map = RootUtils.readTweaksConf()
+        RootUtils.applyTweaksDirect(map)
+        delay(400)
+        _applyingTweak.value = false
+        snack("Tweaks applied ✓")
+    }
+
+    fun toggleSafeMode(enable: Boolean) = viewModelScope.launch {
+        RootUtils.toggleSafeMode(enable)
+        refresh()
+    }
+
+    fun reboot(mode: RootUtils.RebootMode) = viewModelScope.launch {
+        RootUtils.reboot(mode)
+    }
+
+    fun snack(msg: String) { _snackMessage.value = msg }
+    fun clearSnack() { _snackMessage.value = null }
+}
