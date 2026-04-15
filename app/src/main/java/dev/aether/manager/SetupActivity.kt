@@ -158,6 +158,12 @@ fun SetupScreen(onDone: () -> Unit) {
             PermState.GRANTED else PermState.DENIED
     }
 
+    // All required permissions must be GRANTED before Setup Complete is functional
+    val allPermsGranted = rootState    == PermState.GRANTED &&
+                          notifState   == PermState.GRANTED &&
+                          writeState   == PermState.GRANTED &&
+                          storageState == PermState.GRANTED
+
     // ── Pages ─────────────────────────────────────────────────
     val primaryContainer   = MaterialTheme.colorScheme.primaryContainer
     val onPrimaryContainer = MaterialTheme.colorScheme.onPrimaryContainer
@@ -190,12 +196,6 @@ fun SetupScreen(onDone: () -> Unit) {
     val currentPage = pagerState.currentPage
     val page        = pages[currentPage]
     val isLast      = currentPage == pages.size - 1
-
-    // All required permissions must be GRANTED before Setup Complete is functional
-    val allPermsGranted = rootState    == PermState.GRANTED &&
-                          notifState   == PermState.GRANTED &&
-                          writeState   == PermState.GRANTED &&
-                          storageState == PermState.GRANTED
 
     // Auto-check on page enter
     LaunchedEffect(currentPage) {
