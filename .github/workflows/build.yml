@@ -1,0 +1,45 @@
+name: Build APK
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:   # bisa trigger manual dari GitHub UI
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install NDK 27.0.12077973
+        run: |
+          echo "y" | sdkmanager --install "ndk;27.0.12077973" --sdk_root=$ANDROID_SDK_ROOT
+
+      - name: Grant Gradle permission
+        run: chmod +x gradlew
+
+      - name: Build Debug APK
+        run: ./gradlew assembleDebug --no-daemon --stacktrace
+        env:
+          ANDROID_NDK_HOME: ${{ env.ANDROID_SDK_ROOT }}/ndk/27.0.12077973
+
+      - name: Upload Debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: aether-manager-debug
+          path: app/build/outputs/apk/debug/*.apk
+          retention-days: 7

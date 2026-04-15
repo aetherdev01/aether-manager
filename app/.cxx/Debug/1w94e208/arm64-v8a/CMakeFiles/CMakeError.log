@@ -1,0 +1,167 @@
+Compiling the CXX compiler identification source file "CMakeCXXCompilerId.cpp" failed.
+Compiler: /data/data/com.tom.rv2ide/files/home/android-sdk/ndk/27.0.12077973/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++ 
+Build flags: -g;-DANDROID;-fdata-sections;-ffunction-sections;-funwind-tables;-fstack-protector-strong;-no-canonical-prefixes;-D_FORTIFY_SOURCE=2;-Wformat;-Werror=format-security;;-std=c++17
+Id flags: -c;--target=aarch64-none-linux-android26 
+
+The output was:
+1
+/data/data/com.tom.rv2ide/files/home/android-sdk/ndk/27.0.12077973/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++: syntax error: unexpected ')'
+
+
+Compiling the CXX compiler identification source file "CMakeCXXCompilerId.cpp" failed.
+Compiler: /data/data/com.tom.rv2ide/files/home/android-sdk/ndk/27.0.12077973/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++ 
+Build flags: -g;-DANDROID;-fdata-sections;-ffunction-sections;-funwind-tables;-fstack-protector-strong;-no-canonical-prefixes;-D_FORTIFY_SOURCE=2;-Wformat;-Werror=format-security;;-std=c++17
+Id flags:  
+
+The output was:
+1
+/data/data/com.tom.rv2ide/files/home/android-sdk/ndk/27.0.12077973/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++: syntax error: unexpected ')'
+
+
+Compiling the CXX compiler identification source file "CMakeCXXCompilerId.cpp" failed.
+Compiler: /data/data/com.tom.rv2ide/files/home/android-sdk/ndk/27.0.12077973/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++ 
+Build flags: -g;-DANDROID;-fdata-sections;-ffunction-sections;-funwind-tables;-fstack-protector-strong;-no-canonical-prefixes;-D_FORTIFY_SOURCE=2;-Wformat;-Werror=format-security;;-std=c++17
+Id flags: -c 
+
+The output was:
+1
+/data/data/com.tom.rv2ide/files/home/android-sdk/ndk/27.0.12077973/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++: syntax error: unexpected ')'
+
+
+Compiling the CXX compiler identification source file "CMakeCXXCompilerId.cpp" failed.
+Compiler: /data/data/com.tom.rv2ide/files/home/android-sdk/ndk/27.0.12077973/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++ 
+Build flags: -g;-DANDROID;-fdata-sections;-ffunction-sections;-funwind-tables;-fstack-protector-strong;-no-canonical-prefixes;-D_FORTIFY_SOURCE=2;-Wformat;-Werror=format-security;;-std=c++17
+Id flags: --c++ 
+
+The output was:
+1
+/data/data/com.tom.rv2ide/files/home/android-sdk/ndk/27.0.12077973/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++: syntax error: unexpected ')'
+
+
+Compiling the CXX compiler identification source file "CMakeCXXCompilerId.cpp" failed.
+Compiler: /data/data/com.tom.rv2ide/files/home/android-sdk/ndk/27.0.12077973/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++ 
+Build flags: -g;-DANDROID;-fdata-sections;-ffunction-sections;-funwind-tables;-fstack-protector-strong;-no-canonical-prefixes;-D_FORTIFY_SOURCE=2;-Wformat;-Werror=format-security;;-std=c++17
+Id flags: --ec++ 
+
+The output was:
+1
+/data/data/com.tom.rv2ide/files/home/android-sdk/ndk/27.0.12077973/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++: syntax error: unexpected ')'
+
+
+Compiling the CXX compiler identification source file "CMakeCXXCompilerId.cpp" failed.
+Compiler: /data/data/com.tom.rv2ide/files/home/android-sdk/ndk/27.0.12077973/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++ 
+Build flags: -g;-DANDROID;-fdata-sections;-ffunction-sections;-funwind-tables;-fstack-protector-strong;-no-canonical-prefixes;-D_FORTIFY_SOURCE=2;-Wformat;-Werror=format-security;;-std=c++17
+Id flags: --target=arm-arm-none-eabi;-mcpu=cortex-m3 
+
+The output was:
+1
+/data/data/com.tom.rv2ide/files/home/android-sdk/ndk/27.0.12077973/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++: syntax error: unexpected ')'
+
+
+Compiling the CXX compiler identification source file "CMakeCXXCompilerId.cpp" failed.
+Compiler: /data/data/com.tom.rv2ide/files/home/android-sdk/ndk/27.0.12077973/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++ 
+Build flags: -g;-DANDROID;-fdata-sections;-ffunction-sections;-funwind-tables;-fstack-protector-strong;-no-canonical-prefixes;-D_FORTIFY_SOURCE=2;-Wformat;-Werror=format-security;;-std=c++17
+Id flags: -c;-I__does_not_exist__ 
+
+The output was:
+1
+/data/data/com.tom.rv2ide/files/home/android-sdk/ndk/27.0.12077973/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++: syntax error: unexpected ')'
+
+
+Compiling the CXX compiler identification source file "CMakeCXXCompilerId.cpp" failed.
+Compiler: /data/data/com.tom.rv2ide/files/home/android-sdk/ndk/27.0.12077973/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++ 
+Build flags: 
+Id flags: -c;--target=aarch64-none-linux-android26 
+
+The output was:
+1
+/data/data/com.tom.rv2ide/files/home/android-sdk/ndk/27.0.12077973/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++: syntax error: unexpected ')'
+
+
+Compiling the CXX compiler identification source file "CMakeCXXCompilerId.cpp" failed.
+Compiler: /data/data/com.tom.rv2ide/files/home/android-sdk/ndk/27.0.12077973/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++ 
+Build flags: 
+Id flags:  
+
+The output was:
+1
+/data/data/com.tom.rv2ide/files/home/android-sdk/ndk/27.0.12077973/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++: syntax error: unexpected ')'
+
+
+Compiling the CXX compiler identification source file "CMakeCXXCompilerId.cpp" failed.
+Compiler: /data/data/com.tom.rv2ide/files/home/android-sdk/ndk/27.0.12077973/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++ 
+Build flags: 
+Id flags: -c 
+
+The output was:
+1
+/data/data/com.tom.rv2ide/files/home/android-sdk/ndk/27.0.12077973/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++: syntax error: unexpected ')'
+
+
+Compiling the CXX compiler identification source file "CMakeCXXCompilerId.cpp" failed.
+Compiler: /data/data/com.tom.rv2ide/files/home/android-sdk/ndk/27.0.12077973/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++ 
+Build flags: 
+Id flags: --c++ 
+
+The output was:
+1
+/data/data/com.tom.rv2ide/files/home/android-sdk/ndk/27.0.12077973/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++: syntax error: unexpected ')'
+
+
+Compiling the CXX compiler identification source file "CMakeCXXCompilerId.cpp" failed.
+Compiler: /data/data/com.tom.rv2ide/files/home/android-sdk/ndk/27.0.12077973/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++ 
+Build flags: 
+Id flags: --ec++ 
+
+The output was:
+1
+/data/data/com.tom.rv2ide/files/home/android-sdk/ndk/27.0.12077973/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++: syntax error: unexpected ')'
+
+
+Compiling the CXX compiler identification source file "CMakeCXXCompilerId.cpp" failed.
+Compiler: /data/data/com.tom.rv2ide/files/home/android-sdk/ndk/27.0.12077973/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++ 
+Build flags: 
+Id flags: --target=arm-arm-none-eabi;-mcpu=cortex-m3 
+
+The output was:
+1
+/data/data/com.tom.rv2ide/files/home/android-sdk/ndk/27.0.12077973/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++: syntax error: unexpected ')'
+
+
+Compiling the CXX compiler identification source file "CMakeCXXCompilerId.cpp" failed.
+Compiler: /data/data/com.tom.rv2ide/files/home/android-sdk/ndk/27.0.12077973/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++ 
+Build flags: 
+Id flags: -c;-I__does_not_exist__ 
+
+The output was:
+1
+/data/data/com.tom.rv2ide/files/home/android-sdk/ndk/27.0.12077973/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++: syntax error: unexpected ')'
+
+
+Checking whether the CXX compiler is IAR using "" did not match "IAR .+ Compiler":
+/data/data/com.tom.rv2ide/files/home/android-sdk/ndk/27.0.12077973/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++: syntax error: unexpected ')'
+Checking whether the CXX compiler is IAR using "" did not match "IAR .+ Compiler":
+/data/data/com.tom.rv2ide/files/home/android-sdk/ndk/27.0.12077973/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++: syntax error: unexpected ')'
+Detecting CXX compiler ABI info failed to compile with the following output:
+Change Dir: /storage/emulated/0/aether-app/app/.cxx/Debug/1w94e208/arm64-v8a/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/data/data/com.tom.rv2ide/files/home/android-sdk/cmake/3.22.1/bin/ninja cmTC_3ab17 && [1/2] Building CXX object CMakeFiles/cmTC_3ab17.dir/CMakeCXXCompilerABI.cpp.o
+FAILED: CMakeFiles/cmTC_3ab17.dir/CMakeCXXCompilerABI.cpp.o 
+/data/data/com.tom.rv2ide/files/home/android-sdk/ndk/27.0.12077973/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++   -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat  -std=c++17 -o CMakeFiles/cmTC_3ab17.dir/CMakeCXXCompilerABI.cpp.o -c /data/data/com.tom.rv2ide/files/home/android-sdk/cmake/3.22.1/share/cmake-3.22/Modules/CMakeCXXCompilerABI.cpp
+/bin/sh: /data/data/com.tom.rv2ide/files/home/android-sdk/ndk/27.0.12077973/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++: not executable: 64-bit ELF file
+ninja: build stopped: subcommand failed.
+
+
+
+
+Determining if the CXX compiler works failed with the following output:
+Change Dir: /storage/emulated/0/aether-app/app/.cxx/Debug/1w94e208/arm64-v8a/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/data/data/com.tom.rv2ide/files/home/android-sdk/cmake/3.22.1/bin/ninja cmTC_5df87 && [1/2] Building CXX object CMakeFiles/cmTC_5df87.dir/testCXXCompiler.cxx.o
+FAILED: CMakeFiles/cmTC_5df87.dir/testCXXCompiler.cxx.o 
+/data/data/com.tom.rv2ide/files/home/android-sdk/ndk/27.0.12077973/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++   -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security  -std=c++17 -o CMakeFiles/cmTC_5df87.dir/testCXXCompiler.cxx.o -c /storage/emulated/0/aether-app/app/.cxx/Debug/1w94e208/arm64-v8a/CMakeFiles/CMakeTmp/testCXXCompiler.cxx
+/bin/sh: /data/data/com.tom.rv2ide/files/home/android-sdk/ndk/27.0.12077973/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++: not executable: 64-bit ELF file
+ninja: build stopped: subcommand failed.
+
+
+

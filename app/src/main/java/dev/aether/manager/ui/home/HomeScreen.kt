@@ -28,6 +28,7 @@ import dev.aether.manager.data.MonitorState
 import dev.aether.manager.data.UiState
 import dev.aether.manager.i18n.LocalStrings
 import dev.aether.manager.ui.components.*
+import dev.aether.manager.ads.AdBannerView
 import dev.aether.manager.util.DeviceInfo
 import dev.aether.manager.util.SocType
 
@@ -74,6 +75,8 @@ fun HomeScreen(vm: MainViewModel) {
             MonitorSection(monitorState) { vm.refreshMonitor() }
         }
 
+        // ── AdMob Banner ──────────────────────────────────────────────────────
+        AdBannerView()
 
     }
 }
