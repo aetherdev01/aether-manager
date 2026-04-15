@@ -67,9 +67,12 @@ object NativeExec {
     private fun javaExec(vararg cmds: String): ShellResult {
         return try {
             val script = cmds.joinToString("\n")
-            val process = ProcessBuilder("su", "-c", script)
+            // Pipe script via stdin to avoid argument-length limits and
+            // ensure multi-command scripts are executed correctly by su.
+            val process = ProcessBuilder("su")
                 .redirectErrorStream(false)
                 .start()
+            process.outputStream.bufferedWriter().use { it.write(script) }
             val stdout = process.inputStream.bufferedReader().readText()
             val stderr = process.errorStream.bufferedReader().readText()
             val exit = process.waitFor()

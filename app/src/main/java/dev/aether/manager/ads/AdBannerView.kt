@@ -30,7 +30,7 @@ fun AdBannerView(
     }
 
     DisposableEffect(Unit) {
-        if (!UnityAds.isInitialized()) {
+        if (!UnityAds.isInitialized) {
             UnityAds.initialize(
                 activity,
                 AdManager.GAME_ID,
