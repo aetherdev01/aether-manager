@@ -1,7 +1,7 @@
 plugins {
-    alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
-    alias(libs.plugins.kotlin.compose)
+    id("com.android.application")
+    id("org.jetbrains.kotlin.android")
+    id("org.jetbrains.kotlin.plugin.compose")
 }
 
 android {
@@ -25,7 +25,7 @@ android {
         }
     }
 
-    ndkVersion = "27.0.12077973"
+    ndkVersion = "25.2.9519653"
 
     buildTypes {
         release {
