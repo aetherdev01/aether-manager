@@ -66,15 +66,32 @@ object NativeExec {
 
     private fun javaExec(vararg cmds: String): ShellResult {
         return try {
-            val script = cmds.joinToString("\n")
-            // Pipe script via stdin to avoid argument-length limits and
-            // ensure multi-command scripts are executed correctly by su.
+            val script = cmds.joinToString("\n") + "\n"
             val process = ProcessBuilder("su")
                 .redirectErrorStream(false)
                 .start()
-            process.outputStream.bufferedWriter().use { it.write(script) }
-            val stdout = process.inputStream.bufferedReader().readText()
-            val stderr = process.errorStream.bufferedReader().readText()
+
+            // FIX: Tulis stdin di thread terpisah supaya tidak deadlock
+            // kalau stdout/stderr buffer penuh sebelum stdin selesai ditulis.
+            val stdinThread = Thread {
+                try {
+                    process.outputStream.bufferedWriter().use { it.write(script) }
+                } catch (_: Exception) {}
+            }
+            stdinThread.start()
+
+            // Baca stdout dan stderr secara paralel
+            var stdout = ""
+            var stderr = ""
+            val stdoutThread = Thread { stdout = process.inputStream.bufferedReader().readText() }
+            val stderrThread = Thread { stderr = process.errorStream.bufferedReader().readText() }
+            stdoutThread.start()
+            stderrThread.start()
+
+            stdinThread.join(5000)
+            stdoutThread.join(30_000)
+            stderrThread.join(5000)
+
             val exit = process.waitFor()
             ShellResult(exit, stdout, stderr)
         } catch (e: Exception) {
@@ -88,9 +105,13 @@ object NativeExec {
             val p = ProcessBuilder("su", "-c", "echo aether_root_ok")
                 .redirectErrorStream(true)
                 .start()
-            val out = p.inputStream.bufferedReader().readText()
-            p.waitFor()
-            out.contains("aether_root_ok")
+            // FIX: baca output di thread terpisah dengan timeout 8 detik
+            var out = ""
+            val t = Thread { out = p.inputStream.bufferedReader().readText() }
+            t.start()
+            t.join(8000)
+            val exited = p.waitFor()
+            out.contains("aether_root_ok") && exited == 0
         } catch (e: Exception) {
             false
         }

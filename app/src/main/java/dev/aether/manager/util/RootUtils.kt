@@ -24,12 +24,20 @@ object RootUtils {
     // ── Root check ────────────────────────────────────────────────────────
 
     suspend fun hasRoot(): Boolean = withContext(Dispatchers.IO) {
-        try {
-            if (NativeExec.nativeAvailable) NativeExec.nHasRoot()
-            else NativeExec.javaHasRoot()
-        } catch (e: Exception) {
-            NativeExec.javaHasRoot()
+        // FIX: Coba 2x — SU manager kadang butuh sedikit waktu setelah grant
+        for (attempt in 0..1) {
+            try {
+                val result = if (NativeExec.nativeAvailable) NativeExec.nHasRoot()
+                             else NativeExec.javaHasRoot()
+                if (result) return@withContext true
+            } catch (e: Exception) {
+                try {
+                    if (NativeExec.javaHasRoot()) return@withContext true
+                } catch (_: Exception) {}
+            }
+            if (attempt == 0) kotlinx.coroutines.delay(800)
         }
+        false
     }
 
     // ── Core shell exec ───────────────────────────────────────────────────

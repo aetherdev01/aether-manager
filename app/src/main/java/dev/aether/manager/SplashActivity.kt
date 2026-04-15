@@ -54,6 +54,9 @@ class SplashActivity : ComponentActivity() {
             AetherTheme {
                 ProvideStrings {
                     SplashScreen {
+                        // FIX: Kalau setup belum selesai → SetupActivity
+                        // Kalau setup sudah selesai → langsung MainActivity
+                        // (root check dilakukan di MainViewModel dengan retry)
                         if (setupDone) startActivity(Intent(this, MainActivity::class.java))
                         else startActivity(Intent(this, SetupActivity::class.java))
                         finish()

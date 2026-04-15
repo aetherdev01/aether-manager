@@ -80,11 +80,32 @@ class MainViewModel : ViewModel() {
     init {
         viewModelScope.launch {
             try {
-                checkRoot()
+                checkRootWithRetry()
             } catch (e: Exception) {
                 _deviceInfo.value = UiState.Error("Initialization error: ${e.message}")
             }
         }
+    }
+
+    /**
+     * FIX: Retry root check beberapa kali dengan delay.
+     * Su manager kadang butuh waktu untuk grant — jangan langsung fail di attempt pertama.
+     */
+    private suspend fun checkRootWithRetry(maxAttempts: Int = 3) {
+        repeat(maxAttempts) { attempt ->
+            val hasRoot = RootUtils.hasRoot()
+            if (hasRoot) {
+                _rootGranted.value = true
+                loadAll()
+                startMonitorLoop()
+                return
+            }
+            // Delay sebelum retry — beri waktu SU manager grant
+            if (attempt < maxAttempts - 1) delay(1500L)
+        }
+        // Semua attempt gagal
+        _rootGranted.value = false
+        _deviceInfo.value = UiState.Error("Root access denied.\nAether Manager requires root.")
     }
 
     private suspend fun checkRoot() {
@@ -98,9 +119,20 @@ class MainViewModel : ViewModel() {
         }
     }
 
+    /**
+     * FIX: refresh() sekarang juga re-check root supaya "Coba Lagi" benar-benar retry root.
+     */
     fun refresh() = viewModelScope.launch {
         _deviceInfo.value = UiState.Loading
-        loadAll()
+        val hasRoot = RootUtils.hasRoot()
+        _rootGranted.value = hasRoot
+        if (hasRoot) {
+            loadAll()
+            // Pastikan monitor loop jalan kalau belum
+            if (_monitorState.value == MonitorState()) startMonitorLoop()
+        } else {
+            _deviceInfo.value = UiState.Error("Root access denied.\nAether Manager requires root.")
+        }
     }
 
     fun refreshMonitor() = viewModelScope.launch {
