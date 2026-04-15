@@ -42,6 +42,8 @@ val StringsId = AppStrings(
 
     setupDoneTitle = "Siap Digunakan!",
     setupDoneDesc = "Setup selesai. Aether Manager siap mengoptimalkan performa, meningkatkan stabilitas, dan menerapkan berbagai tweak pada perangkat kamu.",
+    setupIncompleteTitle = "Lengkapi Setup Dulu!",
+    setupIncompleteDesc = "Beberapa izin yang diperlukan belum diberikan. Kembali dan selesaikan semua langkah sebelum melanjutkan.",
 
     setupBtnNext = "Lanjut",
     setupBtnStart = "Mulai",

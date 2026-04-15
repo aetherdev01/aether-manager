@@ -43,6 +43,8 @@ data class AppStrings(
     val setupStorageDenied: String,
     val setupDoneTitle: String,
     val setupDoneDesc: String,
+    val setupIncompleteTitle: String,
+    val setupIncompleteDesc: String,
     val setupBtnNext: String,
     val setupBtnStart: String,
     val setupBtnBack: String,

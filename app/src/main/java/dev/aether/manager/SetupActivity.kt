@@ -121,8 +121,8 @@ fun SetupScreen(onDone: () -> Unit) {
                 }
 
                 // Root re-check — runs when user returns after the SU grant dialog.
-                // Only re-check if root was being awaited (CHECKING or DENIED).
-                if (rootState == PermState.CHECKING || rootState == PermState.DENIED) {
+                // Re-check from any non-GRANTED state so a fresh grant is always detected.
+                if (rootState != PermState.GRANTED) {
                     scope.launch {
                         rootState = PermState.CHECKING
                         rootState = try {
@@ -179,9 +179,11 @@ fun SetupScreen(onDone: () -> Unit) {
             s.setupWriteTitle, s.setupWriteDesc, "WRITE_SETTINGS", s.setupWriteCta),
         SetupPage(Icons.Outlined.FolderOpen, secContainer, onSecContainer,
             s.setupStorageTitle, s.setupStorageDesc, "STORAGE", s.setupStorageCta),
-        SetupPage(Icons.Outlined.CheckCircle,
-            Color(0xFF1B5E20).copy(alpha = 0.2f), Color(0xFF4CAF50),
-            s.setupDoneTitle, s.setupDoneDesc),
+        SetupPage(if (allPermsGranted) Icons.Outlined.CheckCircle else Icons.Outlined.Warning,
+            if (allPermsGranted) Color(0xFF1B5E20).copy(alpha = 0.2f) else MaterialTheme.colorScheme.errorContainer,
+            if (allPermsGranted) Color(0xFF4CAF50) else MaterialTheme.colorScheme.onErrorContainer,
+            if (allPermsGranted) s.setupDoneTitle else s.setupIncompleteTitle,
+            if (allPermsGranted) s.setupDoneDesc else s.setupIncompleteDesc),
     )
 
     val pagerState  = rememberPagerState { pages.size }
