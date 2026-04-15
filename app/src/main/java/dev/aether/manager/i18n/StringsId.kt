@@ -25,20 +25,20 @@ val StringsId = AppStrings(
     setupNotifDesc = "Izinkan notifikasi agar Aether Manager dapat memberi tahu saat tweak diterapkan atau ada pembaruan penting.",
     setupNotifCta = "Izinkan Notifikasi",
     setupNotifGranted = "Notifikasi diizinkan",
-    setupNotifDenied = "Notifikasi ditolak",
+    setupNotifDenied = "Notifikasi ditolak — wajib diizinkan",
 
     setupWriteTitle = "Pengaturan Sistem",
     setupWriteDesc = "Izin WRITE_SETTINGS diperlukan untuk menerapkan penyesuaian sistem dan mengubah pengaturan perangkat.",
     setupWriteCta = "Izinkan Pengaturan",
     setupWriteGranted = "Write Settings diizinkan",
     setupWriteDenied = "Write Settings ditolak",
-    setupWriteDeniedSub = "Diperlukan untuk pengaturan sistem dan tweak performa",
+    setupWriteDeniedSub = "Izin ini wajib diberikan untuk melanjutkan.",
 
     setupStorageTitle = "Izin Storage",
     setupStorageDesc = "Izin storage diperlukan untuk menyimpan log tweak dan backup konfigurasi ke penyimpanan perangkat.",
     setupStorageCta = "Izinkan Storage",
     setupStorageGranted = "Storage diizinkan",
-    setupStorageDenied = "Storage ditolak",
+    setupStorageDenied = "Storage ditolak — wajib diizinkan",
 
     setupDoneTitle = "Siap Digunakan!",
     setupDoneDesc = "Setup selesai. Aether Manager siap mengoptimalkan performa, meningkatkan stabilitas, dan menerapkan berbagai tweak pada perangkat kamu.",
@@ -48,7 +48,7 @@ val StringsId = AppStrings(
     setupBtnBack = "Kembali",
     setupBtnSkip = "Lewati",
     setupBtnRetry = "Coba Lagi",
-    setupRootRequired = "Izin root diperlukan untuk melanjutkan",
+    setupRootRequired = "Izin ini wajib diberikan untuk melanjutkan",
 
     // Nav
     navHome = "Beranda",

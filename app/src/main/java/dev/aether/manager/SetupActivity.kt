@@ -156,24 +156,17 @@ fun SetupScreen(onDone: () -> Unit) {
         }
     }
 
+    // All permissions are mandatory — user cannot proceed until GRANTED
     val canProceed = when (page.permissionType) {
-        "ROOT"           -> rootState == PermState.GRANTED
-        "NOTIFICATION"   -> notifState == PermState.GRANTED || notifState == PermState.DENIED
-        "WRITE_SETTINGS" -> writeState == PermState.GRANTED || writeState == PermState.DENIED
-        "STORAGE"        -> storageState == PermState.GRANTED || storageState == PermState.DENIED
+        "ROOT"           -> rootState    == PermState.GRANTED
+        "NOTIFICATION"   -> notifState   == PermState.GRANTED
+        "WRITE_SETTINGS" -> writeState   == PermState.GRANTED
+        "STORAGE"        -> storageState == PermState.GRANTED
         else             -> true
     }
 
     fun nextPage() { scope.launch { pagerState.animateScrollToPage(currentPage + 1) } }
     fun prevPage() { scope.launch { pagerState.animateScrollToPage(currentPage - 1) } }
-    fun skipPerm() {
-        when (page.permissionType) {
-            "NOTIFICATION"   -> notifState   = PermState.DENIED
-            "WRITE_SETTINGS" -> writeState   = PermState.DENIED
-            "STORAGE"        -> storageState = PermState.DENIED
-        }
-        nextPage()
-    }
 
     Scaffold(containerColor = MaterialTheme.colorScheme.surface) { padding ->
         Column(
@@ -261,7 +254,23 @@ fun SetupScreen(onDone: () -> Unit) {
                                 when (pg.permissionType) {
                                     "ROOT" -> scope.launch {
                                         rootState = PermState.CHECKING
-                                        rootState = if (RootUtils.hasRoot()) PermState.GRANTED else PermState.DENIED
+                                        // Explicitly request su access — this triggers the
+                                        // Magisk / KernelSU / APatch grant dialog.
+                                        // We do NOT use NativeExec here because the .so may not
+                                        // be loaded yet; a direct su invocation is what causes
+                                        // the superuser manager to register the app and show the
+                                        // permission popup.
+                                        rootState = try {
+                                            val proc = ProcessBuilder("su", "-c", "echo aether_ok")
+                                                .redirectErrorStream(true)
+                                                .start()
+                                            val out = proc.inputStream.bufferedReader().readText()
+                                            proc.waitFor()
+                                            if (out.contains("aether_ok")) PermState.GRANTED
+                                            else PermState.DENIED
+                                        } catch (e: Exception) {
+                                            PermState.DENIED
+                                        }
                                     }
                                     "NOTIFICATION" -> {
                                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -347,8 +356,8 @@ fun SetupScreen(onDone: () -> Unit) {
                     )
                 }
 
-                // Root required hint
-                AnimatedVisibility(visible = !canProceed && page.permissionType == "ROOT") {
+                // Required hint for any blocked permission page
+                AnimatedVisibility(visible = !canProceed && page.permissionType != null) {
                     Text(
                         s.setupRootRequired,
                         color     = MaterialTheme.colorScheme.error,
@@ -358,7 +367,7 @@ fun SetupScreen(onDone: () -> Unit) {
                     )
                 }
 
-                // Back / Skip row
+                // Back row only — no skip button
                 Row(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     modifier = Modifier.fillMaxWidth()
@@ -370,16 +379,7 @@ fun SetupScreen(onDone: () -> Unit) {
                     } else {
                         Spacer(Modifier.width(80.dp))
                     }
-
-                    val canSkip = !canProceed &&
-                            page.permissionType in listOf("NOTIFICATION", "WRITE_SETTINGS", "STORAGE")
-                    if (canSkip) {
-                        TextButton(onClick = { skipPerm() }) {
-                            Text(s.setupBtnSkip, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
-                    } else {
-                        Spacer(Modifier.width(80.dp))
-                    }
+                    Spacer(Modifier.width(80.dp))
                 }
 
                 Spacer(Modifier.height(16.dp))
@@ -474,7 +474,9 @@ private fun PermissionBlock(
                         )
                         val sub = when (permType) {
                             "ROOT"           -> strings.setupRootDeniedSub
+                            "NOTIFICATION"   -> strings.setupWriteDeniedSub   // reuse "required" hint
                             "WRITE_SETTINGS" -> strings.setupWriteDeniedSub
+                            "STORAGE"        -> strings.setupWriteDeniedSub
                             else             -> null
                         }
                         if (sub != null) {
