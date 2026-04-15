@@ -126,6 +126,9 @@ val StringsId = AppStrings(
     tweakTcpBbr = "TCP BBR",
     tweakTcpBbrDesc = "Algoritma jaringan lebih efisien",
 
+    tweakDoh = "DNS over HTTPS",
+    tweakDohDesc = "Enkripsi DNS untuk privasi dan kecepatan lebih baik",
+
     tweakNetBuffer = "Net Buffer Boost",
     tweakNetBufferDesc = "Meningkatkan buffer TCP",
 
