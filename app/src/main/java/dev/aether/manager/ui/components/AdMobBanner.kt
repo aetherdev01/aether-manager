@@ -8,8 +8,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdSize
 import com.google.android.gms.ads.AdView
-
-private const val BANNER_AD_UNIT_ID = "ca-app-pub-5043818314955328/4052266582"
+import dev.aether.manager.ads.AdManager
 
 @Composable
 fun AdMobBanner(
@@ -23,7 +22,7 @@ fun AdMobBanner(
         factory = { context ->
             AdView(context).apply {
                 setAdSize(adSize)
-                adUnitId = BANNER_AD_UNIT_ID
+                adUnitId = AdManager.bannerId   // ambil dari native layer
                 loadAd(AdRequest.Builder().build())
             }
         }

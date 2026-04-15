@@ -14,6 +14,7 @@
 
 #include <jni.h>
 #include <unistd.h>
+#include "aether_strings.h"
 #include <sys/wait.h>
 #include <sys/select.h>
 #include <fcntl.h>
@@ -340,6 +341,28 @@ Java_dev_aether_manager_util_NativeExec_nExecSuCmd(
     env->SetObjectArrayElement(result, 1, strToJstring(env, r.stdoutStr));
     env->SetObjectArrayElement(result, 2, strToJstring(env, r.stderrStr));
     return result;
+}
+
+/**
+ * nGetAdId(key: Int) → String
+ * Return decrypted AdMob ID untuk key yang diberikan.
+ *   key = 0 → Banner production ID
+ * Return empty string jika key tidak dikenali.
+ */
+JNIEXPORT jstring JNICALL
+Java_dev_aether_manager_ads_AdManager_nGetAdId(
+        JNIEnv* env, jclass /*cls*/, jint key)
+{
+    std::string result;
+    switch (key) {
+        case 0:
+            result = aether_decrypt(kAdMobBannerId, sizeof(kAdMobBannerId), AETHER_KEY);
+            break;
+        default:
+            result = "";
+            break;
+    }
+    return env->NewStringUTF(result.c_str());
 }
 
 } // extern "C"
