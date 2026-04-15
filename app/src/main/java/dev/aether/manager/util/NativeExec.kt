@@ -1,6 +1,7 @@
 package dev.aether.manager.util
 
 import android.util.Log
+import java.io.File
 
 /**
  * NativeExec — JNI bridge ke libaether-x.so
@@ -62,17 +63,46 @@ object NativeExec {
 
     fun ok(vararg cmds: String): Boolean = exec(*cmds).exitCode == 0
 
+    // ── Su binary resolver ────────────────────────────────────────────────
+
+    /**
+     * Cari binary 'su' yang valid.
+     * PATH di app context seringkali tidak include /system/xbin atau /system/bin,
+     * jadi kita probe manual.
+     */
+    val suBinary: String by lazy {
+        val candidates = listOf(
+            "/system/bin/su",
+            "/system/xbin/su",
+            "/sbin/su",
+            "/su/bin/su",
+            "/magisk/.core/bin/su",
+            "su"  // fallback terakhir — andalkan PATH
+        )
+        candidates.firstOrNull { path ->
+            if (path == "su") true
+            else File(path).let { it.exists() && it.canExecute() }
+        } ?: "su"
+    }
+
     // ── Java fallback shell ───────────────────────────────────────────────
 
-    private fun javaExec(vararg cmds: String): ShellResult {
+    /**
+     * Eksekusi commands via su stdin-pipe.
+     * WAJIB stdin-pipe (bukan argumen -c) supaya kompatibel dengan
+     * Magisk, KernelSU, APatch — semua butuh stdin session untuk multi-command.
+     */
+    fun javaExec(vararg cmds: String): ShellResult {
         return try {
-            val script = cmds.joinToString("\n") + "\n"
-            val process = ProcessBuilder("su")
+            val script = buildString {
+                cmds.forEach { appendLine(it) }
+                appendLine("exit")
+            }
+
+            val process = ProcessBuilder(suBinary)
                 .redirectErrorStream(false)
                 .start()
 
-            // FIX: Tulis stdin di thread terpisah supaya tidak deadlock
-            // kalau stdout/stderr buffer penuh sebelum stdin selesai ditulis.
             val stdinThread = Thread {
                 try {
                     process.outputStream.bufferedWriter().use { it.write(script) }
@@ -80,7 +110,6 @@ object NativeExec {
             }
             stdinThread.start()
 
-            // Baca stdout dan stderr secara paralel
             var stdout = ""
             var stderr = ""
             val stdoutThread = Thread { stdout = process.inputStream.bufferedReader().readText() }
@@ -88,11 +117,11 @@ object NativeExec {
             stdoutThread.start()
             stderrThread.start()
 
-            stdinThread.join(5000)
+            stdinThread.join(5_000)
             stdoutThread.join(30_000)
-            stderrThread.join(5000)
+            stderrThread.join(5_000)
 
-            val exit = process.waitFor()
+            val exit = try { process.waitFor() } catch (_: Exception) { -1 }
             ShellResult(exit, stdout, stderr)
         } catch (e: Exception) {
             Log.e(TAG, "javaExec error: ${e.message}")
@@ -100,19 +129,56 @@ object NativeExec {
         }
     }
 
+    /**
+     * FIX: hasRoot via stdin-pipe dulu, lalu fallback ke -c flag.
+     * KSU/APatch menolak -c tapi accept stdin; beberapa su klasik sebaliknya.
+     */
     fun javaHasRoot(): Boolean {
+        if (javaHasRootStdin()) return true
+        return javaHasRootArgC()
+    }
+
+    private fun javaHasRootStdin(): Boolean {
         return try {
-            val p = ProcessBuilder("su", "-c", "echo aether_root_ok")
+            val process = ProcessBuilder(suBinary)
                 .redirectErrorStream(true)
                 .start()
-            // FIX: baca output di thread terpisah dengan timeout 8 detik
+            val writeThread = Thread {
+                try {
+                    process.outputStream.bufferedWriter().use {
+                        it.write("echo aether_root_ok\nexit\n")
+                    }
+                } catch (_: Exception) {}
+            }
+            writeThread.start()
+            var out = ""
+            val readThread = Thread { out = process.inputStream.bufferedReader().readText() }
+            readThread.start()
+            writeThread.join(5_000)
+            readThread.join(8_000)
+            val code = try { process.waitFor() } catch (_: Exception) { -1 }
+            Log.d(TAG, "javaHasRootStdin: out='${out.trim()}' exit=$code su=$suBinary")
+            out.contains("aether_root_ok") && code == 0
+        } catch (e: Exception) {
+            Log.w(TAG, "javaHasRootStdin failed: ${e.message}")
+            false
+        }
+    }
+
+    private fun javaHasRootArgC(): Boolean {
+        return try {
+            val p = ProcessBuilder(suBinary, "-c", "echo aether_root_ok")
+                .redirectErrorStream(true)
+                .start()
             var out = ""
             val t = Thread { out = p.inputStream.bufferedReader().readText() }
             t.start()
-            t.join(8000)
-            val exited = p.waitFor()
-            out.contains("aether_root_ok") && exited == 0
+            t.join(8_000)
+            val code = try { p.waitFor() } catch (_: Exception) { -1 }
+            Log.d(TAG, "javaHasRootArgC: out='${out.trim()}' exit=$code")
+            out.contains("aether_root_ok") && code == 0
         } catch (e: Exception) {
+            Log.w(TAG, "javaHasRootArgC failed: ${e.message}")
             false
         }
     }
