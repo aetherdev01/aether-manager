@@ -21,23 +21,46 @@ project("aether-x" LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# ── Compiler flags ──────────────────────────────────────────────────────────
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} \
-    -O2 \
+# ── Compiler Flags ──────────────────────────────────────────────────────────
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} \
+    -Oz \
     -fvisibility=hidden \
     -fstack-protector-strong \
+    -ffunction-sections \
+    -fdata-sections \
+    -fomit-frame-pointer \
+    -fno-unwind-tables \
+    -fno-asynchronous-unwind-tables")
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} \
+    -Oz \
+    -fvisibility=hidden \
+    -fvisibility-inlines-hidden \
+    -fstack-protector-strong \
+    -ffunction-sections \
+    -fdata-sections \
+    -fomit-frame-pointer \
+    -fno-unwind-tables \
+    -fno-asynchronous-unwind-tables \
     -Wall \
     -Wextra \
     -Wno-unused-parameter")
 
-# ── Target: libaether-x.so ──────────────────────────────────────────────────
+# ── Linker Flags ────────────────────────────────────────────────────────────
+set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} \
+    -Wl,--gc-sections \
+    -Wl,--strip-all \
+    -Wl,--exclude-libs,ALL \
+    -Wl,--hash-style=gnu")
+
+# ── Target ──────────────────────────────────────────────────────────────────
 add_library(
     aether-x
     SHARED
     aether_exec.cpp
 )
 
-# ── Link libraries ──────────────────────────────────────────────────────────
+# ── Link Libraries ──────────────────────────────────────────────────────────
 find_library(log-lib log)
 
 target_link_libraries(

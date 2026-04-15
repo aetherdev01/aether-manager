@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.stringcare)
 }
 
 android {
@@ -59,7 +60,7 @@ android {
     }
 
     androidResources {
-        generateLocaleConfig = false
+        generateLocaleConfig = true
     }
 
     compileOptions {
@@ -113,7 +114,19 @@ dependencies {
     implementation(libs.accompanist.systemuicontroller)
     implementation(libs.androidx.appcompat)
     implementation(libs.google.admob)
+    // StringCare runtime (wajib ada agar string bisa didekripsi di runtime)
+    implementation("com.github.StringCare:library:3.1")
     debugImplementation(libs.androidx.ui.tooling)
+}
+
+// ── StringCare: enkripsi string literal di release build ─────────────────────
+stringcare {
+    // Hanya aktif di release — debug tetap plaintext (mudah debug)
+    applicationId = "dev.aether.manager"
+    // Enkripsi semua package di bawah namespace app
+    packages {
+        encrypt("dev.aether.manager")
+    }
 }
 
 configurations.all {
