@@ -23,18 +23,14 @@ android {
         }
 
         externalNativeBuild {
-    cmake {
-        cppFlags += listOf(
-            "-std=c++17",
-            "-O3",
-            "-s"
-        )
-        arguments += listOf(
-            "-DANDROID_STL=c++_static",
-            "-DANDROID_HOST_TAG=linux-x86_64"
-        )
-    }
-}
+            cmake {
+                cppFlags += "-std=c++17"
+                arguments += listOf(
+                    "-DANDROID_STL=c++_static",
+                    "-DANDROID_HOST_TAG=linux-x86_64"
+                )
+            }
+        }
     }
 
     externalNativeBuild {
@@ -52,11 +48,11 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            ndk { debugSymbolLevel = "none" }
-            multiDexEnabled = true 
+            ndk { debugSymbolLevel = "NONE" }
+            multiDexEnabled = false
         }
         debug {
-            isMinifyEnabled = true
+            isMinifyEnabled = false
             multiDexEnabled = true
             ndk { debugSymbolLevel = "FULL" }
         }
