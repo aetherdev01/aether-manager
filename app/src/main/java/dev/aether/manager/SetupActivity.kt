@@ -31,16 +31,18 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import dev.aether.manager.i18n.AppStrings
 import dev.aether.manager.i18n.LocalStrings
 import dev.aether.manager.i18n.ProvideStrings
 import dev.aether.manager.ui.AetherTheme
-import dev.aether.manager.util.RootUtils
 import kotlinx.coroutines.launch
 
 class SetupActivity : ComponentActivity() {
@@ -89,15 +91,66 @@ fun SetupScreen(onDone: () -> Unit) {
     var writeState   by remember { mutableStateOf(PermState.IDLE) }
     var storageState by remember { mutableStateOf(PermState.IDLE) }
 
-    // ── Launchers (unconditional) ─────────────────────────────
-    // Notif: result comes directly as Boolean — no need for delayed re-check
+    // ── Re-check on resume (after user grants in SU manager or Settings) ──
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                // Write settings
+                if (android.provider.Settings.System.canWrite(ctx))
+                    writeState = PermState.GRANTED
+
+                // Notification
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    if (ContextCompat.checkSelfPermission(
+                            ctx, Manifest.permission.POST_NOTIFICATIONS
+                        ) == PackageManager.PERMISSION_GRANTED
+                    ) notifState = PermState.GRANTED
+                } else {
+                    notifState = PermState.GRANTED
+                }
+
+                // Storage
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    storageState = PermState.GRANTED
+                } else if (ContextCompat.checkSelfPermission(
+                        ctx, Manifest.permission.READ_EXTERNAL_STORAGE
+                    ) == PackageManager.PERMISSION_GRANTED
+                ) {
+                    storageState = PermState.GRANTED
+                }
+
+                // Root re-check — runs when user returns after the SU grant dialog.
+                // Only re-check if root was being awaited (CHECKING or DENIED).
+                if (rootState == PermState.CHECKING || rootState == PermState.DENIED) {
+                    scope.launch {
+                        rootState = PermState.CHECKING
+                        rootState = try {
+                            val proc = ProcessBuilder("su", "-c", "echo aether_ok")
+                                .redirectErrorStream(true)
+                                .start()
+                            val out = proc.inputStream.bufferedReader().readText()
+                            proc.waitFor()
+                            if (out.contains("aether_ok")) PermState.GRANTED
+                            else PermState.DENIED
+                        } catch (e: Exception) {
+                            PermState.DENIED
+                        }
+                    }
+                }
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
+    // ── Launchers ─────────────────────────────────────────────
     val notifLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { granted ->
         notifState = if (granted) PermState.GRANTED else PermState.DENIED
     }
 
-    // Write settings: result comes back after user returns from Settings screen
     val writeSettingsLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) {
@@ -136,6 +189,12 @@ fun SetupScreen(onDone: () -> Unit) {
     val page        = pages[currentPage]
     val isLast      = currentPage == pages.size - 1
 
+    // All required permissions must be GRANTED before Setup Complete is functional
+    val allPermsGranted = rootState    == PermState.GRANTED &&
+                          notifState   == PermState.GRANTED &&
+                          writeState   == PermState.GRANTED &&
+                          storageState == PermState.GRANTED
+
     // Auto-check on page enter
     LaunchedEffect(currentPage) {
         when (page.permissionType) {
@@ -156,13 +215,13 @@ fun SetupScreen(onDone: () -> Unit) {
         }
     }
 
-    // All permissions are mandatory — user cannot proceed until GRANTED
+    // Per-page proceed gate; last page requires ALL perms
     val canProceed = when (page.permissionType) {
         "ROOT"           -> rootState    == PermState.GRANTED
         "NOTIFICATION"   -> notifState   == PermState.GRANTED
         "WRITE_SETTINGS" -> writeState   == PermState.GRANTED
         "STORAGE"        -> storageState == PermState.GRANTED
-        else             -> true
+        else             -> if (isLast) allPermsGranted else true
     }
 
     fun nextPage() { scope.launch { pagerState.animateScrollToPage(currentPage + 1) } }
@@ -170,26 +229,17 @@ fun SetupScreen(onDone: () -> Unit) {
 
     Scaffold(containerColor = MaterialTheme.colorScheme.surface) { padding ->
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding),
+            modifier = Modifier.fillMaxSize().padding(padding),
             verticalArrangement = Arrangement.SpaceBetween,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(Modifier.height(48.dp))
 
-            // ── HorizontalPager — full width, no peek ────────────
             HorizontalPager(
                 state      = pagerState,
-                // PageSize.Fill = each page fills the viewport, no adjacent page visible
                 pageSize   = PageSize.Fill,
-                // No contentPadding so neighbours stay off-screen
                 beyondViewportPageCount = 0,
-                modifier   = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-                    // Clip so any overshoot animation doesn't bleed into adjacent pages
-                    .clip(RoundedCornerShape(0.dp)),
+                modifier   = Modifier.fillMaxWidth().weight(1f).clip(RoundedCornerShape(0.dp)),
                 userScrollEnabled = true,
             ) { idx ->
                 val pg = pages[idx]
@@ -201,49 +251,46 @@ fun SetupScreen(onDone: () -> Unit) {
                     else             -> PermState.IDLE
                 }
 
-                // Each page is a full-width Column with its own horizontal padding
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(20.dp),
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 32.dp)
+                    modifier = Modifier.fillMaxSize().padding(horizontal = 32.dp)
                 ) {
                     Spacer(Modifier.height(4.dp))
 
-                    // Icon box
                     Box(
-                        modifier = Modifier
-                            .size(108.dp)
-                            .clip(RoundedCornerShape(32.dp))
-                            .background(pg.iconBg),
+                        modifier = Modifier.size(108.dp).clip(RoundedCornerShape(32.dp)).background(pg.iconBg),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(pg.icon, null, tint = pg.iconTint, modifier = Modifier.size(54.dp))
                     }
 
-                    // Title + desc
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        Text(
-                            pg.title,
-                            style = MaterialTheme.typography.headlineSmall,
-                            fontWeight = FontWeight.Bold,
+                        Text(pg.title, style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Bold, textAlign = TextAlign.Center,
+                            color = MaterialTheme.colorScheme.onSurface)
+                        Text(pg.desc, style = MaterialTheme.typography.bodyMedium,
                             textAlign = TextAlign.Center,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Text(
-                            pg.desc,
-                            style = MaterialTheme.typography.bodyMedium,
-                            textAlign = TextAlign.Center,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            lineHeight = 22.sp
+                            color = MaterialTheme.colorScheme.onSurfaceVariant, lineHeight = 22.sp)
+                    }
+
+                    // Last page: show missing perms summary if not all granted
+                    if (pg.permissionType == null && idx == pages.size - 1 && !allPermsGranted) {
+                        MissingPermsSummary(
+                            rootMissing    = rootState    != PermState.GRANTED,
+                            notifMissing   = notifState   != PermState.GRANTED,
+                            writeMissing   = writeState   != PermState.GRANTED,
+                            storageMissing = storageState != PermState.GRANTED,
+                            strings        = s,
+                            onGoToPage     = { targetIdx ->
+                                scope.launch { pagerState.animateScrollToPage(targetIdx) }
+                            }
                         )
                     }
 
-                    // Permission block
                     if (pg.permissionType != null) {
                         PermissionBlock(
                             permType = pg.permissionType,
@@ -254,51 +301,36 @@ fun SetupScreen(onDone: () -> Unit) {
                                 when (pg.permissionType) {
                                     "ROOT" -> scope.launch {
                                         rootState = PermState.CHECKING
-                                        // Explicitly request su access — this triggers the
-                                        // Magisk / KernelSU / APatch grant dialog.
-                                        // We do NOT use NativeExec here because the .so may not
-                                        // be loaded yet; a direct su invocation is what causes
-                                        // the superuser manager to register the app and show the
-                                        // permission popup.
                                         rootState = try {
                                             val proc = ProcessBuilder("su", "-c", "echo aether_ok")
-                                                .redirectErrorStream(true)
-                                                .start()
+                                                .redirectErrorStream(true).start()
                                             val out = proc.inputStream.bufferedReader().readText()
                                             proc.waitFor()
                                             if (out.contains("aether_ok")) PermState.GRANTED
                                             else PermState.DENIED
-                                        } catch (e: Exception) {
-                                            PermState.DENIED
-                                        }
+                                        } catch (e: Exception) { PermState.DENIED }
                                     }
                                     "NOTIFICATION" -> {
-                                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                                            // Result handled directly in notifLauncher callback
+                                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
                                             notifLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                                        } else {
-                                            // Below Android 13 — permission not needed
-                                            notifState = PermState.GRANTED
-                                        }
+                                        else notifState = PermState.GRANTED
                                     }
                                     "WRITE_SETTINGS" -> {
                                         if (android.provider.Settings.System.canWrite(ctx)) {
                                             writeState = PermState.GRANTED
                                         } else {
-                                            // Result handled in writeSettingsLauncher callback
-                                            writeSettingsLauncher.launch(
-                                                Intent(
-                                                    android.provider.Settings.ACTION_MANAGE_WRITE_SETTINGS,
-                                                    android.net.Uri.parse("package:${ctx.packageName}")
-                                                )
-                                            )
+                                            writeSettingsLauncher.launch(Intent(
+                                                android.provider.Settings.ACTION_MANAGE_WRITE_SETTINGS,
+                                                android.net.Uri.parse("package:${ctx.packageName}")
+                                            ))
                                         }
                                     }
                                     "STORAGE" -> {
                                         storageState = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                                             PermState.GRANTED
                                         } else {
-                                            if (ContextCompat.checkSelfPermission(ctx, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED)
+                                            if (ContextCompat.checkSelfPermission(ctx,
+                                                    Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED)
                                                 PermState.GRANTED else PermState.DENIED
                                         }
                                     }
@@ -323,55 +355,36 @@ fun SetupScreen(onDone: () -> Unit) {
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier.padding(horizontal = 28.dp)
             ) {
-                // Dot indicators
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     pages.forEachIndexed { i, _ ->
                         val sel = i == currentPage
                         val w by animateDpAsState(if (sel) 24.dp else 8.dp, label = "dot")
-                        Box(
-                            modifier = Modifier
-                                .height(8.dp)
-                                .width(w)
-                                .clip(CircleShape)
-                                .background(
-                                    if (sel) MaterialTheme.colorScheme.primary
-                                    else MaterialTheme.colorScheme.surfaceContainerHighest
-                                )
-                        )
+                        Box(modifier = Modifier.height(8.dp).width(w).clip(CircleShape).background(
+                            if (sel) MaterialTheme.colorScheme.primary
+                            else MaterialTheme.colorScheme.surfaceContainerHighest
+                        ))
                     }
                 }
 
                 Spacer(Modifier.height(4.dp))
 
-                // Primary button
                 Button(
                     onClick  = { if (isLast) onDone() else nextPage() },
                     modifier = Modifier.fillMaxWidth().height(52.dp),
                     shape    = RoundedCornerShape(16.dp),
                     enabled  = canProceed
                 ) {
-                    Text(
-                        if (isLast) s.setupBtnStart else s.setupBtnNext,
-                        fontWeight = FontWeight.SemiBold, fontSize = 16.sp
-                    )
+                    Text(if (isLast) s.setupBtnStart else s.setupBtnNext,
+                        fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
                 }
 
-                // Required hint for any blocked permission page
-                AnimatedVisibility(visible = !canProceed && page.permissionType != null) {
-                    Text(
-                        s.setupRootRequired,
-                        color     = MaterialTheme.colorScheme.error,
-                        fontSize  = 12.sp,
-                        textAlign = TextAlign.Center,
-                        modifier  = Modifier.alpha(0.9f)
-                    )
+                AnimatedVisibility(visible = !canProceed && (page.permissionType != null || isLast)) {
+                    Text(s.setupRootRequired, color = MaterialTheme.colorScheme.error,
+                        fontSize = 12.sp, textAlign = TextAlign.Center,
+                        modifier = Modifier.alpha(0.9f))
                 }
 
-                // Back row only — no skip button
-                Row(
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
+                Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
                     if (currentPage > 0) {
                         TextButton(onClick = { prevPage() }) {
                             Text(s.setupBtnBack, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -388,6 +401,47 @@ fun SetupScreen(onDone: () -> Unit) {
     }
 }
 
+/**
+ * Summary card shown on the last page when some permissions are still missing.
+ * Each row is tappable and navigates back to the relevant permission page.
+ */
+@Composable
+private fun MissingPermsSummary(
+    rootMissing: Boolean, notifMissing: Boolean,
+    writeMissing: Boolean, storageMissing: Boolean,
+    strings: AppStrings, onGoToPage: (Int) -> Unit
+) {
+    Surface(shape = RoundedCornerShape(16.dp), color = MaterialTheme.colorScheme.errorContainer,
+        modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Icon(Icons.Outlined.Warning, null,
+                    tint = MaterialTheme.colorScheme.onErrorContainer, modifier = Modifier.size(18.dp))
+                Text(strings.setupRootRequired,
+                    color = MaterialTheme.colorScheme.onErrorContainer,
+                    fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+            }
+            // Page indices: 0=Welcome 1=Root 2=Notif 3=Write 4=Storage 5=Done
+            if (rootMissing)    MissingPermRow(strings.setupRootTitle,    1, onGoToPage)
+            if (notifMissing)   MissingPermRow(strings.setupNotifTitle,   2, onGoToPage)
+            if (writeMissing)   MissingPermRow(strings.setupWriteTitle,   3, onGoToPage)
+            if (storageMissing) MissingPermRow(strings.setupStorageTitle, 4, onGoToPage)
+        }
+    }
+}
+
+@Composable
+private fun MissingPermRow(label: String, pageIdx: Int, onGoToPage: (Int) -> Unit) {
+    TextButton(onClick = { onGoToPage(pageIdx) },
+        contentPadding = PaddingValues(horizontal = 4.dp, vertical = 2.dp)) {
+        Icon(Icons.Outlined.ChevronRight, null,
+            tint = MaterialTheme.colorScheme.onErrorContainer, modifier = Modifier.size(14.dp))
+        Spacer(Modifier.width(4.dp))
+        Text("$label", color = MaterialTheme.colorScheme.onErrorContainer, fontSize = 12.sp)
+    }
+}
+
 @Composable
 private fun PermissionBlock(
     permType: String, ctaLabel: String, state: PermState,
@@ -395,101 +449,72 @@ private fun PermissionBlock(
 ) {
     AnimatedContent(targetState = state, label = "perm_$permType") { s ->
         when (s) {
-            PermState.IDLE -> FilledTonalButton(
-                onClick  = onAction,
-                modifier = Modifier.fillMaxWidth().height(50.dp),
-                shape    = RoundedCornerShape(14.dp)
-            ) {
-                Icon(
-                    when (permType) {
-                        "ROOT"           -> Icons.Outlined.AdminPanelSettings
-                        "NOTIFICATION"   -> Icons.Outlined.Notifications
-                        "WRITE_SETTINGS" -> Icons.Outlined.Tune
-                        else             -> Icons.Outlined.FolderOpen
-                    },
-                    null, modifier = Modifier.size(18.dp)
-                )
+            PermState.IDLE -> FilledTonalButton(onClick = onAction,
+                modifier = Modifier.fillMaxWidth().height(50.dp), shape = RoundedCornerShape(14.dp)) {
+                Icon(when (permType) {
+                    "ROOT"           -> Icons.Outlined.AdminPanelSettings
+                    "NOTIFICATION"   -> Icons.Outlined.Notifications
+                    "WRITE_SETTINGS" -> Icons.Outlined.Tune
+                    else             -> Icons.Outlined.FolderOpen
+                }, null, modifier = Modifier.size(18.dp))
                 Spacer(Modifier.width(8.dp))
                 Text(ctaLabel, fontWeight = FontWeight.Medium)
             }
 
-            PermState.CHECKING -> Row(
-                modifier              = Modifier.fillMaxWidth().height(50.dp),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment     = Alignment.CenterVertically
-            ) {
+            PermState.CHECKING -> Row(modifier = Modifier.fillMaxWidth().height(50.dp),
+                horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
                 CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.5.dp)
                 Spacer(Modifier.width(12.dp))
                 Text(strings.setupRootChecking, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
 
-            PermState.GRANTED -> Surface(
-                shape    = RoundedCornerShape(14.dp),
-                color    = MaterialTheme.colorScheme.primaryContainer,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Row(
-                    modifier              = Modifier.padding(horizontal = 20.dp, vertical = 14.dp),
-                    verticalAlignment     = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    Icon(Icons.Outlined.CheckCircle, null,
-                        tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp))
-                    Text(
-                        when (permType) {
-                            "ROOT"           -> strings.setupRootGranted
-                            "NOTIFICATION"   -> strings.setupNotifGranted
-                            "WRITE_SETTINGS" -> strings.setupWriteGranted
-                            else             -> strings.setupStorageGranted
-                        },
-                        color = MaterialTheme.colorScheme.onPrimaryContainer,
-                        fontWeight = FontWeight.Medium
-                    )
+            PermState.GRANTED -> Surface(shape = RoundedCornerShape(14.dp),
+                color = MaterialTheme.colorScheme.primaryContainer, modifier = Modifier.fillMaxWidth()) {
+                Row(modifier = Modifier.padding(horizontal = 20.dp, vertical = 14.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Icon(Icons.Outlined.CheckCircle, null, tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(22.dp))
+                    Text(when (permType) {
+                        "ROOT"           -> strings.setupRootGranted
+                        "NOTIFICATION"   -> strings.setupNotifGranted
+                        "WRITE_SETTINGS" -> strings.setupWriteGranted
+                        else             -> strings.setupStorageGranted
+                    }, color = MaterialTheme.colorScheme.onPrimaryContainer, fontWeight = FontWeight.Medium)
                 }
             }
 
-            PermState.DENIED -> Surface(
-                shape    = RoundedCornerShape(14.dp),
-                color    = MaterialTheme.colorScheme.errorContainer,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Row(
-                    modifier              = Modifier.padding(horizontal = 20.dp, vertical = 12.dp),
-                    verticalAlignment     = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    Icon(Icons.Outlined.Warning, null,
-                        tint = MaterialTheme.colorScheme.onErrorContainer, modifier = Modifier.size(22.dp))
+            PermState.DENIED -> Surface(shape = RoundedCornerShape(14.dp),
+                color = MaterialTheme.colorScheme.errorContainer, modifier = Modifier.fillMaxWidth()) {
+                Row(modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Icon(Icons.Outlined.Warning, null, tint = MaterialTheme.colorScheme.onErrorContainer,
+                        modifier = Modifier.size(22.dp))
                     Column(Modifier.weight(1f)) {
-                        Text(
-                            when (permType) {
-                                "ROOT"           -> strings.setupRootDenied
-                                "NOTIFICATION"   -> strings.setupNotifDenied
-                                "WRITE_SETTINGS" -> strings.setupWriteDenied
-                                else             -> strings.setupStorageDenied
-                            },
-                            color = MaterialTheme.colorScheme.onErrorContainer,
-                            fontWeight = FontWeight.Medium,
-                            fontSize = 13.sp
-                        )
+                        Text(when (permType) {
+                            "ROOT"           -> strings.setupRootDenied
+                            "NOTIFICATION"   -> strings.setupNotifDenied
+                            "WRITE_SETTINGS" -> strings.setupWriteDenied
+                            else             -> strings.setupStorageDenied
+                        }, color = MaterialTheme.colorScheme.onErrorContainer,
+                            fontWeight = FontWeight.Medium, fontSize = 13.sp)
                         val sub = when (permType) {
                             "ROOT"           -> strings.setupRootDeniedSub
-                            "NOTIFICATION"   -> strings.setupWriteDeniedSub   // reuse "required" hint
+                            "NOTIFICATION"   -> strings.setupWriteDeniedSub
                             "WRITE_SETTINGS" -> strings.setupWriteDeniedSub
                             "STORAGE"        -> strings.setupWriteDeniedSub
                             else             -> null
                         }
                         if (sub != null) {
-                            Text(sub,
-                                color    = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.7f),
+                            Text(sub, color = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.7f),
                                 fontSize = 11.sp)
                             Spacer(Modifier.height(6.dp))
-                            OutlinedButton(
-                                onClick          = onRetry,
-                                modifier         = Modifier.height(34.dp),
-                                shape            = RoundedCornerShape(10.dp),
-                                contentPadding   = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
-                            ) { Text(strings.setupBtnRetry, fontSize = 12.sp) }
+                            OutlinedButton(onClick = onRetry, modifier = Modifier.height(34.dp),
+                                shape = RoundedCornerShape(10.dp),
+                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)) {
+                                Text(strings.setupBtnRetry, fontSize = 12.sp)
+                            }
                         }
                     }
                 }
