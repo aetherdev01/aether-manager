@@ -31,18 +31,16 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
 import dev.aether.manager.i18n.AppStrings
 import dev.aether.manager.i18n.LocalStrings
 import dev.aether.manager.i18n.ProvideStrings
 import dev.aether.manager.ui.AetherTheme
+import dev.aether.manager.util.RootManager
 import kotlinx.coroutines.launch
 
 class SetupActivity : ComponentActivity() {
@@ -56,6 +54,9 @@ class SetupActivity : ComponentActivity() {
                         onDone = {
                             val prefs = getSharedPreferences("aether_prefs", Context.MODE_PRIVATE)
                             prefs.edit().putBoolean("setup_done", true).apply()
+                            // Root sudah granted oleh RootManager.requestRoot() saat klik tombol.
+                            // markGranted() memastikan cache valid untuk MainActivity.
+                            RootManager.markGranted()
                             startActivity(Intent(this, MainActivity::class.java))
                             finish()
                         }
@@ -85,66 +86,15 @@ fun SetupScreen(onDone: () -> Unit) {
     val scope = rememberCoroutineScope()
     val s     = LocalStrings.current
 
-    // ── Permission states ─────────────────────────────────────
+    // ── Permission states ──────────────────────────────────────────────────
+    // Root mulai IDLE — tidak ada check otomatis sama sekali.
+    // Grant hanya dipicu saat user klik tombol di halaman ROOT.
     var rootState    by remember { mutableStateOf(PermState.IDLE) }
     var notifState   by remember { mutableStateOf(PermState.IDLE) }
     var writeState   by remember { mutableStateOf(PermState.IDLE) }
     var storageState by remember { mutableStateOf(PermState.IDLE) }
 
-    // ── Re-check on resume (after user grants in SU manager or Settings) ──
-    val lifecycleOwner = LocalLifecycleOwner.current
-    DisposableEffect(lifecycleOwner) {
-        val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME) {
-                // Write settings
-                if (android.provider.Settings.System.canWrite(ctx))
-                    writeState = PermState.GRANTED
-
-                // Notification
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                    if (ContextCompat.checkSelfPermission(
-                            ctx, Manifest.permission.POST_NOTIFICATIONS
-                        ) == PackageManager.PERMISSION_GRANTED
-                    ) notifState = PermState.GRANTED
-                } else {
-                    notifState = PermState.GRANTED
-                }
-
-                // Storage
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                    storageState = PermState.GRANTED
-                } else if (ContextCompat.checkSelfPermission(
-                        ctx, Manifest.permission.READ_EXTERNAL_STORAGE
-                    ) == PackageManager.PERMISSION_GRANTED
-                ) {
-                    storageState = PermState.GRANTED
-                }
-
-                // Root re-check — runs when user returns after the SU grant dialog.
-                // Re-check from any non-GRANTED state so a fresh grant is always detected.
-                if (rootState != PermState.GRANTED) {
-                    scope.launch {
-                        rootState = PermState.CHECKING
-                        rootState = try {
-                            val proc = ProcessBuilder("su", "-c", "echo aether_ok")
-                                .redirectErrorStream(true)
-                                .start()
-                            val out = proc.inputStream.bufferedReader().readText()
-                            proc.waitFor()
-                            if (out.contains("aether_ok")) PermState.GRANTED
-                            else PermState.DENIED
-                        } catch (e: Exception) {
-                            PermState.DENIED
-                        }
-                    }
-                }
-            }
-        }
-        lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
-    }
-
-    // ── Launchers ─────────────────────────────────────────────
+    // ── Launchers ──────────────────────────────────────────────────────────
     val notifLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { granted ->
@@ -158,13 +108,12 @@ fun SetupScreen(onDone: () -> Unit) {
             PermState.GRANTED else PermState.DENIED
     }
 
-    // All required permissions must be GRANTED before Setup Complete is functional
     val allPermsGranted = rootState    == PermState.GRANTED &&
                           notifState   == PermState.GRANTED &&
                           writeState   == PermState.GRANTED &&
                           storageState == PermState.GRANTED
 
-    // ── Pages ─────────────────────────────────────────────────
+    // ── Color aliases ──────────────────────────────────────────────────────
     val primaryContainer   = MaterialTheme.colorScheme.primaryContainer
     val onPrimaryContainer = MaterialTheme.colorScheme.onPrimaryContainer
     val errContainer       = MaterialTheme.colorScheme.errorContainer
@@ -185,11 +134,13 @@ fun SetupScreen(onDone: () -> Unit) {
             s.setupWriteTitle, s.setupWriteDesc, "WRITE_SETTINGS", s.setupWriteCta),
         SetupPage(Icons.Outlined.FolderOpen, secContainer, onSecContainer,
             s.setupStorageTitle, s.setupStorageDesc, "STORAGE", s.setupStorageCta),
-        SetupPage(if (allPermsGranted) Icons.Outlined.CheckCircle else Icons.Outlined.Warning,
-            if (allPermsGranted) Color(0xFF1B5E20).copy(alpha = 0.2f) else MaterialTheme.colorScheme.errorContainer,
-            if (allPermsGranted) Color(0xFF4CAF50) else MaterialTheme.colorScheme.onErrorContainer,
-            if (allPermsGranted) s.setupDoneTitle else s.setupIncompleteTitle,
-            if (allPermsGranted) s.setupDoneDesc else s.setupIncompleteDesc),
+        SetupPage(
+            icon    = if (allPermsGranted) Icons.Outlined.CheckCircle else Icons.Outlined.Warning,
+            iconBg  = if (allPermsGranted) Color(0xFF1B5E20).copy(alpha = 0.2f) else MaterialTheme.colorScheme.errorContainer,
+            iconTint= if (allPermsGranted) Color(0xFF4CAF50) else MaterialTheme.colorScheme.onErrorContainer,
+            title   = if (allPermsGranted) s.setupDoneTitle else s.setupIncompleteTitle,
+            desc    = if (allPermsGranted) s.setupDoneDesc  else s.setupIncompleteDesc
+        ),
     )
 
     val pagerState  = rememberPagerState { pages.size }
@@ -197,7 +148,8 @@ fun SetupScreen(onDone: () -> Unit) {
     val page        = pages[currentPage]
     val isLast      = currentPage == pages.size - 1
 
-    // Auto-check on page enter
+    // Auto-check state untuk permission NON-root saat page dibuka
+    // ROOT sengaja TIDAK di-check di sini — hanya saat klik tombol
     LaunchedEffect(currentPage) {
         when (page.permissionType) {
             "NOTIFICATION" -> {
@@ -214,10 +166,10 @@ fun SetupScreen(onDone: () -> Unit) {
                 else ContextCompat.checkSelfPermission(ctx, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
                 if (ok) storageState = PermState.GRANTED
             }
+            // ROOT: tidak ada auto-check — user harus klik tombol
         }
     }
 
-    // Per-page proceed gate; last page requires ALL perms
     val canProceed = when (page.permissionType) {
         "ROOT"           -> rootState    == PermState.GRANTED
         "NOTIFICATION"   -> notifState   == PermState.GRANTED
@@ -279,7 +231,6 @@ fun SetupScreen(onDone: () -> Unit) {
                             color = MaterialTheme.colorScheme.onSurfaceVariant, lineHeight = 22.sp)
                     }
 
-                    // Last page: show missing perms summary if not all granted
                     if (pg.permissionType == null && idx == pages.size - 1 && !allPermsGranted) {
                         MissingPermsSummary(
                             rootMissing    = rootState    != PermState.GRANTED,
@@ -301,16 +252,12 @@ fun SetupScreen(onDone: () -> Unit) {
                             strings  = s,
                             onAction = {
                                 when (pg.permissionType) {
+                                    // ROOT: panggil RootManager.requestRoot() — satu-satunya tempat
+                                    // yang memunculkan dialog SU manager.
                                     "ROOT" -> scope.launch {
                                         rootState = PermState.CHECKING
-                                        rootState = try {
-                                            val proc = ProcessBuilder("su", "-c", "echo aether_ok")
-                                                .redirectErrorStream(true).start()
-                                            val out = proc.inputStream.bufferedReader().readText()
-                                            proc.waitFor()
-                                            if (out.contains("aether_ok")) PermState.GRANTED
-                                            else PermState.DENIED
-                                        } catch (e: Exception) { PermState.DENIED }
+                                        val granted = RootManager.requestRoot()
+                                        rootState = if (granted) PermState.GRANTED else PermState.DENIED
                                     }
                                     "NOTIFICATION" -> {
                                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
@@ -339,8 +286,9 @@ fun SetupScreen(onDone: () -> Unit) {
                                 }
                             },
                             onRetry = {
+                                // Reset ke IDLE — user bisa klik lagi
                                 when (pg.permissionType) {
-                                    "ROOT"           -> rootState    = PermState.IDLE
+                                    "ROOT"           -> { RootManager.clearCache(); rootState = PermState.IDLE }
                                     "WRITE_SETTINGS" -> writeState   = PermState.IDLE
                                     "NOTIFICATION"   -> notifState   = PermState.IDLE
                                     "STORAGE"        -> storageState = PermState.IDLE
@@ -351,7 +299,7 @@ fun SetupScreen(onDone: () -> Unit) {
                 }
             }
 
-            // ── Bottom controls ───────────────────────────────────
+            // ── Bottom controls ────────────────────────────────────────────
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -403,10 +351,6 @@ fun SetupScreen(onDone: () -> Unit) {
     }
 }
 
-/**
- * Summary card shown on the last page when some permissions are still missing.
- * Each row is tappable and navigates back to the relevant permission page.
- */
 @Composable
 private fun MissingPermsSummary(
     rootMissing: Boolean, notifMissing: Boolean,
@@ -424,7 +368,6 @@ private fun MissingPermsSummary(
                     color = MaterialTheme.colorScheme.onErrorContainer,
                     fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
             }
-            // Page indices: 0=Welcome 1=Root 2=Notif 3=Write 4=Storage 5=Done
             if (rootMissing)    MissingPermRow(strings.setupRootTitle,    1, onGoToPage)
             if (notifMissing)   MissingPermRow(strings.setupNotifTitle,   2, onGoToPage)
             if (writeMissing)   MissingPermRow(strings.setupWriteTitle,   3, onGoToPage)

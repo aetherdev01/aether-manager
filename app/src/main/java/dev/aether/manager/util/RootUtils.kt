@@ -10,6 +10,9 @@ import kotlinx.coroutines.withContext
  *   - Tidak ada Runtime.getRuntime().exec() langsung
  *   - Real-time, tanpa reboot
  *   - select()-based multiplexed read, bebas deadlock
+ *
+ * hasRoot() sekarang TIDAK memicu request dialog baru.
+ * Untuk request grant, pakai RootManager.requestRoot() dari SetupActivity.
  */
 object RootUtils {
 
@@ -21,24 +24,10 @@ object RootUtils {
 
     data class ShellResult(val exitCode: Int, val stdout: String, val stderr: String)
 
-    // ── Root check ────────────────────────────────────────────────────────
-
-    suspend fun hasRoot(): Boolean = withContext(Dispatchers.IO) {
-        // FIX: Coba 2x — SU manager kadang butuh sedikit waktu setelah grant
-        for (attempt in 0..1) {
-            try {
-                val result = if (NativeExec.nativeAvailable) NativeExec.nHasRoot()
-                             else NativeExec.javaHasRoot()
-                if (result) return@withContext true
-            } catch (e: Exception) {
-                try {
-                    if (NativeExec.javaHasRoot()) return@withContext true
-                } catch (_: Exception) {}
-            }
-            if (attempt == 0) kotlinx.coroutines.delay(800)
-        }
-        false
-    }
+    // ── Root check — READ-ONLY, tidak memunculkan dialog baru ─────────────
+    // Pakai RootManager.isRooted() yang hanya baca cache atau silent check.
+    // Dialog grant HANYA dari RootManager.requestRoot() di SetupActivity.
+    suspend fun hasRoot(): Boolean = RootManager.isRooted()
 
     // ── Core shell exec ───────────────────────────────────────────────────
 
@@ -87,7 +76,7 @@ object RootUtils {
             android   = map["android"]  ?: "?",
             kernel    = map["kernel"]   ?: "?",
             selinux   = map["selinux"]  ?: "?",
-            rootType  = map["root"]     ?: "Unknown",
+            rootType  = map["root"]     ?: RootManager.detectRootType(),
             soc       = detectSoc(platform),
             socRaw    = map["platform"] ?: "",
             pid       = "",
@@ -131,7 +120,6 @@ object RootUtils {
     suspend fun applyTweaksDirect(tweaks: Map<String, String>): Boolean {
         val cmds = mutableListOf<String>()
 
-        // ── CPU Governor / Profile
         val profile = tweaks["profile"] ?: "balance"
         val governor = when (profile) {
             "performance" -> "performance"
@@ -147,11 +135,9 @@ object RootUtils {
             cmds += "for p in /sys/devices/system/cpu/cpu*/cpufreq/scaling_max_freq; do [ -f \$p ] && echo 1516800 > \$p 2>/dev/null; done"
         }
 
-        // ── Sched boost
         val schedVal = if (tweaks["schedboost"] == "1") "1" else "0"
         cmds += "[ -f /proc/sys/kernel/sched_boost ] && echo $schedVal > /proc/sys/kernel/sched_boost 2>/dev/null"
 
-        // ── CPU Input Boost
         if (tweaks["cpu_boost"] == "1") {
             cmds += "[ -f /sys/module/cpu_boost/parameters/input_boost_enabled ] && echo 1 > /sys/module/cpu_boost/parameters/input_boost_enabled 2>/dev/null"
             cmds += "[ -f /sys/module/cpu_boost/parameters/input_boost_freq ] && echo '0:1324800 1:1324800 2:1324800 3:1324800' > /sys/module/cpu_boost/parameters/input_boost_freq 2>/dev/null"
@@ -159,7 +145,6 @@ object RootUtils {
             cmds += "[ -f /sys/module/cpu_boost/parameters/input_boost_enabled ] && echo 0 > /sys/module/cpu_boost/parameters/input_boost_enabled 2>/dev/null"
         }
 
-        // ── GPU Throttle
         if (tweaks["gpu_throttle_off"] == "1") {
             cmds += "[ -f /sys/class/kgsl/kgsl-3d0/throttling ] && echo 0 > /sys/class/kgsl/kgsl-3d0/throttling 2>/dev/null"
             cmds += "[ -f /sys/class/kgsl/kgsl-3d0/force_clk_on ] && echo 1 > /sys/class/kgsl/kgsl-3d0/force_clk_on 2>/dev/null"
@@ -167,26 +152,22 @@ object RootUtils {
             cmds += "[ -f /sys/class/kgsl/kgsl-3d0/throttling ] && echo 1 > /sys/class/kgsl/kgsl-3d0/throttling 2>/dev/null"
         }
 
-        // ── CPUset optimization
         if (tweaks["cpuset_opt"] == "1") {
             cmds += "[ -d /dev/cpuset/top-app ] && echo '4-7' > /dev/cpuset/top-app/cpus 2>/dev/null"
             cmds += "[ -d /dev/cpuset/foreground ] && echo '0-7' > /dev/cpuset/foreground/cpus 2>/dev/null"
             cmds += "[ -d /dev/cpuset/background ] && echo '0-1' > /dev/cpuset/background/cpus 2>/dev/null"
         }
 
-        // ── OBB/noop
         if (tweaks["obb_noop"] == "1") {
             cmds += "[ -f /sys/block/dm-0/queue/scheduler ] && echo 'none' > /sys/block/dm-0/queue/scheduler 2>/dev/null"
             cmds += "[ -f /sys/block/dm-0/queue/read_ahead_kb ] && echo 2048 > /sys/block/dm-0/queue/read_ahead_kb 2>/dev/null"
         }
 
-        // ── LMK Aggressive
         if (tweaks["lmk_aggressive"] == "1") {
             cmds += "[ -f /sys/module/lowmemorykiller/parameters/minfree ] && echo '18432,23040,27648,32256,55296,80640' > /sys/module/lowmemorykiller/parameters/minfree 2>/dev/null"
             cmds += "[ -f /sys/module/lowmemorykiller/parameters/adj ] && echo '0,100,200,300,900,906' > /sys/module/lowmemorykiller/parameters/adj 2>/dev/null"
         }
 
-        // ── ZRAM
         if (tweaks["zram"] == "1") {
             val size = tweaks["zram_size"] ?: "1073741824"
             val algo = tweaks["zram_algo"] ?: "lz4"
@@ -195,7 +176,6 @@ object RootUtils {
             cmds += "echo $size > /sys/block/zram0/disksize 2>/dev/null && mkswap /dev/zram0 2>/dev/null && swapon /dev/zram0 2>/dev/null"
         }
 
-        // ── VM Dirty
         if (tweaks["vm_dirty_opt"] == "1") {
             cmds += "echo 10 > /proc/sys/vm/dirty_ratio 2>/dev/null"
             cmds += "echo 5 > /proc/sys/vm/dirty_background_ratio 2>/dev/null"
@@ -203,26 +183,22 @@ object RootUtils {
             cmds += "echo 25 > /proc/sys/vm/dirty_writeback_centisecs 2>/dev/null"
         }
 
-        // ── I/O Scheduler
         val ioScheduler = tweaks["io_scheduler"] ?: ""
         if (ioScheduler.isNotBlank()) {
             cmds += "for dev in /sys/block/*/queue/scheduler; do [ -f \$dev ] && echo $ioScheduler > \$dev 2>/dev/null; done"
         }
 
-        // ── I/O Latency
         if (tweaks["io_latency_opt"] == "1") {
             cmds += "for dev in /sys/block/*/queue/read_ahead_kb; do [ -f \$dev ] && echo 512 > \$dev 2>/dev/null; done"
             cmds += "for dev in /sys/block/*/queue/add_random; do [ -f \$dev ] && echo 0 > \$dev 2>/dev/null; done"
             cmds += "for dev in /sys/block/*/queue/rq_affinity; do [ -f \$dev ] && echo 2 > \$dev 2>/dev/null; done"
         }
 
-        // ── TCP BBR
         if (tweaks["tcp_bbr"] == "1") {
             cmds += "[ -f /proc/sys/net/ipv4/tcp_congestion_control ] && echo bbr > /proc/sys/net/ipv4/tcp_congestion_control 2>/dev/null"
             cmds += "[ -f /proc/sys/net/core/default_qdisc ] && echo fq > /proc/sys/net/core/default_qdisc 2>/dev/null"
         }
 
-        // ── Net Buffer
         if (tweaks["net_buffer"] == "1") {
             cmds += "echo 4096 87380 16777216 > /proc/sys/net/ipv4/tcp_rmem 2>/dev/null"
             cmds += "echo 4096 65536 16777216 > /proc/sys/net/ipv4/tcp_wmem 2>/dev/null"
@@ -230,26 +206,19 @@ object RootUtils {
             cmds += "echo 16777216 > /proc/sys/net/core/wmem_max 2>/dev/null"
         }
 
-        // ── DoH / Private DNS
-        // FIX: settings put global private_dns_specifier tidak cukup,
-        // harus pakai 'hostname' mode + set specifier dengan benar
         if (tweaks["doh"] == "1") {
             cmds += "settings put global private_dns_mode hostname 2>/dev/null"
             cmds += "settings put global private_dns_specifier dns.google 2>/dev/null"
-            // Fallback: coba juga via content provider
-            cmds += "content call --uri content://settings/global --method GET_prefer_dns 2>/dev/null || true"
         } else {
             cmds += "settings put global private_dns_mode off 2>/dev/null"
             cmds += "settings delete global private_dns_specifier 2>/dev/null"
         }
 
-        // ── Doze
         if (tweaks["doze"] == "1") {
             cmds += "dumpsys deviceidle enable deep 2>/dev/null"
             cmds += "dumpsys deviceidle force-idle deep 2>/dev/null"
         }
 
-        // ── Fast animations
         if (tweaks["fast_anim"] == "1") {
             cmds += "settings put global window_animation_scale 0.5 2>/dev/null"
             cmds += "settings put global transition_animation_scale 0.5 2>/dev/null"
@@ -260,12 +229,10 @@ object RootUtils {
             cmds += "settings put global animator_duration_scale 1.0 2>/dev/null"
         }
 
-        // ── Entropy boost
         if (tweaks["entropy_boost"] == "1") {
             cmds += "[ -f /proc/sys/kernel/random/write_wakeup_threshold ] && echo 256 > /proc/sys/kernel/random/write_wakeup_threshold 2>/dev/null"
         }
 
-        // ── Clear cache
         if (tweaks["clear_cache"] == "1") {
             cmds += "sync && echo 3 > /proc/sys/vm/drop_caches 2>/dev/null"
             cmds += "pm trim-caches 0 2>/dev/null"
@@ -359,7 +326,7 @@ object RootUtils {
         }
 }
 
-// ── Data classes (tetap di file yang sama untuk kompatibilitas) ───────────────
+// ── Data classes ──────────────────────────────────────────────────────────────
 
 data class DeviceInfo(
     val model     : String,

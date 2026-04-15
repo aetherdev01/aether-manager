@@ -3,6 +3,7 @@ package dev.aether.manager.data
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dev.aether.manager.util.DeviceInfo
+import dev.aether.manager.util.RootManager
 import dev.aether.manager.util.RootUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -77,50 +78,45 @@ class MainViewModel : ViewModel() {
     private val _monitorState = MutableStateFlow(MonitorState())
     val monitorState: StateFlow<MonitorState> = _monitorState.asStateFlow()
 
+    private var monitorStarted = false
+
     init {
+        // PENTING: Di sini TIDAK boleh request root!
+        // RootManager sudah di-markGranted() oleh SetupActivity sebelum
+        // MainActivity dibuka. Kita hanya pakai cachedRoot yang sudah ada.
         viewModelScope.launch {
-            try {
-                checkRootWithRetry()
-            } catch (e: Exception) {
-                _deviceInfo.value = UiState.Error("Initialization error: ${e.message}")
-            }
+            initFromCachedRoot()
         }
     }
 
     /**
-     * FIX: Retry root check beberapa kali dengan delay.
-     * Su manager kadang butuh waktu untuk grant — jangan langsung fail di attempt pertama.
+     * Inisialisasi dari cache RootManager — TANPA memunculkan dialog baru.
+     * Setup sudah selesai sebelum MainActivity, jadi root pasti sudah granted
+     * atau prefs setup_done tidak akan pernah true.
      */
-    private suspend fun checkRootWithRetry(maxAttempts: Int = 3) {
-        repeat(maxAttempts) { attempt ->
-            val hasRoot = RootUtils.hasRoot()
-            if (hasRoot) {
-                _rootGranted.value = true
-                loadAll()
-                startMonitorLoop()
-                return
-            }
-            // Delay sebelum retry — beri waktu SU manager grant
-            if (attempt < maxAttempts - 1) delay(1500L)
+    private suspend fun initFromCachedRoot() {
+        // Pakai cached state dari RootManager (hasil SetupActivity)
+        val hasRoot = if (RootManager.isRootGranted) {
+            true
+        } else {
+            // Fallback: silent check tanpa dialog baru
+            RootUtils.hasRoot()
         }
-        // Semua attempt gagal
-        _rootGranted.value = false
-        _deviceInfo.value = UiState.Error("Root access denied.\nAether Manager requires root.")
-    }
 
-    private suspend fun checkRoot() {
-        val hasRoot = RootUtils.hasRoot()
         _rootGranted.value = hasRoot
         if (hasRoot) {
             loadAll()
             startMonitorLoop()
         } else {
-            _deviceInfo.value = UiState.Error("Root access denied.\nAether Manager requires root.")
+            _deviceInfo.value = UiState.Error(
+                "Root access denied.\nAether Manager requires root."
+            )
         }
     }
 
     /**
-     * FIX: refresh() sekarang juga re-check root supaya "Coba Lagi" benar-benar retry root.
+     * refresh() — dipakai user tap "Coba Lagi".
+     * Melakukan silent check, TIDAK memunculkan dialog grant baru.
      */
     fun refresh() = viewModelScope.launch {
         _deviceInfo.value = UiState.Loading
@@ -128,10 +124,11 @@ class MainViewModel : ViewModel() {
         _rootGranted.value = hasRoot
         if (hasRoot) {
             loadAll()
-            // Pastikan monitor loop jalan kalau belum
-            if (_monitorState.value == MonitorState()) startMonitorLoop()
+            if (!monitorStarted) startMonitorLoop()
         } else {
-            _deviceInfo.value = UiState.Error("Root access denied.\nAether Manager requires root.")
+            _deviceInfo.value = UiState.Error(
+                "Root access denied.\nAether Manager requires root."
+            )
         }
     }
 
@@ -140,12 +137,14 @@ class MainViewModel : ViewModel() {
     }
 
     private fun startMonitorLoop() = viewModelScope.launch(Dispatchers.IO) {
+        if (monitorStarted) return@launch
+        monitorStarted = true
         while (true) {
             try {
                 val state = RootUtils.getMonitorState()
                 _monitorState.value = state
             } catch (_: Exception) {}
-            delay(3000) // lebih responsif dari 5000ms
+            delay(3000)
         }
     }
 
@@ -165,46 +164,39 @@ class MainViewModel : ViewModel() {
     }
 
     private fun mapToTweaksState(map: Map<String, String>) = TweaksState(
-        schedboost    = map["schedboost"] == "1",
-        cpuBoost      = map["cpu_boost"] == "1",
-        gpuThrottleOff= map["gpu_throttle_off"] == "1",
-        cpusetOpt     = map["cpuset_opt"] == "1",
-        mtkBoost      = map["obb_noop"] == "1",
-        lmkAggressive = map["lmk_aggressive"] == "1",
-        zram          = map["zram"] == "1",
-        zramSize      = map["zram_size"] ?: "1073741824",
-        zramAlgo      = map["zram_algo"] ?: "lz4",
-        vmDirtyOpt    = map["vm_dirty_opt"] == "1",
-        ioScheduler   = map["io_scheduler"] ?: "",
-        ioLatencyOpt  = map["io_latency_opt"] == "1",
-        tcpBbr        = map["tcp_bbr"] == "1",
-        doh           = map["doh"] == "1",
-        netBuffer     = map["net_buffer"] == "1",
-        doze          = map["doze"] == "1",
-        fastAnim      = map["fast_anim"] == "1",
-        entropyBoost  = map["entropy_boost"] == "1",
-        clearCache    = map["clear_cache"] == "1",
+        schedboost     = map["schedboost"] == "1",
+        cpuBoost       = map["cpu_boost"] == "1",
+        gpuThrottleOff = map["gpu_throttle_off"] == "1",
+        cpusetOpt      = map["cpuset_opt"] == "1",
+        mtkBoost       = map["obb_noop"] == "1",
+        lmkAggressive  = map["lmk_aggressive"] == "1",
+        zram           = map["zram"] == "1",
+        zramSize       = map["zram_size"] ?: "1073741824",
+        zramAlgo       = map["zram_algo"] ?: "lz4",
+        vmDirtyOpt     = map["vm_dirty_opt"] == "1",
+        ioScheduler    = map["io_scheduler"] ?: "",
+        ioLatencyOpt   = map["io_latency_opt"] == "1",
+        tcpBbr         = map["tcp_bbr"] == "1",
+        doh            = map["doh"] == "1",
+        netBuffer      = map["net_buffer"] == "1",
+        doze           = map["doze"] == "1",
+        fastAnim       = map["fast_anim"] == "1",
+        entropyBoost   = map["entropy_boost"] == "1",
+        clearCache     = map["clear_cache"] == "1",
     )
 
-    /**
-     * FIX LAG: Optimistic update — UI berubah langsung tanpa tunggu shell.
-     * Apply tweak di background, reload state setelah selesai.
-     */
+    /** Optimistic update — UI berubah langsung, apply background */
     fun setTweak(key: String, value: Boolean) {
-        // 1. Update UI state langsung (optimistic)
         val current = _tweaks.value
         _tweaks.value = applyTweakToState(current, key, value)
 
-        // 2. Apply ke sistem di background
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 RootUtils.writeTweakConf(key, if (value) "1" else "0")
                 val map = RootUtils.readTweaksConf()
                 RootUtils.applyTweaksDirect(map)
-                // Sync balik dari file (verifikasi)
                 _tweaks.value = mapToTweaksState(map)
             } catch (e: Exception) {
-                // Rollback kalau gagal
                 _tweaks.value = current
                 snack("Gagal apply: ${e.message}")
             }
@@ -221,23 +213,23 @@ class MainViewModel : ViewModel() {
 
     private fun applyTweakToState(state: TweaksState, key: String, value: Boolean): TweaksState =
         when (key) {
-            "schedboost"      -> state.copy(schedboost = value)
-            "cpu_boost"       -> state.copy(cpuBoost = value)
-            "gpu_throttle_off"-> state.copy(gpuThrottleOff = value)
-            "cpuset_opt"      -> state.copy(cpusetOpt = value)
-            "obb_noop"        -> state.copy(mtkBoost = value)
-            "lmk_aggressive"  -> state.copy(lmkAggressive = value)
-            "zram"            -> state.copy(zram = value)
-            "vm_dirty_opt"    -> state.copy(vmDirtyOpt = value)
-            "io_latency_opt"  -> state.copy(ioLatencyOpt = value)
-            "tcp_bbr"         -> state.copy(tcpBbr = value)
-            "doh"             -> state.copy(doh = value)
-            "net_buffer"      -> state.copy(netBuffer = value)
-            "doze"            -> state.copy(doze = value)
-            "fast_anim"       -> state.copy(fastAnim = value)
-            "entropy_boost"   -> state.copy(entropyBoost = value)
-            "clear_cache"     -> state.copy(clearCache = value)
-            else              -> state
+            "schedboost"       -> state.copy(schedboost = value)
+            "cpu_boost"        -> state.copy(cpuBoost = value)
+            "gpu_throttle_off" -> state.copy(gpuThrottleOff = value)
+            "cpuset_opt"       -> state.copy(cpusetOpt = value)
+            "obb_noop"         -> state.copy(mtkBoost = value)
+            "lmk_aggressive"   -> state.copy(lmkAggressive = value)
+            "zram"             -> state.copy(zram = value)
+            "vm_dirty_opt"     -> state.copy(vmDirtyOpt = value)
+            "io_latency_opt"   -> state.copy(ioLatencyOpt = value)
+            "tcp_bbr"          -> state.copy(tcpBbr = value)
+            "doh"              -> state.copy(doh = value)
+            "net_buffer"       -> state.copy(netBuffer = value)
+            "doze"             -> state.copy(doze = value)
+            "fast_anim"        -> state.copy(fastAnim = value)
+            "entropy_boost"    -> state.copy(entropyBoost = value)
+            "clear_cache"      -> state.copy(clearCache = value)
+            else               -> state
         }
 
     fun setProfile(profile: String) = viewModelScope.launch {
@@ -247,7 +239,6 @@ class MainViewModel : ViewModel() {
             delay(300)
             val info = RootUtils.getDeviceInfo()
             _deviceInfo.value = UiState.Success(info)
-            // Refresh governor setelah profile change
             _monitorState.value = RootUtils.getMonitorState()
             snack("Profile → ${profile.replaceFirstChar { it.uppercaseChar() }}")
         }
