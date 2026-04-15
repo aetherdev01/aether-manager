@@ -11,35 +11,41 @@ val StringsId = AppStrings(
 
     // Setup
     setupWelcomeTitle = "Selamat Datang!",
-    setupWelcomeDesc = "Aether Manager adalah tool manajemen sistem Android berbasis root. Kelola performa, memori, jaringan, dan DNS langsung dari app ini.",
+    setupWelcomeDesc = "Aether Manager adalah tool optimasi sistem Android yang dirancang untuk meningkatkan performa, mengelola penggunaan memori, dan menerapkan berbagai tweak sistem. Dengan kontrol yang mudah, kamu bisa membuat perangkat lebih cepat, stabil, dan responsif.",
+    
     setupRootTitle = "Root Access",
-    setupRootDesc = "App ini membutuhkan akses root (Magisk / KernelSU / APatch). Pastikan superuser sudah diizinkan untuk Aether Manager.",
+    setupRootDesc = "Aplikasi ini membutuhkan akses root (Magisk / KernelSU / APatch). Pastikan izin superuser telah diberikan untuk Aether Manager.",
     setupRootCta = "Cek Root Sekarang",
     setupRootChecking = "Mengecek…",
-    setupRootGranted = "Root berhasil diizinkan ✓",
+    setupRootGranted = "Root berhasil diizinkan",
     setupRootDenied = "Root tidak ditemukan",
-    setupRootDeniedSub = "Pastikan Magisk/KSU/APatch sudah terinstall",
+    setupRootDeniedSub = "Pastikan Magisk/KSU/APatch sudah terpasang",
+
     setupNotifTitle = "Izin Notifikasi",
-    setupNotifDesc = "Izinkan notifikasi agar Aether Manager bisa memberi tahu kamu saat tweak diterapkan atau ada pembaruan penting.",
+    setupNotifDesc = "Izinkan notifikasi agar Aether Manager dapat memberi tahu saat tweak diterapkan atau ada pembaruan penting.",
     setupNotifCta = "Izinkan Notifikasi",
-    setupNotifGranted = "Notifikasi diizinkan ✓",
+    setupNotifGranted = "Notifikasi diizinkan",
     setupNotifDenied = "Notifikasi ditolak",
+
     setupWriteTitle = "Pengaturan Sistem",
-    setupWriteDesc = "Izin WRITE_SETTINGS diperlukan agar Aether Manager bisa mengganti DNS, mengubah brightness, dan men-tweak pengaturan sistem lainnya.",
+    setupWriteDesc = "Izin WRITE_SETTINGS diperlukan untuk menerapkan penyesuaian sistem dan mengubah pengaturan perangkat.",
     setupWriteCta = "Izinkan Pengaturan",
-    setupWriteGranted = "Write Settings diizinkan ✓",
+    setupWriteGranted = "Write Settings diizinkan",
     setupWriteDenied = "Write Settings ditolak",
-    setupWriteDeniedSub = "Diperlukan untuk tweak DNS & sistem",
+    setupWriteDeniedSub = "Diperlukan untuk pengaturan sistem dan tweak performa",
+
     setupStorageTitle = "Izin Storage",
-    setupStorageDesc = "Izin storage diperlukan untuk menyimpan log tweak dan backup konfigurasi ke penyimpanan eksternal.",
+    setupStorageDesc = "Izin storage diperlukan untuk menyimpan log tweak dan backup konfigurasi ke penyimpanan perangkat.",
     setupStorageCta = "Izinkan Storage",
-    setupStorageGranted = "Storage diizinkan ✓",
+    setupStorageGranted = "Storage diizinkan",
     setupStorageDenied = "Storage ditolak",
+
     setupDoneTitle = "Siap Digunakan!",
-    setupDoneDesc = "Setup selesai. Aether Manager siap mengoptimalkan performa, jaringan, dan DNS perangkat kamu.",
+    setupDoneDesc = "Setup selesai. Aether Manager siap mengoptimalkan performa, meningkatkan stabilitas, dan menerapkan berbagai tweak pada perangkat kamu.",
+
     setupBtnNext = "Lanjut",
     setupBtnStart = "Mulai",
-    setupBtnBack = "← Kembali",
+    setupBtnBack = "Kembali",
     setupBtnSkip = "Lewati",
     setupBtnRetry = "Coba Lagi",
     setupRootRequired = "Izin root diperlukan untuk melanjutkan",
@@ -82,62 +88,77 @@ val StringsId = AppStrings(
 
     // Tweak
     tweakPerformanceProfile = "Performance Profile",
-    tweakApplyAll = "Apply All Tweaks",
+    tweakApplyAll = "Terapkan Semua Tweak",
+
     tweakSectionCpu = "CPU & Kernel",
-    tweakSectionMemory = "Memory",
+    tweakSectionMemory = "Memori",
     tweakSectionIo = "I/O Scheduler",
-    tweakSectionNetwork = "Network",
-    tweakSectionBattery = "Battery & Daily",
+    tweakSectionNetwork = "Jaringan",
+    tweakSectionBattery = "Baterai & Harian",
+
     tweakSchedBoost = "Sched Boost",
-    tweakSchedBoostDesc = "CPU scheduler priority boost",
+    tweakSchedBoostDesc = "Meningkatkan prioritas scheduler CPU",
+
     tweakCpuBoost = "CPU Boost",
-    tweakCpuBoostDesc = "Input boost — MTK/Snapdragon/Exynos",
+    tweakCpuBoostDesc = "Boost performa saat input (MTK/Snapdragon/Exynos)",
+
     tweakGpuThrottle = "GPU Throttle Off",
-    tweakGpuThrottleDesc = "Nonaktifkan GPU throttling",
+    tweakGpuThrottleDesc = "Menonaktifkan pembatasan performa GPU",
+
     tweakCpusetOpt = "CPUset Optimizer",
-    tweakCpusetOptDesc = "Distribusi core top-app / background",
+    tweakCpusetOptDesc = "Distribusi core untuk aplikasi aktif & background",
+
     tweakMtkBoost = "MTK EAS/HPS Boost",
-    tweakMtkBoostDesc = "Hotplug & CCI mode (MediaTek)",
-    tweakLmk = "LMK Aggressive",
-    tweakLmkDesc = "Kill background apps lebih cepat",
+    tweakMtkBoostDesc = "Optimasi hotplug & CCI (MediaTek)",
+
+    tweakLmk = "LMK Agresif",
+    tweakLmkDesc = "Menutup aplikasi background lebih cepat",
+
     tweakZram = "ZRAM",
-    tweakZramDesc = "Compressed swap di RAM",
+    tweakZramDesc = "Swap terkompresi di RAM",
+
     tweakVmDirty = "VM Dirty Optimization",
-    tweakVmDirtyDesc = "Tuning vm.dirty_ratio untuk I/O",
+    tweakVmDirtyDesc = "Optimasi parameter vm.dirty untuk I/O",
+
     tweakIoLatency = "I/O Latency Opt",
-    tweakIoLatencyDesc = "read_ahead, add_random, rotational",
+    tweakIoLatencyDesc = "Optimasi read_ahead dan latency disk",
+
     tweakTcpBbr = "TCP BBR",
-    tweakTcpBbrDesc = "Congestion control efisien",
-    tweakDoh = "DNS over HTTPS",
-    tweakDohDesc = "Private DNS Cloudflare (1.1.1.1)",
+    tweakTcpBbrDesc = "Algoritma jaringan lebih efisien",
+
     tweakNetBuffer = "Net Buffer Boost",
-    tweakNetBufferDesc = "Enlarge rmem/wmem TCP buffer",
+    tweakNetBufferDesc = "Meningkatkan buffer TCP",
+
     tweakDoze = "Doze Agresif",
-    tweakDozeDesc = "Deep sleep masuk lebih cepat",
+    tweakDozeDesc = "Mempercepat masuk ke mode hemat daya",
+
     tweakClearCache = "Hapus Cache Boot",
-    tweakClearCacheDesc = "Clear dalvik/art cache tiap boot",
+    tweakClearCacheDesc = "Membersihkan cache saat boot",
+
     tweakFastAnim = "Animasi Cepat",
-    tweakFastAnimDesc = "Scale animasi 0.5x",
+    tweakFastAnimDesc = "Skala animasi 0.5x",
+
     tweakEntropy = "Entropy Boost",
-    tweakEntropyDesc = "Random generator threshold",
+    tweakEntropyDesc = "Meningkatkan respons random generator",
+
     tweakZramSize = "Ukuran ZRAM",
     tweakZramAlgo = "Algoritma ZRAM",
     tweakIoScheduler = "I/O Scheduler",
 
     // About
-    aboutApp = "App",
+    aboutApp = "Aplikasi",
     aboutVersion = "Versi",
     aboutMode = "Mode",
-    aboutModeValue = "Standalone (No Module)",
-    aboutSupport = "Support",
+    aboutModeValue = "Standalone",
+    aboutSupport = "Dukungan",
     aboutRoot = "Root",
     aboutSelinux = "SELinux",
     aboutSoc = "SoC",
     aboutGithub = "GitHub",
-    aboutTelegram = "Telegram Channel",
+    aboutTelegram = "Channel",
     aboutSaweria = "saweria.co/AetherDev",
-    aboutSaweriaLabel = "Saweria — Dukung Saya",
-    aboutLicense = "Aether Manager adalah software gratis dan open source. Didistribusikan di bawah Lisensi MIT.",
+    aboutSaweriaLabel = "Saweria",
+    aboutLicense = "Aether Manager adalah software gratis dan open source yang didistribusikan di bawah Lisensi MIT.",
     aboutTagModuleDev = "Module Dev",
     aboutTagOpenSource = "Open Source",
     aboutTagAndroid = "Android",
@@ -145,10 +166,10 @@ val StringsId = AppStrings(
     // Log / Reboot
     logRebootOptions = "Opsi Reboot",
     logRebootSystem = "Reboot Sistem",
-    logRebootSystemDesc = "Restart perangkat normal",
+    logRebootSystemDesc = "Restart perangkat seperti biasa",
     logRebootRecovery = "Reboot Recovery",
     logRebootRecoveryDesc = "Masuk ke mode recovery",
     logReloadUi = "Reload UI",
-    logReloadUiDesc = "Refresh data tanpa reboot",
+    logReloadUiDesc = "Muat ulang tanpa reboot",
     logBtnCancel = "Batal",
 )

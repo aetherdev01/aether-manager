@@ -75,7 +75,7 @@ fun HomeScreen(vm: MainViewModel) {
             MonitorSection(monitorState) { vm.refreshMonitor() }
         }
 
-        // ── AdMob Banner ──────────────────────────────────────────────────────
+        // ── Unity Ads Banner ─────────────────────────────────────────────────
         AdBannerView()
 
     }

@@ -112,7 +112,7 @@ dependencies {
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.accompanist.systemuicontroller)
     implementation(libs.androidx.appcompat)
-    implementation(libs.google.admob)
+    implementation(libs.unity.ads)
     debugImplementation(libs.androidx.ui.tooling)
 }
 
