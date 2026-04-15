@@ -1,11 +1,9 @@
-name: Build APK
+name: Build Release APK
 
 on:
   push:
     branches: [ main, master ]
-  pull_request:
-    branches: [ main, master ]
-  workflow_dispatch:   # bisa trigger manual dari GitHub UI
+  workflow_dispatch:
 
 jobs:
   build:
@@ -32,14 +30,14 @@ jobs:
       - name: Grant Gradle permission
         run: chmod +x gradlew
 
-      - name: Build Debug APK
-        run: ./gradlew assembleDebug --no-daemon --stacktrace
+      - name: Build Release APK (R8 + minify + resource shrink)
+        run: ./gradlew assembleRelease --no-daemon --stacktrace
         env:
           ANDROID_NDK_HOME: ${{ env.ANDROID_SDK_ROOT }}/ndk/27.0.12077973
 
-      - name: Upload Debug APK
+      - name: Upload Release APK
         uses: actions/upload-artifact@v4
         with:
-          name: aether-manager-debug
-          path: app/build/outputs/apk/debug/*.apk
-          retention-days: 7
+          name: aether-manager-release
+          path: app/build/outputs/apk/release/*.apk
+          retention-days: 30

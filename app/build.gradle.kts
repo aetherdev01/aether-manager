@@ -7,8 +7,6 @@ plugins {
 android {
     namespace   = "dev.aether.manager"
     compileSdk  = 36
-
-    // ── Pin NDK version — wajib agar rv2ide pakai NDK yang sama ──────────
     ndkVersion  = "27.0.12077973"
 
     defaultConfig {
@@ -20,24 +18,25 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        // ── NDK — libaether-x.so ───────────────────────────────────────
         ndk {
             abiFilters += listOf("arm64-v8a", "armeabi-v7a")
         }
 
         externalNativeBuild {
-            cmake {
-                cppFlags += "-std=c++17"
-                arguments += listOf(
-                    "-DANDROID_STL=c++_static",
-                    // ── Fix rv2ide: eksplisit set host tag agar path clang++ benar
-                    "-DANDROID_HOST_TAG=linux-x86_64"
-                )
-            }
-        }
+    cmake {
+        cppFlags += listOf(
+            "-std=c++17",
+            "-O3",
+            "-s"
+        )
+        arguments += listOf(
+            "-DANDROID_STL=c++_static",
+            "-DANDROID_HOST_TAG=linux-x86_64"
+        )
+    }
+}
     }
 
-    // ── CMake build untuk libaether-x.so ──────────────────────────────────
     externalNativeBuild {
         cmake {
             path    = file("src/main/cpp/CMakeLists.txt")
@@ -53,12 +52,18 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            ndk { debugSymbolLevel = "NONE" }
+            ndk { debugSymbolLevel = "none" }
+            multiDexEnabled = true 
         }
         debug {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            multiDexEnabled = true
             ndk { debugSymbolLevel = "FULL" }
         }
+    }
+
+    androidResources {
+        generateLocaleConfig = false
     }
 
     compileOptions {
@@ -68,16 +73,27 @@ android {
 
     kotlinOptions {
         jvmTarget = "11"
+        freeCompilerArgs += listOf(
+            "-opt-in=kotlin.RequiresOptIn",
+            "-Xjvm-default=all"
+        )
     }
 
     buildFeatures {
-        compose = true
+        compose     = true
         buildConfig = true
     }
 
     packaging {
         resources {
-            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+            excludes += setOf(
+                "/META-INF/{AL2.0,LGPL2.1}",
+                "/META-INF/*.kotlin_module",
+                "/META-INF/MANIFEST.MF",
+                "**.proto",
+                "kotlin/**",
+                "META-INF/com/**"
+            )
         }
         jniLibs {
             useLegacyPackaging = true
@@ -104,7 +120,6 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
 }
 
-// Safety net: block any transitive alpha/beta from pulling incompatible SDK versions
 configurations.all {
     resolutionStrategy.eachDependency {
         val v = requested.version ?: return@eachDependency
