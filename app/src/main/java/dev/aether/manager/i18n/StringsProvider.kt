@@ -66,10 +66,6 @@ fun saveLanguage(context: Context, language: AppLanguage) {
 
 // ── CompositionLocal ──────────────────────────────────────────────────────────
 
-val LocalStrings = staticCompositionLocalOf<AppStrings> {
-    error("AppStrings not provided")
-}
-
 /** Exposes the current AppLanguage so any composable can read or change it. */
 val LocalLanguage = staticCompositionLocalOf<AppLanguage> {
     error("AppLanguage not provided")

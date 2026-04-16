@@ -4,12 +4,14 @@
 
 # Aether Manager
 
-**A Magisk module to optimize your device performance based on your needs:**  
-memory control, kernel tweaks, and performance profiles — with WebUI support.
+**A native Android app to manage and optimize your rooted device —**  
+performance profiles, kernel tweaks, memory control, and system monitoring — all in one place.
 
 [![Release](https://img.shields.io/github/v/release/aetherdev01/aether-manager?style=flat-square&color=1B6EBF&label=Latest)](https://github.com/aetherdev01/aether-manager/releases)
 [![Downloads](https://img.shields.io/github/downloads/aetherdev01/aether-manager/total?style=flat-square&color=2D7D46)](https://github.com/aetherdev01/aether-manager/releases)
 [![License](https://img.shields.io/badge/License-Apache%202.0-6A3FA0?style=flat-square)](LICENSE)
+[![Min SDK](https://img.shields.io/badge/minSdk-26-blue?style=flat-square)](https://developer.android.com/about/versions/oreo)
+[![Target SDK](https://img.shields.io/badge/targetSdk-36-brightgreen?style=flat-square)](https://developer.android.com/about/versions/15)
 
 </div>
 
@@ -17,7 +19,18 @@ memory control, kernel tweaks, and performance profiles — with WebUI support.
 
 ## Overview
 
-Aether Manager is a root module that brings a full-featured performance manager to your Android device. It provides four performance profiles and 17+ individual tweaks across CPU, GPU, memory, I/O, network, and daily use — all configurable through a clean Material Design 3 WebUI.
+Aether Manager is a native Android application for rooted devices. It provides full control over performance profiles and 17+ individual tweaks across CPU, GPU, memory, I/O, network, and battery — with a clean Material Design 3 interface and real-time system monitoring.
+
+Root is managed through **Magisk** or **KernelSU** — no WebUI required.
+
+---
+
+## Requirements
+
+- **Root Manager:** Magisk · KernelSU
+- **Android:** 8.0+ (API 26+)
+- **Target SDK:** 36 (Android 16)
+- **Architecture:** ARM / ARM64
 
 ---
 
@@ -30,15 +43,7 @@ Aether Manager is a root module that brings a full-featured performance manager 
 | **Exynos** | Partial (Mali · CPU · VM · ZRAM · TCP — KGSL/MTK skipped) |
 | **Kirin** | Partial (Mali · CPU · VM · ZRAM — KGSL/MTK skipped) |
 
-> SOC is auto-detected on install from `ro.board.platform`, `ro.hardware`, and `ro.soc.model`.
-
----
-
-## Requirements
-
-- **Root Manager:** Magisk · KernelSU · APatch
-- **Android:** 11.0+ (API 30+)
-- **Architecture:** ARM/ARM64
+> SoC is auto-detected at runtime from `ro.board.platform`, `ro.hardware`, and `ro.soc.model`.
 
 ---
 
@@ -56,7 +61,7 @@ Aether Manager is a root module that brings a full-featured performance manager 
 ### CPU & Kernel
 - **Sched Boost** — CPU scheduler priority boost (Snapdragon)
 - **CPU Boost** — Input boost for MTK / Snapdragon / Exynos
-- **GPU Throttle Off** — Disable GPU thermal throttling on all SOCs
+- **GPU Throttle Off** — Disable GPU thermal throttling on all SoCs
 - **CPUset Optimizer** — Redistribute cores across top-app / foreground / background
 
 ### Memory
@@ -81,22 +86,16 @@ Aether Manager is a root module that brings a full-featured performance manager 
 
 ---
 
-## WebUI
+## App Structure
 
-Aether Manager ships with a standalone WebUI accessible via **KernelSU**, **APatch**, or **Magisk** WebUI.
+Aether Manager is built with **Jetpack Compose** and organized into four main tabs:
 
-**WebUI features:**
-- Real-time device info — model, SoC, Android version, kernel, root type
-- Service PID status with bootloop guard indicator
-- Profile switcher with active state indicator
-- Individual toggle for all 17 tweaks with realtime apply
-- ZRAM size and algorithm selector
-- I/O scheduler dropdown
-- System log viewer with OK / FAIL filter
-- Reboot / Reboot Recovery shortcut
-- Safe mode toggle for bootloop recovery
-
-> All changes apply instantly without requiring a reboot.
+| Tab | Description |
+|---|---|
+| **Home** | Real-time system info — SoC, RAM, CPU/GPU freq, temps, uptime |
+| **Tweak** | Toggle individual tweaks, set ZRAM size/algo, I/O scheduler |
+| **Log** | Live shell log viewer with OK / FAIL filter + reboot options |
+| **About** | App version, root info, developer links |
 
 ---
 
@@ -105,18 +104,39 @@ Aether Manager ships with a standalone WebUI accessible via **KernelSU**, **APat
 Aether Manager includes a built-in **Bootloop Guard**:
 
 - Tracks boot attempts via a `boot_count` file
-- If the device fails to boot successfully **3 or more times**, the guard activates `safe_mode`
+- If the device fails to boot **3 or more times**, safe mode activates automatically
 - In safe mode, all tweaks are skipped on boot
-- Safe mode can be toggled manually from the WebUI Home tab
+- Safe mode can be toggled manually from the Home tab
 
 ---
 
 ## Installation
 
-1. Download the latest `.zip` from [Releases](https://github.com/aetherdev01/aether-manager/releases)
-2. Flash via **Magisk** / **KernelSU** / **APatch** module manager
-3. Reboot
-4. Open **WebUI** from your root manager and navigate to Aether Manager
+1. Ensure **Magisk** or **KernelSU** is installed and active
+2. Download the latest `.apk` from [Releases](https://github.com/aetherdev01/aether-manager/releases)
+3. Install and grant root access when prompted
+4. Open Aether Manager and complete the setup wizard
+
+---
+
+## Build
+
+```bash
+# Clone
+git clone https://github.com/aetherdev01/aether-manager.git
+cd aether-manager
+
+# Debug build
+./gradlew assembleDebug
+
+# Release build
+./gradlew assembleRelease
+```
+
+**Requirements:**
+- Android Studio Hedgehog or newer
+- JDK 17+
+- AGP 8.3.2 · Gradle 8.9
 
 ---
 
@@ -126,13 +146,17 @@ See [changelog.md](changelog.md) for the full version history.
 
 ---
 
-## Credits
+## Contributors
 
-| Project | Role |
+| Contributor | Role |
 |---|---|
-| [Magisk](https://github.com/topjohnwu/Magisk) | Module Installer |
-| [KernelSU WebUI](https://github.com/tiann/KernelSU) | WebUI |
-| Open Source Community | Guidance and support |
+| [@AetherDev22](https://github.com/aetherdev22) | Lead Developer — App & Module |
+| [Magisk](https://github.com/topjohnwu/Magisk) | Root framework & module system |
+| [KernelSU](https://github.com/tiann/KernelSU) | Root framework & kernel-level support |
+| [topjohnwu](https://github.com/topjohnwu) | Magisk creator & Android root developer |
+| [tiann](https://github.com/tiann) | KernelSU creator & kernel developer |
+| [Android Open Source Project](https://source.android.com) | Platform foundation |
+| Open Source Community | Libraries, guidance, and support |
 
 ---
 
