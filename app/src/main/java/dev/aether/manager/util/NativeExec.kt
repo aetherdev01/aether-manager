@@ -6,6 +6,9 @@ import java.io.File
 /**
  * NativeExec — JNI bridge ke libaether-x.so
  *
+ * FIX: exec() sekarang mengirim seluruh script sebagai SATU string
+ *      via nExecSuCmd() agar variable shell persist dalam satu sesi.
+ *
  * Fallback ke Java Runtime.exec() kalau .so belum di-build atau gagal load.
  */
 object NativeExec {
@@ -30,46 +33,52 @@ object NativeExec {
     @JvmStatic
     external fun nHasRoot(): Boolean
 
+    /**
+     * Kirim array of commands — setiap item satu baris.
+     * Return: [exitCode_string, stdout, stderr]
+     */
     @JvmStatic
     external fun nExecSu(cmds: Array<String>): Array<String>
 
+    /**
+     * Kirim satu string cmd (boleh multi-line script).
+     * Return: [exitCode_string, stdout, stderr]
+     * FIX: ini yang dipakai exec(script) agar variable shell persist.
+     */
     @JvmStatic
     external fun nExecSuCmd(cmd: String): Array<String>
 
-    // ── Kotlin convenience wrappers (dengan Java fallback) ────────────────
+    // ── Kotlin convenience wrappers ───────────────────────────────────────
 
     data class ShellResult(val exitCode: Int, val stdout: String, val stderr: String)
 
-    fun exec(vararg cmds: String): ShellResult {
-        if (cmds.isEmpty()) return ShellResult(0, "", "")
+    /**
+     * Eksekusi satu script (boleh multi-line).
+     * FIX: pakai nExecSuCmd() — script dikirim sebagai stdin satu sesi.
+     * Variable shell ($x, $y, dll) persist sepanjang script.
+     */
+    fun exec(script: String): ShellResult {
+        if (script.isBlank()) return ShellResult(0, "", "")
         return if (nativeAvailable) {
-            val raw = nExecSu(arrayOf(*cmds))
+            val raw = nExecSuCmd(script)
             ShellResult(raw[0].toIntOrNull() ?: -1, raw[1], raw[2])
         } else {
-            javaExec(*cmds)
+            javaExec(script)
         }
     }
 
-    fun execCmd(cmd: String): ShellResult {
-        return if (nativeAvailable) {
-            val raw = nExecSuCmd(cmd)
-            ShellResult(raw[0].toIntOrNull() ?: -1, raw[1], raw[2])
-        } else {
-            javaExec(cmd)
-        }
-    }
+    /** Legacy overload: gabung array jadi satu script */
+    fun exec(vararg cmds: String): ShellResult =
+        exec(cmds.joinToString("\n"))
 
-    fun output(cmd: String): String = execCmd(cmd).stdout.trim()
+    fun execCmd(cmd: String): ShellResult = exec(cmd)
+
+    fun output(cmd: String): String = exec(cmd).stdout.trim()
 
     fun ok(vararg cmds: String): Boolean = exec(*cmds).exitCode == 0
 
     // ── Su binary resolver ────────────────────────────────────────────────
 
-    /**
-     * Cari binary 'su' yang valid.
-     * PATH di app context seringkali tidak include /system/xbin atau /system/bin,
-     * jadi kita probe manual.
-     */
     val suBinary: String by lazy {
         val candidates = listOf(
             "/system/bin/su",
@@ -77,7 +86,7 @@ object NativeExec {
             "/sbin/su",
             "/su/bin/su",
             "/magisk/.core/bin/su",
-            "su"  // fallback terakhir — andalkan PATH
+            "su"
         )
         candidates.firstOrNull { path ->
             if (path == "su") true
@@ -86,18 +95,12 @@ object NativeExec {
     }
 
     // ── Java fallback shell ───────────────────────────────────────────────
+    // Kirim script sebagai satu stdin-session agar variable persist.
 
-    /**
-     * Eksekusi commands via su stdin-pipe.
-     * WAJIB stdin-pipe (bukan argumen -c) supaya kompatibel dengan
-     * Magisk, KernelSU, APatch — semua butuh stdin session untuk multi-command.
-     */
-    fun javaExec(vararg cmds: String): ShellResult {
+    fun javaExec(script: String): ShellResult {
         return try {
-            val script = buildString {
-                cmds.forEach { appendLine(it) }
-                appendLine("exit")
-            }
+            val payload = if (script.trimEnd().endsWith("exit")) script
+                          else "$script\nexit\n"
 
             val process = ProcessBuilder(suBinary)
                 .redirectErrorStream(false)
@@ -105,7 +108,7 @@ object NativeExec {
 
             val stdinThread = Thread {
                 try {
-                    process.outputStream.bufferedWriter().use { it.write(script) }
+                    process.outputStream.bufferedWriter().use { it.write(payload) }
                 } catch (_: Exception) {}
             }
             stdinThread.start()
@@ -129,10 +132,8 @@ object NativeExec {
         }
     }
 
-    /**
-     * FIX: hasRoot via stdin-pipe dulu, lalu fallback ke -c flag.
-     * KSU/APatch menolak -c tapi accept stdin; beberapa su klasik sebaliknya.
-     */
+    // ── javaHasRoot ───────────────────────────────────────────────────────
+
     fun javaHasRoot(): Boolean {
         if (javaHasRootStdin()) return true
         return javaHasRootArgC()

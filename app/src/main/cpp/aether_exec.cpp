@@ -1,15 +1,16 @@
 /**
  * libaether-x.so  —  AetherManager Native Exec Engine
  *
- * Menyediakan root shell execution real-time via su dengan:
- *   - pipe()+fork()+execv() untuk full process control
- *   - select() multiplexed read (stdout+stderr) untuk hindari deadlock
- *   - Proper FD cleanup dan SIGPIPE handling
- *   - Timeout built-in (30 detik per batch command)
+ * FIX v2:
+ *   - nExecSuCmd() sekarang mengirim script multi-line via stdin pipe
+ *     (sama persis dengan nExecSu) agar variable shell PERSIST dalam satu sesi.
+ *   - Sebelumnya nExecSuCmd pakai execl("su","-c",cmd) yang spawn subshell baru
+ *     untuk setiap pemanggilan, sehingga $cpu1/$cpu2/dll tidak bisa dibaca.
  *
  * JNI entry points:
- *   nHasRoot()                     → Boolean
- *   nExecSu(cmds: Array<String>)   → Array<String> [exitCode, stdout, stderr]
+ *   nHasRoot()                      → Boolean
+ *   nExecSu(cmds: Array<String>)    → Array<String> [exitCode, stdout, stderr]
+ *   nExecSuCmd(script: String)      → Array<String> [exitCode, stdout, stderr]
  */
 
 #include <jni.h>
@@ -29,26 +30,20 @@
 #define LOGD(...)  __android_log_print(ANDROID_LOG_DEBUG, TAG, __VA_ARGS__)
 #define LOGE(...)  __android_log_print(ANDROID_LOG_ERROR, TAG, __VA_ARGS__)
 
-// ────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
 // Internal helpers
-// ────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
 
 static void closeFd(int& fd) {
     if (fd >= 0) { close(fd); fd = -1; }
 }
 
-/**
- * Set FD non-blocking. Returns false on error.
- */
 static bool setNonBlocking(int fd) {
     int flags = fcntl(fd, F_GETFL, 0);
     if (flags < 0) return false;
     return fcntl(fd, F_SETFL, flags | O_NONBLOCK) == 0;
 }
 
-/**
- * Fully write `data` to fd. Returns false if write fails.
- */
 static bool writeAll(int fd, const std::string& data) {
     const char* ptr = data.c_str();
     size_t remaining = data.size();
@@ -72,14 +67,14 @@ struct ExecResult {
 };
 
 /**
- * Jalankan `su` dengan commands dikirim via stdin pipe.
- * stdout dan stderr dibaca secara multiplexed dengan select().
- * Timeout: 30 detik total.
+ * Jalankan su dengan PAYLOAD dikirim via stdin pipe.
+ * Satu sesi shell — semua variable ($x, $y, dll) persist sepanjang payload.
+ * select() multiplexed read untuk hindari deadlock.
+ * Timeout: 30 detik.
  */
-static ExecResult execSuInternal(const std::vector<std::string>& cmds) {
+static ExecResult execSuWithPayload(const std::string& payload) {
     ExecResult res;
 
-    // Pipes: [0]=read, [1]=write
     int stdinPipe[2]  = {-1, -1};
     int stdoutPipe[2] = {-1, -1};
     int stderrPipe[2] = {-1, -1};
@@ -95,7 +90,6 @@ static ExecResult execSuInternal(const std::vector<std::string>& cmds) {
         return res;
     }
 
-    // Ignore SIGPIPE — jika su exits lebih awal
     struct sigaction sa_old{};
     struct sigaction sa_ign{};
     sa_ign.sa_handler = SIG_IGN;
@@ -114,18 +108,15 @@ static ExecResult execSuInternal(const std::vector<std::string>& cmds) {
     }
 
     if (pid == 0) {
-        // ── CHILD PROCESS ──────────────────────────────────────
-        // Redirect stdin/stdout/stderr ke pipes
+        // ── CHILD ────────────────────────────────────────────
         dup2(stdinPipe[0],  STDIN_FILENO);
         dup2(stdoutPipe[1], STDOUT_FILENO);
         dup2(stderrPipe[1], STDERR_FILENO);
 
-        // Tutup semua ujung pipe yang tidak dipakai di child
         closeFd(stdinPipe[0]);  closeFd(stdinPipe[1]);
         closeFd(stdoutPipe[0]); closeFd(stdoutPipe[1]);
         closeFd(stderrPipe[0]); closeFd(stderrPipe[1]);
 
-        // Coba exec su dari path yang umum di Android
         const char* suPaths[] = {
             "/system/bin/su",
             "/system/xbin/su",
@@ -138,46 +129,37 @@ static ExecResult execSuInternal(const std::vector<std::string>& cmds) {
             execl(suPaths[i], "su", (char*)nullptr);
         }
 
-        // Jika semua gagal
         const char* msg = "exec su failed\n";
         write(STDERR_FILENO, msg, strlen(msg));
         _exit(127);
     }
 
-    // ── PARENT PROCESS ───────────────────────────────────────
+    // ── PARENT ───────────────────────────────────────────────
 
-    // Tutup ujung pipe yang dipakai child
     closeFd(stdinPipe[0]);
     closeFd(stdoutPipe[1]);
     closeFd(stderrPipe[1]);
 
-    // Build stdin payload
-    std::string payload;
-    for (const auto& cmd : cmds) {
-        payload += cmd;
-        payload += '\n';
-    }
-    payload += "exit $?\n";
+    // Kirim payload ke su stdin — SATU sesi shell
+    std::string fullPayload = payload;
+    if (fullPayload.empty() || fullPayload.back() != '\n')
+        fullPayload += '\n';
+    // Pastikan ada "exit $?" di akhir agar exit code benar
+    if (fullPayload.find("exit") == std::string::npos)
+        fullPayload += "exit $?\n";
 
-    // Tulis commands ke su's stdin
-    writeAll(stdinPipe[1], payload);
-    closeFd(stdinPipe[1]);   // signal EOF ke su
+    writeAll(stdinPipe[1], fullPayload);
+    closeFd(stdinPipe[1]);  // EOF ke su
 
-    // Set stdout/stderr non-blocking untuk select()
     setNonBlocking(stdoutPipe[0]);
     setNonBlocking(stderrPipe[0]);
 
-    // Baca output dengan select() — mencegah deadlock buffer penuh
     constexpr int TIMEOUT_SEC = 30;
     constexpr size_t BUF_SIZE = 8192;
     char buf[BUF_SIZE];
 
     bool stdoutDone = false;
     bool stderrDone = false;
-
-    struct timeval deadline{};
-    deadline.tv_sec  = TIMEOUT_SEC;
-    deadline.tv_usec = 0;
 
     while (!stdoutDone || !stderrDone) {
         fd_set readFds;
@@ -189,7 +171,9 @@ static ExecResult execSuInternal(const std::vector<std::string>& cmds) {
 
         if (maxFd < 0) break;
 
-        struct timeval tv = deadline;
+        struct timeval tv{};
+        tv.tv_sec  = TIMEOUT_SEC;
+        tv.tv_usec = 0;
         int sel = select(maxFd + 1, &readFds, nullptr, nullptr, &tv);
 
         if (sel < 0) {
@@ -197,7 +181,6 @@ static ExecResult execSuInternal(const std::vector<std::string>& cmds) {
             break;
         }
         if (sel == 0) {
-            // Timeout — kill su
             LOGE("execSu timeout, killing pid %d", pid);
             kill(pid, SIGKILL);
             res.stderrStr += "\n[aether-x] TIMEOUT after 30s";
@@ -219,30 +202,20 @@ static ExecResult execSuInternal(const std::vector<std::string>& cmds) {
         }
     }
 
-    // Drain sisa data jika ada
-    while (true) {
-        ssize_t n = read(stdoutPipe[0], buf, BUF_SIZE);
-        if (n <= 0) break;
-        res.stdoutStr.append(buf, n);
-    }
-    while (true) {
-        ssize_t n = read(stderrPipe[0], buf, BUF_SIZE);
-        if (n <= 0) break;
-        res.stderrStr.append(buf, n);
-    }
+    // Drain sisa
+    { ssize_t n; while ((n = read(stdoutPipe[0], buf, BUF_SIZE)) > 0) res.stdoutStr.append(buf, n); }
+    { ssize_t n; while ((n = read(stderrPipe[0], buf, BUF_SIZE)) > 0) res.stderrStr.append(buf, n); }
 
     closeFd(stdoutPipe[0]);
     closeFd(stderrPipe[0]);
 
-    // Tunggu child selesai
     int status = 0;
     waitpid(pid, &status, 0);
     res.exitCode = WIFEXITED(status) ? WEXITSTATUS(status) : -1;
 
-    // Restore SIGPIPE handler
     sigaction(SIGPIPE, &sa_old, nullptr);
 
-    // Trim trailing newlines dari output
+    // Trim trailing newlines
     while (!res.stdoutStr.empty() && res.stdoutStr.back() == '\n')
         res.stdoutStr.pop_back();
     while (!res.stderrStr.empty() && res.stderrStr.back() == '\n')
@@ -254,9 +227,19 @@ static ExecResult execSuInternal(const std::vector<std::string>& cmds) {
     return res;
 }
 
-// ────────────────────────────────────────────────────────────────────────────
-// JNI Helper: convert jstring ↔ std::string
-// ────────────────────────────────────────────────────────────────────────────
+/** Legacy: gabung array commands menjadi satu payload */
+static ExecResult execSuInternal(const std::vector<std::string>& cmds) {
+    std::string payload;
+    for (const auto& cmd : cmds) {
+        payload += cmd;
+        payload += '\n';
+    }
+    return execSuWithPayload(payload);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// JNI Helpers
+// ─────────────────────────────────────────────────────────────────────────────
 
 static std::string jstringToStr(JNIEnv* env, jstring js) {
     if (!js) return "";
@@ -270,36 +253,34 @@ static jstring strToJstring(JNIEnv* env, const std::string& s) {
     return env->NewStringUTF(s.c_str());
 }
 
-// ────────────────────────────────────────────────────────────────────────────
+static jobjectArray makeResultArray(JNIEnv* env, const ExecResult& r) {
+    jclass stringClass = env->FindClass("java/lang/String");
+    jobjectArray result = env->NewObjectArray(3, stringClass, nullptr);
+    env->SetObjectArrayElement(result, 0, strToJstring(env, std::to_string(r.exitCode)));
+    env->SetObjectArrayElement(result, 1, strToJstring(env, r.stdoutStr));
+    env->SetObjectArrayElement(result, 2, strToJstring(env, r.stderrStr));
+    return result;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // JNI Exports
-// ────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
 
 extern "C" {
 
-/**
- * nHasRoot() → Boolean
- * Cek apakah root tersedia dan dapat dieksekusi.
- */
 JNIEXPORT jboolean JNICALL
 Java_dev_aether_manager_util_NativeExec_nHasRoot(JNIEnv* /*env*/, jclass /*cls*/) {
-    std::vector<std::string> cmds = {"echo aether_root_ok"};
-    ExecResult r = execSuInternal(cmds);
+    ExecResult r = execSuWithPayload("echo aether_root_ok");
     bool ok = (r.exitCode == 0) &&
               (r.stdoutStr.find("aether_root_ok") != std::string::npos);
     LOGD("nHasRoot → %s (exit=%d)", ok ? "true" : "false", r.exitCode);
     return ok ? JNI_TRUE : JNI_FALSE;
 }
 
-/**
- * nExecSu(cmds: Array<String>) → Array<String>
- * Menjalankan array perintah shell via su stdin pipe.
- * Return: [exitCode_as_string, stdout, stderr]
- */
 JNIEXPORT jobjectArray JNICALL
 Java_dev_aether_manager_util_NativeExec_nExecSu(
         JNIEnv* env, jclass /*cls*/, jobjectArray jCmds)
 {
-    // Convert Java String[] → std::vector<std::string>
     std::vector<std::string> cmds;
     if (jCmds) {
         jsize len = env->GetArrayLength(jCmds);
@@ -310,45 +291,23 @@ Java_dev_aether_manager_util_NativeExec_nExecSu(
             env->DeleteLocalRef(js);
         }
     }
-
-    ExecResult r = execSuInternal(cmds);
-
-    // Build result array: [exitCode, stdout, stderr]
-    jclass stringClass = env->FindClass("java/lang/String");
-    jobjectArray result = env->NewObjectArray(3, stringClass, nullptr);
-    env->SetObjectArrayElement(result, 0, strToJstring(env, std::to_string(r.exitCode)));
-    env->SetObjectArrayElement(result, 1, strToJstring(env, r.stdoutStr));
-    env->SetObjectArrayElement(result, 2, strToJstring(env, r.stderrStr));
-    return result;
+    return makeResultArray(env, execSuInternal(cmds));
 }
 
 /**
- * nExecSuCmd(cmd: String) → Array<String>
- * Single real-time command via `su -c "cmd"` — lebih cepat untuk one-liner.
- * Return: [exitCode_as_string, stdout, stderr]
+ * nExecSuCmd(script: String) → Array<String>
+ * FIX: script (boleh multi-line) dikirim via stdin pipe — SATU sesi shell.
+ *      Variable shell PERSIST sepanjang script.
+ *      Sebelumnya pakai execl("su","-c",cmd) yang spawn subshell baru tiap call.
  */
 JNIEXPORT jobjectArray JNICALL
 Java_dev_aether_manager_util_NativeExec_nExecSuCmd(
         JNIEnv* env, jclass /*cls*/, jstring jCmd)
 {
-    std::string cmd = jstringToStr(env, jCmd);
-    // Wrap single command supaya tetap pakai pipe path yang sama
-    ExecResult r = execSuInternal({cmd});
-
-    jclass stringClass = env->FindClass("java/lang/String");
-    jobjectArray result = env->NewObjectArray(3, stringClass, nullptr);
-    env->SetObjectArrayElement(result, 0, strToJstring(env, std::to_string(r.exitCode)));
-    env->SetObjectArrayElement(result, 1, strToJstring(env, r.stdoutStr));
-    env->SetObjectArrayElement(result, 2, strToJstring(env, r.stderrStr));
-    return result;
+    std::string script = jstringToStr(env, jCmd);
+    return makeResultArray(env, execSuWithPayload(script));
 }
 
-/**
- * nGetAdId(key: Int) → String
- * Return decrypted AdMob ID untuk key yang diberikan.
- *   key = 0 → Banner production ID
- * Return empty string jika key tidak dikenali.
- */
 JNIEXPORT jstring JNICALL
 Java_dev_aether_manager_ads_AdManager_nGetAdId(
         JNIEnv* env, jclass /*cls*/, jint key)
