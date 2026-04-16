@@ -231,19 +231,19 @@ get_foreground_pkg() {
   # Method 1: mCurrentFocus (most reliable on most ROMs)
   local pkg
   pkg=$(dumpsys window windows 2>/dev/null | grep -E 'mCurrentFocus' | head -1 | grep -oE '[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]+)+' | head -1)
-  [ -n "$pkg" ] && { echo "$pkg"; return; }
+  [ -n "${'$'}pkg" ] && { echo "${'$'}pkg"; return; }
 
   # Method 2: ResumedActivity from activity manager
   pkg=$(dumpsys activity activities 2>/dev/null | grep -E 'ResumedActivity' | head -1 | grep -oE '[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]+)+' | head -1)
-  [ -n "$pkg" ] && { echo "$pkg"; return; }
+  [ -n "${'$'}pkg" ] && { echo "${'$'}pkg"; return; }
 
   # Method 3: mFocusedApp fallback
   pkg=$(dumpsys window windows 2>/dev/null | grep -E 'mFocusedApp' | head -1 | grep -oE '[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]+)+' | head -1)
-  [ -n "$pkg" ] && { echo "$pkg"; return; }
+  [ -n "${'$'}pkg" ] && { echo "${'$'}pkg"; return; }
 
   # Method 4: top process visible
   pkg=$(dumpsys activity top 2>/dev/null | grep 'TASK\|ACTIVITY' | grep -oE '[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]+)+' | head -1)
-  echo "$pkg"
+  echo "${'$'}pkg"
 }
 
 while true; do
