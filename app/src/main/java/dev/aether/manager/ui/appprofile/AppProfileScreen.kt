@@ -16,8 +16,13 @@ import androidx.compose.ui.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.*
 import androidx.compose.ui.graphics.*
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import android.graphics.drawable.BitmapDrawable
+import android.graphics.Bitmap
+import android.graphics.Canvas
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.*
 import dev.aether.manager.data.*
@@ -63,6 +68,7 @@ fun AppProfileScreen(vm: AppProfileViewModel) {
         AppProfileEditor(
             profile  = editTarget,
             appLabel = appInfo?.label ?: editTarget.packageName,
+            appIcon  = appInfo?.icon,
             saving   = vm.savingPkg.collectAsState().value == editTarget.packageName,
             onDismiss = { vm.closeEditor() },
             onSave    = { vm.saveProfile(it) },
@@ -163,52 +169,76 @@ private fun AppProfileHeader(
     onToggleMonitor: (Boolean) -> Unit,
 ) {
     Surface(
-        color  = MaterialTheme.colorScheme.surfaceContainer,
+        color = MaterialTheme.colorScheme.surfaceContainer,
         tonalElevation = 0.dp,
+        modifier = Modifier.fillMaxWidth(),
     ) {
-        Row(
-            Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
-        ) {
-            Column {
-                Text(
-                    "App Profiles",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                )
-                Text(
-                    "$activeCount profile aktif",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = if (activeCount > 0)
-                        MaterialTheme.colorScheme.primary
-                    else MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                val monitorColor by animateColorAsState(
-                    if (monitorRunning) MaterialTheme.colorScheme.primary
-                    else MaterialTheme.colorScheme.onSurfaceVariant,
-                    label = "monitor_color"
-                )
-                Icon(
-                    if (monitorRunning) Icons.Filled.RadioButtonChecked else Icons.Filled.RadioButtonUnchecked,
-                    null, tint = monitorColor, modifier = Modifier.size(16.dp)
-                )
-                Text(
-                    if (monitorRunning) "Monitor ON" else "Monitor OFF",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = monitorColor,
-                )
-                Switch(
-                    checked  = monitorRunning,
-                    onCheckedChange = onToggleMonitor,
-                    modifier = Modifier.scale(0.85f),
-                    colors   = SwitchDefaults.colors(
-                        checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
-                        checkedTrackColor = MaterialTheme.colorScheme.primary,
+        Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 14.dp)) {
+            Row(
+                Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Text(
+                        "App Profiles",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
                     )
-                )
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        val dotColor = if (activeCount > 0) MaterialTheme.colorScheme.primary
+                                       else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                        Box(
+                            Modifier.size(7.dp).clip(CircleShape)
+                                .background(dotColor)
+                        )
+                        Text(
+                            if (activeCount > 0) "$activeCount profile aktif" else "Tidak ada profile aktif",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = if (activeCount > 0) MaterialTheme.colorScheme.primary
+                                    else MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+
+                // Monitor toggle card
+                Surface(
+                    shape = RoundedCornerShape(14.dp),
+                    color = if (monitorRunning)
+                        MaterialTheme.colorScheme.primaryContainer
+                    else MaterialTheme.colorScheme.surfaceVariant,
+                ) {
+                    Row(
+                        Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        val monitorColor by animateColorAsState(
+                            if (monitorRunning) MaterialTheme.colorScheme.primary
+                            else MaterialTheme.colorScheme.onSurfaceVariant,
+                            label = "monitor_color"
+                        )
+                        Icon(
+                            if (monitorRunning) Icons.Filled.RadioButtonChecked else Icons.Filled.RadioButtonUnchecked,
+                            null, tint = monitorColor, modifier = Modifier.size(14.dp)
+                        )
+                        Text(
+                            if (monitorRunning) "Monitor ON" else "Monitor OFF",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.SemiBold,
+                            color = monitorColor,
+                        )
+                        Switch(
+                            checked  = monitorRunning,
+                            onCheckedChange = onToggleMonitor,
+                            modifier = Modifier.scale(0.75f).padding(0.dp),
+                            colors   = SwitchDefaults.colors(
+                                checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
+                                checkedTrackColor = MaterialTheme.colorScheme.primary,
+                            )
+                        )
+                    }
+                }
             }
         }
     }
@@ -299,22 +329,41 @@ private fun AppListItem(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            // App icon placeholder with first letter
+            // App icon - real icon from PackageManager
             Box(
-                Modifier.size(44.dp).clip(RoundedCornerShape(12.dp))
-                    .background(
-                        if (isEnabled) MaterialTheme.colorScheme.primary
-                        else MaterialTheme.colorScheme.secondaryContainer
-                    ),
+                Modifier.size(44.dp).clip(RoundedCornerShape(12.dp)),
                 contentAlignment = Alignment.Center,
             ) {
-                Text(
-                    app.label.take(1).uppercase(),
-                    style     = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color     = if (isEnabled) MaterialTheme.colorScheme.onPrimary
-                                else MaterialTheme.colorScheme.onSecondaryContainer,
-                )
+                val drawable = app.icon
+                val bitmap = remember(app.packageName) {
+                    if (drawable != null) {
+                        drawableToBitmap(drawable)
+                    } else null
+                }
+                if (bitmap != null) {
+                    Image(
+                        painter = BitmapPainter(bitmap.asImageBitmap()),
+                        contentDescription = app.label,
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                } else {
+                    Box(
+                        Modifier.fillMaxSize()
+                            .background(
+                                if (isEnabled) MaterialTheme.colorScheme.primary
+                                else MaterialTheme.colorScheme.secondaryContainer
+                            ),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            app.label.take(1).uppercase(),
+                            style     = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color     = if (isEnabled) MaterialTheme.colorScheme.onPrimary
+                                        else MaterialTheme.colorScheme.onSecondaryContainer,
+                        )
+                    }
+                }
             }
 
             // App info
@@ -417,6 +466,7 @@ private fun ProfileBadge(text: String, icon: ImageVector) {
 fun AppProfileEditor(
     profile: AppProfile,
     appLabel: String,
+    appIcon: android.graphics.drawable.Drawable?,
     saving: Boolean,
     onDismiss: () -> Unit,
     onSave: (AppProfile) -> Unit,
@@ -445,16 +495,33 @@ fun AppProfileEditor(
                 horizontalArrangement = Arrangement.spacedBy(14.dp)
             ) {
                 Box(
-                    Modifier.size(52.dp).clip(RoundedCornerShape(14.dp))
-                        .background(MaterialTheme.colorScheme.primaryContainer),
+                    Modifier.size(52.dp).clip(RoundedCornerShape(14.dp)),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        appLabel.take(1).uppercase(),
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer,
-                    )
+                    val editorDrawable = appIcon
+                    val editorBitmap = remember(profile.packageName) {
+                        if (editorDrawable != null) drawableToBitmap(editorDrawable) else null
+                    }
+                    if (editorBitmap != null) {
+                        Image(
+                            painter = BitmapPainter(editorBitmap.asImageBitmap()),
+                            contentDescription = appLabel,
+                            modifier = Modifier.fillMaxSize(),
+                        )
+                    } else {
+                        Box(
+                            Modifier.fillMaxSize()
+                                .background(MaterialTheme.colorScheme.primaryContainer),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text(
+                                appLabel.take(1).uppercase(),
+                                style = MaterialTheme.typography.headlineSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            )
+                        }
+                    }
                 }
                 Column(Modifier.weight(1f)) {
                     Text(appLabel, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
@@ -807,6 +874,19 @@ private fun TweakToggleRow(
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
+
+private fun drawableToBitmap(drawable: android.graphics.drawable.Drawable): Bitmap {
+    if (drawable is BitmapDrawable && drawable.bitmap != null) {
+        return drawable.bitmap
+    }
+    val w = drawable.intrinsicWidth.coerceAtLeast(1)
+    val h = drawable.intrinsicHeight.coerceAtLeast(1)
+    val bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+    val canvas = Canvas(bitmap)
+    drawable.setBounds(0, 0, canvas.width, canvas.height)
+    drawable.draw(canvas)
+    return bitmap
+}
 
 private fun govIcon(gov: String): ImageVector = when (gov) {
     "performance"   -> Icons.Filled.FlashOn

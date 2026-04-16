@@ -6,6 +6,7 @@ data class AppInfo(
     val versionName: String,
     val targetSdk: Int,
     val isSystemApp: Boolean,
+    val icon: android.graphics.drawable.Drawable? = null,
 )
 
 data class AppProfile(
