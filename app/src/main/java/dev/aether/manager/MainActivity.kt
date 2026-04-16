@@ -29,11 +29,14 @@ import dev.aether.manager.ui.appprofile.AppProfileScreen
 import dev.aether.manager.ui.components.RebootBottomSheet
 import dev.aether.manager.ui.home.HomeScreen
 import dev.aether.manager.ui.tweak.TweakScreen
+import dev.aether.manager.update.UpdateDialogHost
+import dev.aether.manager.update.UpdateViewModel
 import dev.aether.manager.util.RootUtils
 
 class MainActivity : ComponentActivity() {
     private val vm: MainViewModel by viewModels()
     private val apVm: AppProfileViewModel by viewModels()
+    private val updateVm: UpdateViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -41,7 +44,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             AetherTheme {
                 ProvideStrings {
-                    AetherApp(vm, apVm)
+                    AetherApp(vm, apVm, updateVm)
                 }
             }
         }
@@ -52,7 +55,7 @@ private enum class Screen { HOME, TWEAK, APPS, ABOUT }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AetherApp(vm: MainViewModel, apVm: AppProfileViewModel) {
+fun AetherApp(vm: MainViewModel, apVm: AppProfileViewModel, updateVm: UpdateViewModel) {
     val s = LocalStrings.current
     var currentScreen by remember { mutableStateOf(Screen.HOME) }
     var showReboot by remember { mutableStateOf(false) }
@@ -154,4 +157,7 @@ fun AetherApp(vm: MainViewModel, apVm: AppProfileViewModel) {
             onReloadUI       = { vm.refresh() }
         )
     }
+
+    // Update dialog — selalu di atas semua konten
+    UpdateDialogHost(viewModel = updateVm)
 }
