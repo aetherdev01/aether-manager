@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.aether.manager.R
 import dev.aether.manager.data.MainViewModel
+import dev.aether.manager.i18n.LanguageDropdown
 import dev.aether.manager.i18n.LocalStrings
 import dev.aether.manager.ui.home.TabSectionTitle
 
@@ -44,6 +45,43 @@ fun AboutScreen(vm: MainViewModel) {
             .padding(top = 8.dp, bottom = 100.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
+        // ── Section: Language ─────────────────────────────────
+        TabSectionTitle(
+            icon  = Icons.Outlined.Language,
+            title = "Language / Bahasa / Язык / 语言"
+        )
+        Surface(
+            shape  = RoundedCornerShape(20.dp),
+            color  = MaterialTheme.colorScheme.surfaceContainerLow,
+            border = androidx.compose.foundation.BorderStroke(
+                1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+            ),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Row(
+                modifier              = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 14.dp),
+                verticalAlignment     = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Text(
+                        "Display Language",
+                        style      = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color      = MaterialTheme.colorScheme.onSurface,
+                    )
+                    Text(
+                        "Changes UI language instantly",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                LanguageDropdown()
+            }
+        }
+
         // ── Section: Developer ────────────────────────────────
         TabSectionTitle(
             icon  = Icons.Outlined.Person,
