@@ -114,14 +114,11 @@ private fun ErrorContent(msg: String, onRetry: () -> Unit) {
 @Composable
 private fun ReadyContent(state: AppsUiState.Ready, vm: AppProfileViewModel) {
     var searchQuery by remember { mutableStateOf("") }
-    var filterEnabled by remember { mutableStateOf(false) }
 
-    val filtered = remember(state.apps, state.profiles, searchQuery, filterEnabled) {
+    val filtered = remember(state.apps, state.profiles, searchQuery) {
         state.apps.filter { app ->
-            val matchSearch = app.label.contains(searchQuery, ignoreCase = true) ||
-                              app.packageName.contains(searchQuery, ignoreCase = true)
-            val matchFilter = if (filterEnabled) state.profiles[app.packageName]?.enabled == true else true
-            matchSearch && matchFilter
+            app.label.contains(searchQuery, ignoreCase = true) ||
+            app.packageName.contains(searchQuery, ignoreCase = true)
         }
     }
 
@@ -137,7 +134,7 @@ private fun ReadyContent(state: AppsUiState.Ready, vm: AppProfileViewModel) {
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp)
-                .padding(top = 12.dp, bottom = 4.dp),
+                .padding(top = 8.dp, bottom = 4.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             TabSectionTitle(
@@ -204,8 +201,6 @@ private fun ReadyContent(state: AppsUiState.Ready, vm: AppProfileViewModel) {
         SearchFilterBar(
             query          = searchQuery,
             onQueryChange  = { searchQuery = it },
-            filterEnabled  = filterEnabled,
-            onToggleFilter = { filterEnabled = !filterEnabled },
         )
 
         if (filtered.isEmpty()) {
@@ -276,8 +271,6 @@ private fun AppStatChip(
 private fun SearchFilterBar(
     query: String,
     onQueryChange: (String) -> Unit,
-    filterEnabled: Boolean,
-    onToggleFilter: () -> Unit,
 ) {
     Row(
         Modifier
@@ -300,15 +293,6 @@ private fun SearchFilterBar(
             modifier     = Modifier.weight(1f),
             shape        = RoundedCornerShape(14.dp),
             textStyle    = MaterialTheme.typography.bodySmall,
-        )
-        FilterChip(
-            selected    = filterEnabled,
-            onClick     = onToggleFilter,
-            label       = { Text("Aktif", style = MaterialTheme.typography.labelSmall) },
-            leadingIcon = if (filterEnabled) {{
-                Icon(Icons.Filled.Check, null, modifier = Modifier.size(14.dp))
-            }} else null,
-            shape = RoundedCornerShape(12.dp),
         )
     }
 }

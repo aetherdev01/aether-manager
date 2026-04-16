@@ -150,7 +150,7 @@ fun SplashScreen(onFinished: () -> Unit) {
 
         // Version
         Text(
-            "v1.5",
+            "v1.2 (Release)",
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .padding(bottom = 28.dp),
