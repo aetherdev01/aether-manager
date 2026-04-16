@@ -36,10 +36,10 @@
         android:networkSecurityConfig="@xml/network_security_config"
         android:usesCleartextTraffic="true">
 
-        <!-- Unity Ads App ID -->
+        <!-- AdMob App ID -->
         <meta-data
-            android:name="com.unity3d.ads.app_id"
-            android:value="54dc2de2-dba9-44db-8889-5b212c8ed9c0"/>
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="ca-app-pub-5043818314955328~2380701071"/>
 
         <activity
             android:name=".SplashActivity"

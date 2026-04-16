@@ -7,8 +7,8 @@ import androidx.compose.ui.Modifier
 import dev.aether.manager.ads.InterstitialAdTrigger
 
 /**
- * Wrapper Composable untuk Unity Ads.
- * Banner placement dihapus; hanya trigger interstitial yang tersedia.
+ * AdMob interstitial trigger wrapper.
+ * Dipasang di layar manapun yang perlu trigger interstitial otomatis.
  */
 @Composable
 fun AdMobBanner(

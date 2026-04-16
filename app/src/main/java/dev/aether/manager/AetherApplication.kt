@@ -2,35 +2,24 @@ package dev.aether.manager
 
 import android.app.Application
 import android.util.Log
-import com.unity3d.ads.IUnityAdsInitializationListener
-import com.unity3d.ads.UnityAds
-import dev.aether.manager.ads.AdManager
+import com.google.android.gms.ads.MobileAds
 import dev.aether.manager.ads.InterstitialAdManager
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class AetherApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
 
-        // Initialize Unity Ads once at app start with the correct Game ID.
-        // Banner & interstitial composables rely on this being ready.
-        UnityAds.initialize(
-            this,
-            AdManager.GAME_ID,          // 6091240
-            AdManager.isTestMode,
-            object : IUnityAdsInitializationListener {
-                override fun onInitializationComplete() {
-                    Log.d("UnityAds", "SDK initialized ✓ (gameId=${AdManager.GAME_ID})")
-                    // Preload interstitial silently so it's ready when needed.
-                    InterstitialAdManager.preload()
-                }
-                override fun onInitializationFailed(
-                    error: UnityAds.UnityAdsInitializationError?,
-                    message: String?
-                ) {
-                    Log.w("UnityAds", "Init failed: $error – $message")
-                }
+        // Initialize AdMob SDK on background thread, then preload interstitial.
+        CoroutineScope(Dispatchers.IO).launch {
+            MobileAds.initialize(this@AetherApplication) { initStatus ->
+                Log.d("AdMob", "SDK initialized ✓ status=$initStatus")
+                // Preload interstitial after SDK ready
+                InterstitialAdManager.preload(this@AetherApplication)
             }
-        )
+        }
     }
 }

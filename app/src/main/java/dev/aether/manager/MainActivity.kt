@@ -32,6 +32,7 @@ import dev.aether.manager.ui.tweak.TweakScreen
 import androidx.compose.ui.platform.LocalContext
 import dev.aether.manager.ads.InterstitialAdManager
 import dev.aether.manager.ads.InterstitialAdTrigger
+import dev.aether.manager.ads.AdManager
 import dev.aether.manager.update.UpdateDialogHost
 import dev.aether.manager.update.UpdateViewModel
 import dev.aether.manager.util.RootUtils

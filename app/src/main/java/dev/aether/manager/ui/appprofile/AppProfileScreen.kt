@@ -26,6 +26,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.*
 import dev.aether.manager.data.*
+import dev.aether.manager.ui.home.TabSectionTitle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -128,18 +129,85 @@ private fun ReadyContent(state: AppsUiState.Ready, vm: AppProfileViewModel) {
         state.profiles.values.count { it.enabled }
     }
 
+    val totalCount = state.apps.size
+
     Column(Modifier.fillMaxSize()) {
-        AppProfileHeader(
-            activeCount     = activeCount,
-            monitorRunning  = state.monitorRunning,
-            onToggleMonitor = { vm.toggleMonitor(it) },
-        )
+        // ── Section header ────────────────────────────────────────────
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+                .padding(top = 12.dp, bottom = 4.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            TabSectionTitle(
+                icon  = Icons.Outlined.Apps,
+                title = "App Profiles",
+                trailing = {
+                    val monitorBg by animateColorAsState(
+                        if (state.monitorRunning) MaterialTheme.colorScheme.primaryContainer
+                        else MaterialTheme.colorScheme.surfaceVariant,
+                        label = "monitor_bg"
+                    )
+                    val monitorFg by animateColorAsState(
+                        if (state.monitorRunning) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.onSurfaceVariant,
+                        label = "monitor_fg"
+                    )
+                    Surface(
+                        onClick = { vm.toggleMonitor(!state.monitorRunning) },
+                        shape = RoundedCornerShape(50),
+                        color = monitorBg,
+                        border = if (!state.monitorRunning)
+                            BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
+                        else null,
+                    ) {
+                        Row(
+                            Modifier.padding(start = 8.dp, end = 10.dp, top = 4.dp, bottom = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(5.dp),
+                        ) {
+                            Box(
+                                Modifier.size(6.dp).clip(CircleShape).background(monitorFg)
+                            )
+                            Text(
+                                if (state.monitorRunning) "Monitor ON" else "Monitor OFF",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.SemiBold,
+                                color = monitorFg,
+                            )
+                        }
+                    }
+                }
+            )
+
+            // Stats row
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                AppStatChip(
+                    icon  = Icons.Outlined.PhoneAndroid,
+                    label = "$totalCount Aplikasi",
+                    modifier = Modifier.weight(1f),
+                )
+                AppStatChip(
+                    icon   = Icons.Outlined.Tune,
+                    label  = "$activeCount Profile Aktif",
+                    active = activeCount > 0,
+                    modifier = Modifier.weight(1f),
+                )
+            }
+        }
+
+        // ── Search / Filter bar ──────────────────────────────────────
         SearchFilterBar(
             query          = searchQuery,
             onQueryChange  = { searchQuery = it },
             filterEnabled  = filterEnabled,
             onToggleFilter = { filterEnabled = !filterEnabled },
         )
+
         if (filtered.isEmpty()) {
             EmptyListHint(searchQuery.isNotEmpty())
         } else {
@@ -163,98 +231,39 @@ private fun ReadyContent(state: AppsUiState.Ready, vm: AppProfileViewModel) {
     }
 }
 
-// ─── Header ───────────────────────────────────────────────────────────────────
+// ─── Stat chip ────────────────────────────────────────────────────────────────
 
 @Composable
-private fun AppProfileHeader(
-    activeCount: Int,
-    monitorRunning: Boolean,
-    onToggleMonitor: (Boolean) -> Unit,
+private fun AppStatChip(
+    icon: ImageVector,
+    label: String,
+    active: Boolean = false,
+    modifier: Modifier = Modifier,
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.surfaceContainer)
-            .padding(horizontal = 16.dp, vertical = 14.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
+    Surface(
+        modifier = modifier,
+        shape    = RoundedCornerShape(12.dp),
+        color    = if (active) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
+                   else MaterialTheme.colorScheme.surfaceContainer,
+        border   = if (active) BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.25f))
+                   else BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.12f)),
     ) {
-        // Row 1: Title kiri, Monitor toggle kanan — sejajar vertical center
         Row(
-            Modifier.fillMaxWidth(),
+            Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
+            horizontalArrangement = Arrangement.spacedBy(7.dp),
         ) {
-            Text(
-                "App Profiles",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-            )
-
-            // Monitor toggle pill
-            val monitorBg by animateColorAsState(
-                if (monitorRunning) MaterialTheme.colorScheme.primaryContainer
-                else MaterialTheme.colorScheme.surfaceVariant,
-                label = "monitor_bg"
-            )
-            val monitorFg by animateColorAsState(
-                if (monitorRunning) MaterialTheme.colorScheme.primary
-                else MaterialTheme.colorScheme.onSurfaceVariant,
-                label = "monitor_fg"
-            )
-            Surface(
-                shape = RoundedCornerShape(50),
-                color = monitorBg,
-                border = if (!monitorRunning) BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)) else null,
-            ) {
-                Row(
-                    Modifier.padding(start = 10.dp, end = 6.dp, top = 3.dp, bottom = 3.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp),
-                ) {
-                    Icon(
-                        if (monitorRunning) Icons.Filled.FiberManualRecord else Icons.Outlined.RadioButtonUnchecked,
-                        contentDescription = null,
-                        tint = monitorFg,
-                        modifier = Modifier.size(8.dp),
-                    )
-                    Text(
-                        if (monitorRunning) "Monitor ON" else "Monitor OFF",
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.SemiBold,
-                        color = monitorFg,
-                    )
-                    Switch(
-                        checked = monitorRunning,
-                        onCheckedChange = onToggleMonitor,
-                        modifier = Modifier
-                            .height(24.dp)
-                            .scale(0.65f),
-                        colors = SwitchDefaults.colors(
-                            checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
-                            checkedTrackColor = MaterialTheme.colorScheme.primary,
-                        )
-                    )
-                }
-            }
-        }
-
-        // Row 2: Status dot + teks aktif — di bawah title, tidak berdesakan dengan toggle
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(5.dp),
-        ) {
-            val dotColor = if (activeCount > 0) MaterialTheme.colorScheme.primary
-                           else MaterialTheme.colorScheme.outline
-            Box(
-                Modifier
-                    .size(6.dp)
-                    .clip(CircleShape)
-                    .background(dotColor)
+            Icon(
+                icon, null,
+                modifier = Modifier.size(15.dp),
+                tint = if (active) MaterialTheme.colorScheme.primary
+                       else MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Text(
-                if (activeCount > 0) "$activeCount profile aktif" else "Tidak ada profile aktif",
-                style = MaterialTheme.typography.labelSmall,
-                color = if (activeCount > 0) MaterialTheme.colorScheme.primary
+                label,
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.Medium,
+                color = if (active) MaterialTheme.colorScheme.primary
                         else MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
@@ -336,7 +345,6 @@ private fun AppListItem(
     val isEnabled  = profile?.enabled == true
     var showDeleteDialog by remember { mutableStateOf(false) }
 
-    // Load icon bitmap asynchronously to avoid janky scroll
     val iconBitmap by produceState<Bitmap?>(initialValue = null, key1 = app.packageName) {
         value = withContext(Dispatchers.IO) {
             runCatching { app.icon?.let { drawableToBitmap(it) } }.getOrNull()
@@ -357,31 +365,13 @@ private fun AppListItem(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            // App icon
-            AppIconView(
-                bitmap     = iconBitmap,
-                label      = app.label,
-                isEnabled  = isEnabled,
-                size       = 44.dp,
-                cornerSize = 12.dp,
-            )
+            AppIconView(bitmap = iconBitmap, label = app.label, isEnabled = isEnabled, size = 44.dp, cornerSize = 12.dp)
 
-            // App label + pkg + badges
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(
-                    app.label,
-                    style      = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Medium,
-                    maxLines   = 1,
-                    overflow   = TextOverflow.Ellipsis,
-                )
-                Text(
-                    app.packageName,
-                    style   = MaterialTheme.typography.labelSmall,
-                    color   = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
+                Text(app.label, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium,
+                    maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(app.packageName, style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 if (hasProfile && isEnabled) {
                     val gov = profile!!.cpuGovernor
                     val rr  = profile.refreshRate
@@ -392,7 +382,6 @@ private fun AppListItem(
                 }
             }
 
-            // Trailing
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(2.dp)) {
                 if (isEnabled) {
                     Icon(Icons.Filled.CheckCircle, null,
@@ -400,13 +389,11 @@ private fun AppListItem(
                 }
                 if (onDelete != null) {
                     IconButton(onClick = { showDeleteDialog = true }, modifier = Modifier.size(30.dp)) {
-                        Icon(Icons.Outlined.DeleteOutline, null,
-                            modifier = Modifier.size(18.dp),
+                        Icon(Icons.Outlined.DeleteOutline, null, modifier = Modifier.size(18.dp),
                             tint = MaterialTheme.colorScheme.error.copy(alpha = 0.6f))
                     }
                 }
-                Icon(Icons.Filled.ChevronRight, null,
-                    modifier = Modifier.size(20.dp),
+                Icon(Icons.Filled.ChevronRight, null, modifier = Modifier.size(20.dp),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
             }
         }
@@ -433,38 +420,20 @@ private fun AppListItem(
 // ─── Shared icon view ─────────────────────────────────────────────────────────
 
 @Composable
-private fun AppIconView(
-    bitmap: Bitmap?,
-    label: String,
-    isEnabled: Boolean,
-    size: Dp,
-    cornerSize: Dp,
-) {
-    Box(
-        Modifier.size(size).clip(RoundedCornerShape(cornerSize)),
-        contentAlignment = Alignment.Center,
-    ) {
+private fun AppIconView(bitmap: Bitmap?, label: String, isEnabled: Boolean, size: Dp, cornerSize: Dp) {
+    Box(Modifier.size(size).clip(RoundedCornerShape(cornerSize)), contentAlignment = Alignment.Center) {
         if (bitmap != null) {
-            Image(
-                painter = BitmapPainter(bitmap.asImageBitmap()),
-                contentDescription = label,
-                modifier = Modifier.fillMaxSize(),
-            )
+            Image(painter = BitmapPainter(bitmap.asImageBitmap()), contentDescription = label,
+                modifier = Modifier.fillMaxSize())
         } else {
-            Box(
-                Modifier.fillMaxSize().background(
-                    if (isEnabled) MaterialTheme.colorScheme.primary
-                    else MaterialTheme.colorScheme.secondaryContainer
-                ),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    label.take(1).uppercase(),
-                    style      = MaterialTheme.typography.titleMedium,
+            Box(Modifier.fillMaxSize().background(
+                if (isEnabled) MaterialTheme.colorScheme.primary
+                else MaterialTheme.colorScheme.secondaryContainer
+            ), contentAlignment = Alignment.Center) {
+                Text(label.take(1).uppercase(), style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color      = if (isEnabled) MaterialTheme.colorScheme.onPrimary
-                                 else MaterialTheme.colorScheme.onSecondaryContainer,
-                )
+                    color = if (isEnabled) MaterialTheme.colorScheme.onPrimary
+                            else MaterialTheme.colorScheme.onSecondaryContainer)
             }
         }
     }
@@ -474,15 +443,9 @@ private fun AppIconView(
 
 @Composable
 private fun ProfileBadge(text: String, icon: ImageVector) {
-    Surface(
-        shape = RoundedCornerShape(6.dp),
-        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
-    ) {
-        Row(
-            Modifier.padding(horizontal = 5.dp, vertical = 2.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(3.dp)
-        ) {
+    Surface(shape = RoundedCornerShape(6.dp), color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)) {
+        Row(Modifier.padding(horizontal = 5.dp, vertical = 2.dp),
+            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(3.dp)) {
             Icon(icon, null, modifier = Modifier.size(10.dp), tint = MaterialTheme.colorScheme.primary)
             Text(text, style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.primary, fontSize = 10.sp)
@@ -503,8 +466,6 @@ fun AppProfileEditor(
     onSave: (AppProfile) -> Unit,
 ) {
     var draft by remember(profile) { mutableStateOf(profile) }
-
-    // Load icon async
     val iconBitmap by produceState<Bitmap?>(initialValue = null, key1 = profile.packageName) {
         value = withContext(Dispatchers.IO) {
             runCatching { appIcon?.let { drawableToBitmap(it) } }.getOrNull()
@@ -519,90 +480,40 @@ fun AppProfileEditor(
         containerColor = MaterialTheme.colorScheme.surface,
     ) {
         Column(
-            Modifier
-                .fillMaxWidth()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp)
-                .padding(bottom = 32.dp),
+            Modifier.fillMaxWidth().verticalScroll(rememberScrollState())
+                .padding(horizontal = 20.dp).padding(bottom = 32.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // App header
-            Row(
-                Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(14.dp)
-            ) {
-                AppIconView(
-                    bitmap     = iconBitmap,
-                    label      = appLabel,
-                    isEnabled  = draft.enabled,
-                    size       = 52.dp,
-                    cornerSize = 14.dp,
-                )
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+                AppIconView(bitmap = iconBitmap, label = appLabel, isEnabled = draft.enabled, size = 52.dp, cornerSize = 14.dp)
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     Text(appLabel, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold,
                         maxLines = 1, overflow = TextOverflow.Ellipsis)
                     Text(draft.packageName, style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
-                // Enable toggle
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Switch(
-                        checked  = draft.enabled,
-                        onCheckedChange = { draft = draft.copy(enabled = it) },
+                    Switch(checked = draft.enabled, onCheckedChange = { draft = draft.copy(enabled = it) },
                         colors = SwitchDefaults.colors(
                             checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
-                            checkedTrackColor = MaterialTheme.colorScheme.primary,
-                        )
-                    )
-                    Text(
-                        if (draft.enabled) "Aktif" else "Nonaktif",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = if (draft.enabled) MaterialTheme.colorScheme.primary
-                                else MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
+                            checkedTrackColor = MaterialTheme.colorScheme.primary))
+                    Text(if (draft.enabled) "Aktif" else "Nonaktif", style = MaterialTheme.typography.labelSmall,
+                        color = if (draft.enabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
-
             HorizontalDivider()
-
-            // CPU Governor
             EditorSectionHeader(Icons.Filled.Memory, "CPU Governor")
-            GovernorSelector(
-                selected = draft.cpuGovernor,
-                onSelect = { draft = draft.copy(cpuGovernor = it) },
-                enabled  = draft.enabled,
-            )
-
-            // Refresh Rate
+            GovernorSelector(selected = draft.cpuGovernor, onSelect = { draft = draft.copy(cpuGovernor = it) }, enabled = draft.enabled)
             EditorSectionHeader(Icons.Filled.DisplaySettings, "Refresh Rate")
-            RefreshRateSelector(
-                selected = draft.refreshRate,
-                onSelect = { draft = draft.copy(refreshRate = it) },
-                enabled  = draft.enabled,
-            )
-
-            // Extra Tweaks
+            RefreshRateSelector(selected = draft.refreshRate, onSelect = { draft = draft.copy(refreshRate = it) }, enabled = draft.enabled)
             EditorSectionHeader(Icons.Filled.Tune, "Tweaks Tambahan")
-            ExtraTweaksPanel(
-                tweaks   = draft.extraTweaks,
-                enabled  = draft.enabled,
-                onChange = { draft = draft.copy(extraTweaks = it) },
-            )
-
+            ExtraTweaksPanel(tweaks = draft.extraTweaks, enabled = draft.enabled, onChange = { draft = draft.copy(extraTweaks = it) })
             Spacer(Modifier.height(4.dp))
-
-            // Save button
-            Button(
-                onClick  = { onSave(draft) },
-                enabled  = !saving,
-                modifier = Modifier.fillMaxWidth().height(50.dp),
-                shape    = RoundedCornerShape(14.dp),
-            ) {
+            Button(onClick = { onSave(draft) }, enabled = !saving,
+                modifier = Modifier.fillMaxWidth().height(50.dp), shape = RoundedCornerShape(14.dp)) {
                 if (saving) {
-                    CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp,
-                        color = MaterialTheme.colorScheme.onPrimary)
+                    CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp, color = MaterialTheme.colorScheme.onPrimary)
                 } else {
                     Icon(Icons.Filled.Save, null, modifier = Modifier.size(18.dp))
                     Spacer(Modifier.width(8.dp))
@@ -612,8 +523,6 @@ fun AppProfileEditor(
         }
     }
 }
-
-// ─── Editor sub-components ────────────────────────────────────────────────────
 
 @Composable
 private fun EditorSectionHeader(icon: ImageVector, title: String) {
@@ -629,39 +538,24 @@ private fun GovernorSelector(selected: String, onSelect: (String) -> Unit, enabl
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             listOf("default", "performance", "powersave").forEach { gov ->
-                GovernorChip(
-                    label    = CpuGovernors.labels[gov] ?: gov,
-                    icon     = govIcon(gov),
-                    selected = selected == gov,
-                    enabled  = enabled,
-                    modifier = Modifier.weight(1f),
-                    onClick  = { onSelect(gov) },
-                )
+                GovernorChip(label = CpuGovernors.labels[gov] ?: gov, icon = govIcon(gov),
+                    selected = selected == gov, enabled = enabled, modifier = Modifier.weight(1f), onClick = { onSelect(gov) })
             }
         }
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             listOf("ondemand", "conservative").forEach { gov ->
-                GovernorChip(
-                    label    = CpuGovernors.labels[gov] ?: gov,
-                    icon     = govIcon(gov),
-                    selected = selected == gov,
-                    enabled  = enabled,
-                    modifier = Modifier.weight(1f),
-                    onClick  = { onSelect(gov) },
-                )
+                GovernorChip(label = CpuGovernors.labels[gov] ?: gov, icon = govIcon(gov),
+                    selected = selected == gov, enabled = enabled, modifier = Modifier.weight(1f), onClick = { onSelect(gov) })
             }
         }
         AnimatedContent(selected, label = "gov_desc") { gov ->
             val desc = govDescription(gov)
             if (desc.isNotEmpty()) {
                 Surface(color = MaterialTheme.colorScheme.surfaceVariant, shape = RoundedCornerShape(10.dp)) {
-                    Row(Modifier.padding(10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.Top) {
-                        Icon(Icons.Outlined.Info, null,
-                            modifier = Modifier.size(13.dp).padding(top = 1.dp),
+                    Row(Modifier.padding(10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.Top) {
+                        Icon(Icons.Outlined.Info, null, modifier = Modifier.size(13.dp).padding(top = 1.dp),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Text(desc, style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(desc, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
             }
@@ -670,38 +564,18 @@ private fun GovernorSelector(selected: String, onSelect: (String) -> Unit, enabl
 }
 
 @Composable
-private fun GovernorChip(
-    label: String,
-    icon: ImageVector,
-    selected: Boolean,
-    enabled: Boolean,
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit,
-) {
+private fun GovernorChip(label: String, icon: ImageVector, selected: Boolean, enabled: Boolean,
+    modifier: Modifier = Modifier, onClick: () -> Unit) {
     val bg by animateColorAsState(
         if (selected) MaterialTheme.colorScheme.primary
         else if (!enabled) MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-        else MaterialTheme.colorScheme.surfaceVariant,
-        label = "gov_chip_bg"
-    )
+        else MaterialTheme.colorScheme.surfaceVariant, label = "gov_chip_bg")
     val fg by animateColorAsState(
-        if (selected) MaterialTheme.colorScheme.onPrimary
-        else MaterialTheme.colorScheme.onSurfaceVariant,
-        label = "gov_chip_fg"
-    )
-    Surface(
-        onClick  = { if (enabled) onClick() },
-        modifier = modifier,
-        shape    = RoundedCornerShape(12.dp),
-        color    = bg,
-        border   = if (!selected) BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.25f)) else null,
-        enabled  = enabled,
-    ) {
-        Column(
-            Modifier.padding(horizontal = 8.dp, vertical = 10.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
+        if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant, label = "gov_chip_fg")
+    Surface(onClick = { if (enabled) onClick() }, modifier = modifier, shape = RoundedCornerShape(12.dp), color = bg,
+        border = if (!selected) BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.25f)) else null, enabled = enabled) {
+        Column(Modifier.padding(horizontal = 8.dp, vertical = 10.dp),
+            horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Icon(icon, null, modifier = Modifier.size(18.dp), tint = fg)
             Text(label, style = MaterialTheme.typography.labelSmall,
                 fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
@@ -712,39 +586,22 @@ private fun GovernorChip(
 
 @Composable
 private fun RefreshRateSelector(selected: String, onSelect: (String) -> Unit, enabled: Boolean) {
-    Row(
-        Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
+    Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         RefreshRates.all.forEach { rate ->
             val isSelected = selected == rate
             val bg by animateColorAsState(
                 if (isSelected) MaterialTheme.colorScheme.secondary
                 else if (!enabled) MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-                else MaterialTheme.colorScheme.surfaceVariant,
-                label = "rr_chip_$rate"
-            )
+                else MaterialTheme.colorScheme.surfaceVariant, label = "rr_chip_$rate")
             val fg by animateColorAsState(
-                if (isSelected) MaterialTheme.colorScheme.onSecondary
-                else MaterialTheme.colorScheme.onSurfaceVariant,
-                label = "rr_fg_$rate"
-            )
-            Surface(
-                onClick  = { if (enabled) onSelect(rate) },
-                shape    = RoundedCornerShape(12.dp),
-                color    = bg,
-                enabled  = enabled,
-                border   = if (!isSelected) BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.25f)) else null,
-            ) {
-                Column(
-                    Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(2.dp)
-                ) {
+                if (isSelected) MaterialTheme.colorScheme.onSecondary else MaterialTheme.colorScheme.onSurfaceVariant, label = "rr_fg_$rate")
+            Surface(onClick = { if (enabled) onSelect(rate) }, shape = RoundedCornerShape(12.dp), color = bg, enabled = enabled,
+                border = if (!isSelected) BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.25f)) else null) {
+                Column(Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     Icon(Icons.Filled.Refresh, null, modifier = Modifier.size(18.dp), tint = fg)
                     Text(RefreshRates.labels[rate] ?: rate, style = MaterialTheme.typography.labelSmall,
-                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                        color = fg)
+                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal, color = fg)
                 }
             }
         }
@@ -752,88 +609,48 @@ private fun RefreshRateSelector(selected: String, onSelect: (String) -> Unit, en
 }
 
 @Composable
-private fun ExtraTweaksPanel(
-    tweaks: AppExtraTweaks,
-    enabled: Boolean,
-    onChange: (AppExtraTweaks) -> Unit,
-) {
-    Surface(
-        shape = RoundedCornerShape(14.dp),
-        color = MaterialTheme.colorScheme.surfaceContainer,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.15f)),
-    ) {
+private fun ExtraTweaksPanel(tweaks: AppExtraTweaks, enabled: Boolean, onChange: (AppExtraTweaks) -> Unit) {
+    Surface(shape = RoundedCornerShape(14.dp), color = MaterialTheme.colorScheme.surfaceContainer,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.15f))) {
         Column(Modifier.fillMaxWidth()) {
-            TweakToggleRow(Icons.Outlined.BatterySaver, "Disable Doze",
-                "Cegah Doze mode saat app aktif",
+            TweakToggleRow(Icons.Outlined.BatterySaver, "Disable Doze", "Cegah Doze mode saat app aktif",
                 tweaks.disableDoze, enabled) { onChange(tweaks.copy(disableDoze = it)) }
             HorizontalDivider(Modifier.padding(horizontal = 14.dp), thickness = 0.5.dp)
-            TweakToggleRow(Icons.Outlined.Speed, "Lock CPU Min Freq",
-                "Kunci frekuensi minimum CPU agar tidak drop",
+            TweakToggleRow(Icons.Outlined.Speed, "Lock CPU Min Freq", "Kunci frekuensi minimum CPU agar tidak drop",
                 tweaks.lockCpuMin, enabled) { onChange(tweaks.copy(lockCpuMin = it)) }
             HorizontalDivider(Modifier.padding(horizontal = 14.dp), thickness = 0.5.dp)
-            TweakToggleRow(Icons.Outlined.CleaningServices, "Kill Background Apps",
-                "Matikan semua background app saat dibuka",
+            TweakToggleRow(Icons.Outlined.CleaningServices, "Kill Background Apps", "Matikan semua background app saat dibuka",
                 tweaks.killBackground, enabled) { onChange(tweaks.copy(killBackground = it)) }
             HorizontalDivider(Modifier.padding(horizontal = 14.dp), thickness = 0.5.dp)
-            TweakToggleRow(Icons.Outlined.Videocam, "GPU Boost",
-                "Set GPU governor ke performance",
+            TweakToggleRow(Icons.Outlined.Videocam, "GPU Boost", "Set GPU governor ke performance",
                 tweaks.gpuBoost, enabled) { onChange(tweaks.copy(gpuBoost = it)) }
             HorizontalDivider(Modifier.padding(horizontal = 14.dp), thickness = 0.5.dp)
-            TweakToggleRow(Icons.Outlined.Storage, "I/O Latency Opt",
-                "Kurangi read-ahead I/O untuk latency lebih rendah",
+            TweakToggleRow(Icons.Outlined.Storage, "I/O Latency Opt", "Kurangi read-ahead I/O untuk latency lebih rendah",
                 tweaks.ioLatency, enabled, isLast = true) { onChange(tweaks.copy(ioLatency = it)) }
         }
     }
 }
 
 @Composable
-private fun TweakToggleRow(
-    icon: ImageVector,
-    title: String,
-    subtitle: String,
-    checked: Boolean,
-    enabled: Boolean,
-    isLast: Boolean = false,
-    onChange: (Boolean) -> Unit,
-) {
-    Row(
-        Modifier
-            .fillMaxWidth()
-            .clickable(enabled = enabled) { onChange(!checked) }
-            .padding(horizontal = 14.dp, vertical = 11.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        Box(
-            Modifier.size(34.dp).clip(RoundedCornerShape(10.dp))
-                .background(
-                    if (checked && enabled) MaterialTheme.colorScheme.primaryContainer
-                    else MaterialTheme.colorScheme.surfaceVariant
-                ),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                icon, null,
-                modifier = Modifier.size(17.dp),
-                tint = if (checked && enabled) MaterialTheme.colorScheme.onPrimaryContainer
-                       else MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+private fun TweakToggleRow(icon: ImageVector, title: String, subtitle: String, checked: Boolean,
+    enabled: Boolean, isLast: Boolean = false, onChange: (Boolean) -> Unit) {
+    Row(Modifier.fillMaxWidth().clickable(enabled = enabled) { onChange(!checked) }
+        .padding(horizontal = 14.dp, vertical = 11.dp),
+        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        Box(Modifier.size(34.dp).clip(RoundedCornerShape(10.dp)).background(
+            if (checked && enabled) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant),
+            contentAlignment = Alignment.Center) {
+            Icon(icon, null, modifier = Modifier.size(17.dp),
+                tint = if (checked && enabled) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant)
         }
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(1.dp)) {
             Text(title, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Medium)
-            Text(subtitle, style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(subtitle, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
-        Switch(
-            checked         = checked,
-            onCheckedChange = { if (enabled) onChange(it) },
-            enabled         = enabled,
-            modifier        = Modifier.scale(0.75f),
-            colors          = SwitchDefaults.colors(
-                checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
-                checkedTrackColor = MaterialTheme.colorScheme.primary,
-            )
-        )
+        Switch(checked = checked, onCheckedChange = { if (enabled) onChange(it) }, enabled = enabled,
+            modifier = Modifier.scale(0.75f),
+            colors = SwitchDefaults.colors(checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
+                checkedTrackColor = MaterialTheme.colorScheme.primary))
     }
 }
 
