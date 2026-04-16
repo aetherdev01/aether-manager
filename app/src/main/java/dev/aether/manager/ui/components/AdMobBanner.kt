@@ -4,11 +4,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import dev.aether.manager.ads.AdBannerView
+import dev.aether.manager.ads.InterstitialAdTrigger
 
 /**
- * Wrapper Composable untuk Unity Ads Banner.
- * Nama file dipertahankan agar tidak perlu update import di tempat lain.
+ * Wrapper Composable untuk Unity Ads.
+ * Banner placement dihapus; hanya trigger interstitial yang tersedia.
  */
 @Composable
 fun AdMobBanner(
@@ -16,5 +16,5 @@ fun AdMobBanner(
         .fillMaxWidth()
         .wrapContentHeight()
 ) {
-    AdBannerView(modifier = modifier)
+    InterstitialAdTrigger()
 }
