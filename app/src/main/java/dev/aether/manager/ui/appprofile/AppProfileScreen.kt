@@ -50,7 +50,7 @@ fun AppProfileScreen(vm: AppProfileViewModel) {
         snackbarHost = { SnackbarHost(snackState) },
         containerColor = MaterialTheme.colorScheme.background,
     ) { pad ->
-        Box(Modifier.padding(pad).fillMaxSize()) {
+        Box(Modifier.padding(bottom = pad.calculateBottomPadding()).fillMaxSize()) {
             AnimatedContent(
                 targetState = state,
                 transitionSpec = { fadeIn(tween(280)) togetherWith fadeOut(tween(180)) },
@@ -184,7 +184,7 @@ private fun ReadyContent(state: AppsUiState.Ready, vm: AppProfileViewModel) {
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp)
                 .padding(top = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             AppStatChip(
                 icon  = Icons.Outlined.PhoneAndroid,

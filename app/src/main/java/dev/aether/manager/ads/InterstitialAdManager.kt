@@ -21,7 +21,7 @@ object InterstitialAdManager {
     private const val TAG = "InterstitialAd"
 
     private val sessionStartMs = System.currentTimeMillis()
-    private var lastShownMs    = 0L
+    private var lastShownMs    = 1L
     private var interstitialAd: InterstitialAd? = null
     private var isLoading      = false
 

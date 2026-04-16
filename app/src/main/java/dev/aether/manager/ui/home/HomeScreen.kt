@@ -250,7 +250,7 @@ private fun MonitorSection(state: MonitorState) {
                 else                 -> Icons.Outlined.BatteryFull
             }
             ArcGaugeCard(
-                "Baterai", state.batLevel,
+                "Battery", state.batLevel,
                 if (state.batTemp > 0f) "%.1f°C".format(state.batTemp) else "—",
                 batColor, batIcon, Modifier.weight(1f), invertColor = true
             )
@@ -575,7 +575,7 @@ private fun TempRow(cpuTemp: Float, batTemp: Float) {
                 verticalArrangement  = Arrangement.spacedBy(1.dp),
                 horizontalAlignment  = Alignment.End
             ) {
-                Text("Baterai", style = MaterialTheme.typography.labelSmall,
+                Text("Battery", style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Text(
                     if (batTemp > 0f) "%.1f°C".format(batTemp) else "—",
