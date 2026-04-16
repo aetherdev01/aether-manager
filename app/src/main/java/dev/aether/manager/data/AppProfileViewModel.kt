@@ -62,10 +62,23 @@ class AppProfileViewModel(application: Application) : AndroidViewModel(applicati
             if (s is AppsUiState.Ready) {
                 val updated = s.profiles.toMutableMap()
                 updated[profile.packageName] = profile
-                _state.value = s.copy(profiles = updated)
+                val hasEnabled = updated.values.any { it.enabled }
+                val monitorWasOff = !s.monitorRunning
+                // Auto-start monitor if there's any enabled profile and monitor is off
+                if (hasEnabled && monitorWasOff) {
+                    AppProfileRepository.startMonitor()
+                    _state.value = s.copy(profiles = updated, monitorRunning = true)
+                    snack("Profile disimpan ✓ — Monitor aktif otomatis")
+                } else {
+                    // Regenerate script with updated profiles even if monitor is already running
+                    if (s.monitorRunning) {
+                        AppProfileRepository.startMonitor() // restart to reload script
+                    }
+                    _state.value = s.copy(profiles = updated)
+                    snack("Profile disimpan ✓")
+                }
             }
             _editingProfile.value = null
-            snack("Profile disimpan ✓")
         } catch (e: Exception) {
             snack("Gagal simpan: ${e.message}")
         }

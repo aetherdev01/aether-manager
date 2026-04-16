@@ -143,12 +143,18 @@ object AppProfileRepository {
                     }
                     if (rr != "default") {
                         appendLine("      _RR=$rr")
-                        appendLine("      service call SurfaceFlinger 1035 i32 \$_RR 2>/dev/null || true")
+                        appendLine("      # Apply refresh rate via all known methods")
                         appendLine("      settings put system peak_refresh_rate \$_RR 2>/dev/null || true")
                         appendLine("      settings put system min_refresh_rate \$_RR 2>/dev/null || true")
-                        appendLine("      echo \$_RR > /sys/devices/platform/soc/soc:qcom,dsi-display*/refresh_rate 2>/dev/null || true")
-                        appendLine("      echo \$_RR > /sys/class/display/panel0/max_refresh_rate 2>/dev/null || true")
-                        appendLine("      echo \$_RR > /proc/drm/card0/max_refresh_rate 2>/dev/null || true")
+                        appendLine("      # SurfaceFlinger binder call (works on most Qualcomm)")
+                        appendLine("      service call SurfaceFlinger 1035 i32 \$_RR 2>/dev/null || true")
+                        appendLine("      # sysfs paths for Qualcomm DSI panels")
+                        appendLine("      for _DSI in /sys/devices/platform/soc/soc:qcom,dsi-display* /sys/devices/platform/soc/*.dsi*; do")
+                        appendLine("        [ -f \"\$_DSI/refresh_rate\" ] && echo \$_RR > \"\$_DSI/refresh_rate\" 2>/dev/null || true")
+                        appendLine("        [ -f \"\$_DSI/dynamic_fps\" ]   && echo \$_RR > \"\$_DSI/dynamic_fps\" 2>/dev/null || true")
+                        appendLine("      done")
+                        appendLine("      [ -f /sys/class/display/panel0/max_refresh_rate ] && echo \$_RR > /sys/class/display/panel0/max_refresh_rate 2>/dev/null || true")
+                        appendLine("      [ -f /sys/class/display/panel0/min_refresh_rate ] && echo \$_RR > /sys/class/display/panel0/min_refresh_rate 2>/dev/null || true")
                     }
                     if (tweaks.optBoolean("disable_doze", false)) {
                         appendLine("      dumpsys deviceidle disable 2>/dev/null || true")
@@ -200,7 +206,7 @@ ${cases}
       for cpu in /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor; do
         echo "${'$'}_DEF" > "${'$'}cpu" 2>/dev/null || true
       done
-      settings put system peak_refresh_rate 0 2>/dev/null || true
+      settings delete system peak_refresh_rate 2>/dev/null || true
       settings delete system min_refresh_rate 2>/dev/null || true
       for gf in /sys/class/kgsl/kgsl-3d0/devfreq /sys/class/devfreq/*.gpu /sys/class/devfreq/gpufreq /sys/class/devfreq/mali /sys/devices/platform/mali; do
         [ -d "${'$'}gf" ] && echo msm-adreno-tz > "${'$'}gf/governor" 2>/dev/null || \

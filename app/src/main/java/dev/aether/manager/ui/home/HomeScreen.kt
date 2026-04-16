@@ -168,39 +168,13 @@ private fun HeroCard(info: DeviceInfo) {
             modifier = Modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 16.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            // Top row: badge kiri, rootType kanan
-            Row(
-                modifier              = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment     = Alignment.CenterVertically
-            ) {
-                SocBadge(info.soc)
-                Surface(shape = CircleShape, color = primary) {
-                    Text(
-                        info.rootType,
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 3.dp),
-                        color    = MaterialTheme.colorScheme.onPrimary,
-                        fontSize = 10.sp, fontWeight = FontWeight.SemiBold
-                    )
-                }
-            }
-
-            // Device model + profile pill
-            Row(
-                modifier          = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    info.model,
-                    style      = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color      = onContainer,
-                    modifier   = Modifier.weight(1f)
-                )
-                Spacer(Modifier.width(8.dp))
-                ProfilePill(info.profile)
-            }
+            // Device model
+            Text(
+                info.model,
+                style      = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color      = onContainer,
+            )
 
             // Info chips — 2×2 grid
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
