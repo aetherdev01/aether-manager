@@ -23,6 +23,7 @@ import dev.aether.manager.data.MainViewModel
 import dev.aether.manager.data.UiState
 import dev.aether.manager.i18n.LocalStrings
 import dev.aether.manager.ui.components.*
+import dev.aether.manager.ui.home.TabSectionTitle
 
 @Composable
 fun TweakScreen(vm: MainViewModel) {
@@ -48,7 +49,7 @@ fun TweakScreen(vm: MainViewModel) {
 
             // ── Performance Profile ───────────────────────────
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                SectionHeader(s.tweakPerformanceProfile)
+                TabSectionTitle(icon = Icons.Outlined.Tune, title = s.tweakPerformanceProfile)
                 val current = (deviceState as? UiState.Success)?.data?.profile ?: "balance"
                 ProfileGrid(current = current, onSelect = { vm.setProfile(it) })
             }
@@ -129,7 +130,7 @@ fun TweakScreen(vm: MainViewModel) {
 @Composable
 private fun TweakSection(title: String, content: @Composable ColumnScope.() -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        SectionHeader(title)
+        TabSectionTitle(icon = Icons.Outlined.Settings, title = title)
         Surface(
             shape          = RoundedCornerShape(20.dp),
             color          = MaterialTheme.colorScheme.surfaceContainerLow,
