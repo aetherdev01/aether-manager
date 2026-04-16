@@ -167,8 +167,8 @@ LAST=""
 PROFILE_DIR=$PROFILE_DIR
 
 apply_profile() {
-  local pkg="$1"
-  case "$pkg" in
+  local pkg="${'$'}1"
+  case "${'$'}pkg" in
 ${cases}
     *)
       # Restore defaults when unlisted app is in foreground

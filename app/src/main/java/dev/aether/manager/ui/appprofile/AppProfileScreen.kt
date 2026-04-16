@@ -425,7 +425,7 @@ fun AppProfileEditor(
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
-        sheetState = rememberModalBottomSheetState(skipPartialExpansion = true),
+        sheetState = rememberModalBottomSheetState(),
         dragHandle  = { BottomSheetDefaults.DragHandle() },
         shape       = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
         containerColor = MaterialTheme.colorScheme.surface,
