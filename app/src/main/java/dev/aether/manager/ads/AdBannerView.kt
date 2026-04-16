@@ -37,14 +37,14 @@ fun AdBannerView(
         BannerView(activity, AdManager.BANNER_PLACEMENT_ID, UnityBannerSize.getDynamicSize(context))
     }
 
-    var sdkReady by remember { mutableStateOf(UnityAds.isInitialized()) }
+    var sdkReady by remember { mutableStateOf<Boolean>(UnityAds.isInitialized) }
 
     // Poll until SDK is ready (handles the async init race condition)
     LaunchedEffect(sdkReady) {
         if (!sdkReady) {
             repeat(20) { // max ~10 seconds
                 delay(500L)
-                if (UnityAds.isInitialized()) {
+                if (UnityAds.isInitialized) {
                     sdkReady = true
                     return@LaunchedEffect
                 }

@@ -39,12 +39,12 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 
     kotlinOptions {
-        jvmTarget = "11"
+        jvmTarget = "17"
         freeCompilerArgs += listOf(
             "-opt-in=kotlin.RequiresOptIn",
             "-Xjvm-default=all"
@@ -87,18 +87,4 @@ dependencies {
     implementation(libs.androidx.appcompat)
     implementation(libs.unity.ads)
     debugImplementation(libs.androidx.ui.tooling)
-}
-
-configurations.all {
-    resolutionStrategy.eachDependency {
-        val v = requested.version ?: return@eachDependency
-        if (requested.group == "androidx.core" && (v.contains("alpha") || v.contains("beta"))) {
-            useVersion("1.13.1")
-            because("Block alpha/beta core")
-        }
-        if (requested.group == "androidx.activity" && (v.contains("alpha") || v.contains("beta"))) {
-            useVersion("1.9.3")
-            because("Block alpha/beta activity")
-        }
-    }
 }
