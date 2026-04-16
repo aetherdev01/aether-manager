@@ -124,7 +124,16 @@ private fun ReadyContent(state: AppsUiState.Ready, vm: AppProfileViewModel) {
         }
     }
 
+    val activeCount = remember(state.profiles) {
+        state.profiles.values.count { it.enabled }
+    }
+
     Column(Modifier.fillMaxSize()) {
+        AppProfileHeader(
+            activeCount     = activeCount,
+            monitorRunning  = state.monitorRunning,
+            onToggleMonitor = { vm.toggleMonitor(it) },
+        )
         SearchFilterBar(
             query          = searchQuery,
             onQueryChange  = { searchQuery = it },

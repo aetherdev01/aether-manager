@@ -51,21 +51,6 @@ fun AboutScreen(vm: MainViewModel) {
         )
         DevProfileCard()
 
-        // ── Section: App Info ─────────────────────────────────
-        TabSectionTitle(
-            icon  = Icons.Outlined.Info,
-            title = s.aboutSectionAppInfo
-        )
-        AboutSection {
-            AboutRow(s.aboutApp,     "Aether Manager",              Icons.Outlined.Extension,   MaterialTheme.colorScheme.primary)
-            AboutDivider()
-            AboutRow(s.aboutVersion, "v2.0 (2)",                    Icons.Outlined.Tag,          MaterialTheme.colorScheme.secondary)
-            AboutDivider()
-            AboutRow(s.aboutMode,    s.aboutModeValue,              Icons.Outlined.Folder,       MaterialTheme.colorScheme.tertiary)
-            AboutDivider()
-            AboutRow(s.aboutSupport, "MTK · SD · Exynos · Kirin",   Icons.Outlined.Devices,      MaterialTheme.colorScheme.primary)
-        }
-
         // ── Section: Komunitas ────────────────────────────────
         TabSectionTitle(
             icon  = Icons.Outlined.Language,
@@ -73,35 +58,26 @@ fun AboutScreen(vm: MainViewModel) {
         )
         AboutSection {
             LinkRow(
-                icon           = Icons.Outlined.Code,
-                label          = s.aboutGithub,
-                subtitle       = "github.com/aetherdev01",
-                badge          = "Open Source",
-                badgeColor     = MaterialTheme.colorScheme.primaryContainer,
-                badgeTextColor = MaterialTheme.colorScheme.primary,
-                onClick        = { ctx.startActivity(Intent(Intent.ACTION_VIEW,
+                icon     = Icons.Outlined.Code,
+                label    = s.aboutGithub,
+                subtitle = "github.com/aetherdev01",
+                onClick  = { ctx.startActivity(Intent(Intent.ACTION_VIEW,
                     Uri.parse("https://github.com/aetherdev01"))) }
             )
             AboutDivider()
             LinkRow(
-                icon           = Icons.Outlined.Send,
-                label          = s.aboutTelegram,
-                subtitle       = "@get01projects",
-                badge          = "Channel",
-                badgeColor     = MaterialTheme.colorScheme.secondaryContainer,
-                badgeTextColor = MaterialTheme.colorScheme.secondary,
-                onClick        = { ctx.startActivity(Intent(Intent.ACTION_VIEW,
+                icon     = Icons.Outlined.Send,
+                label    = s.aboutTelegram,
+                subtitle = "@get01projects",
+                onClick  = { ctx.startActivity(Intent(Intent.ACTION_VIEW,
                     Uri.parse("https://t.me/get01projects"))) }
             )
             AboutDivider()
             LinkRow(
-                icon           = Icons.Outlined.Favorite,
-                label          = s.aboutSaweriaLabel,
-                subtitle       = s.aboutSaweria,
-                badge          = "Support",
-                badgeColor     = MaterialTheme.colorScheme.tertiaryContainer,
-                badgeTextColor = MaterialTheme.colorScheme.tertiary,
-                onClick        = { ctx.startActivity(Intent(Intent.ACTION_VIEW,
+                icon     = Icons.Outlined.Favorite,
+                label    = s.aboutSaweriaLabel,
+                subtitle = s.aboutSaweria,
+                onClick  = { ctx.startActivity(Intent(Intent.ACTION_VIEW,
                     Uri.parse("https://saweria.co/AetherDev"))) }
             )
         }
@@ -255,9 +231,6 @@ private fun LinkRow(
     icon: ImageVector,
     label: String,
     subtitle: String,
-    badge: String,
-    badgeColor: Color,
-    badgeTextColor: Color,
     onClick: () -> Unit
 ) {
     Surface(onClick = onClick, color = Color.Transparent) {
@@ -279,26 +252,12 @@ private fun LinkRow(
             }
 
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                Row(
-                    verticalAlignment     = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    Text(
-                        label,
-                        style      = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        color      = MaterialTheme.colorScheme.onSurface
-                    )
-                    Surface(shape = CircleShape, color = badgeColor) {
-                        Text(
-                            badge,
-                            modifier  = Modifier.padding(horizontal = 7.dp, vertical = 2.dp),
-                            fontSize  = 9.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color     = badgeTextColor
-                        )
-                    }
-                }
+                Text(
+                    label,
+                    style      = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color      = MaterialTheme.colorScheme.onSurface
+                )
                 Text(
                     subtitle,
                     style = MaterialTheme.typography.bodySmall,
