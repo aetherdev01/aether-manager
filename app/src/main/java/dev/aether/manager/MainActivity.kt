@@ -19,11 +19,13 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import dev.aether.manager.data.AppProfileViewModel
 import dev.aether.manager.data.MainViewModel
 import dev.aether.manager.i18n.LocalStrings
 import dev.aether.manager.i18n.ProvideStrings
 import dev.aether.manager.ui.AetherTheme
 import dev.aether.manager.ui.about.AboutScreen
+import dev.aether.manager.ui.appprofile.AppProfileScreen
 import dev.aether.manager.ui.components.RebootBottomSheet
 import dev.aether.manager.ui.home.HomeScreen
 import dev.aether.manager.ui.tweak.TweakScreen
@@ -31,6 +33,7 @@ import dev.aether.manager.util.RootUtils
 
 class MainActivity : ComponentActivity() {
     private val vm: MainViewModel by viewModels()
+    private val apVm: AppProfileViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -38,29 +41,37 @@ class MainActivity : ComponentActivity() {
         setContent {
             AetherTheme {
                 ProvideStrings {
-                    AetherApp(vm)
+                    AetherApp(vm, apVm)
                 }
             }
         }
     }
 }
 
-private enum class Screen { HOME, TWEAK, ABOUT }
+private enum class Screen { HOME, TWEAK, APPS, ABOUT }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AetherApp(vm: MainViewModel) {
+fun AetherApp(vm: MainViewModel, apVm: AppProfileViewModel) {
     val s = LocalStrings.current
     var currentScreen by remember { mutableStateOf(Screen.HOME) }
     var showReboot by remember { mutableStateOf(false) }
     val snack by vm.snackMessage.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
 
-    // Nav items rebuild when language changes (derived from strings)
-    val navLabels = listOf(s.navHome, s.navTweak, s.navAbout)
-    val navScreens = listOf(Screen.HOME, Screen.TWEAK, Screen.ABOUT)
-    val navSelectedIcons = listOf(Icons.Filled.Home, Icons.Filled.Tune, Icons.Filled.Info)
-    val navUnselectedIcons = listOf(Icons.Outlined.Home, Icons.Outlined.Tune, Icons.Outlined.Info)
+    data class NavItem(
+        val screen: Screen,
+        val label: String,
+        val selectedIcon: ImageVector,
+        val unselectedIcon: ImageVector,
+    )
+
+    val navItems = listOf(
+        NavItem(Screen.HOME,  s.navHome,  Icons.Filled.Home,  Icons.Outlined.Home),
+        NavItem(Screen.TWEAK, s.navTweak, Icons.Filled.Tune,  Icons.Outlined.Tune),
+        NavItem(Screen.APPS,  "Apps",     Icons.Filled.Apps,  Icons.Outlined.Apps),
+        NavItem(Screen.ABOUT, s.navAbout, Icons.Filled.Info,  Icons.Outlined.Info),
+    )
 
     LaunchedEffect(snack) {
         if (snack != null) {
@@ -87,25 +98,25 @@ fun AetherApp(vm: MainViewModel) {
         },
         bottomBar = {
             NavigationBar(containerColor = MaterialTheme.colorScheme.surfaceContainer, tonalElevation = 0.dp) {
-                navScreens.forEachIndexed { idx, screen ->
-                    val selected = currentScreen == screen
+                navItems.forEachIndexed { idx, item ->
+                    val selected = currentScreen == item.screen
                     val scale by animateFloatAsState(
                         if (selected) 1.1f else 1f,
                         spring(Spring.DampingRatioMediumBouncy), label = "tab_scale_$idx"
                     )
                     NavigationBarItem(
                         selected = selected,
-                        onClick = { currentScreen = screen },
+                        onClick  = { currentScreen = item.screen },
                         icon = {
                             Box(Modifier.scale(scale)) {
-                                Icon(if (selected) navSelectedIcons[idx] else navUnselectedIcons[idx], null)
+                                Icon(if (selected) item.selectedIcon else item.unselectedIcon, null)
                             }
                         },
-                        label = { Text(navLabels[idx], fontSize = 12.sp) },
+                        label  = { Text(item.label, fontSize = 11.sp) },
                         colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                            selectedTextColor = MaterialTheme.colorScheme.primary,
-                            indicatorColor = MaterialTheme.colorScheme.secondaryContainer,
+                            selectedIconColor   = MaterialTheme.colorScheme.onSecondaryContainer,
+                            selectedTextColor   = MaterialTheme.colorScheme.primary,
+                            indicatorColor      = MaterialTheme.colorScheme.secondaryContainer,
                             unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
                             unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -128,6 +139,7 @@ fun AetherApp(vm: MainViewModel) {
                 when (screen) {
                     Screen.HOME  -> HomeScreen(vm)
                     Screen.TWEAK -> TweakScreen(vm)
+                    Screen.APPS  -> AppProfileScreen(apVm)
                     Screen.ABOUT -> AboutScreen(vm)
                 }
             }
@@ -136,10 +148,10 @@ fun AetherApp(vm: MainViewModel) {
 
     if (showReboot) {
         RebootBottomSheet(
-            onDismiss = { showReboot = false },
-            onReboot = { vm.reboot(RootUtils.RebootMode.NORMAL) },
+            onDismiss        = { showReboot = false },
+            onReboot         = { vm.reboot(RootUtils.RebootMode.NORMAL) },
             onRebootRecovery = { vm.reboot(RootUtils.RebootMode.RECOVERY) },
-            onReloadUI = { vm.refresh() }
+            onReloadUI       = { vm.refresh() }
         )
     }
 }

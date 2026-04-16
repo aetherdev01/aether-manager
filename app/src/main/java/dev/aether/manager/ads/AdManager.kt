@@ -13,10 +13,10 @@ object AdManager {
 
     // ── Anti-spam policy ──────────────────────────────────────
     /** Minimum gap (ms) between two interstitial shows. Default: 10 minutes. */
-    const val INTERSTITIAL_COOLDOWN_MS = 2L * 60_000L   // 10 min
+    const val INTERSTITIAL_COOLDOWN_MS = 10L * 60_000L   // 10 min
 
     /** Minimum app session time (ms) before the first interstitial can appear. */
-    const val FIRST_SHOW_DELAY_MS      = 1L  * 60_000L   // 3 min after launch
+    const val FIRST_SHOW_DELAY_MS      = 3L  * 60_000L   // 3 min after launch
 
     // ── Mode ──────────────────────────────────────────────────
     /** true = test mode (debug build), false = production */
