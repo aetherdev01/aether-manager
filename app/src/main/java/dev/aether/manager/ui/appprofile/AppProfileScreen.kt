@@ -1,5 +1,8 @@
 package dev.aether.manager.ui.appprofile
 
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.drawable.BitmapDrawable
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
@@ -20,12 +23,13 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
-import android.graphics.drawable.BitmapDrawable
-import android.graphics.Bitmap
-import android.graphics.Canvas
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.*
 import dev.aether.manager.data.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+
+// ─── Screen root ─────────────────────────────────────────────────────────────
 
 @Composable
 fun AppProfileScreen(vm: AppProfileViewModel) {
@@ -60,21 +64,22 @@ fun AppProfileScreen(vm: AppProfileViewModel) {
         }
     }
 
-    // Bottom sheet editor
     val editTarget = editing
     if (editTarget != null) {
         val apps = (state as? AppsUiState.Ready)?.apps ?: emptyList()
         val appInfo = apps.find { it.packageName == editTarget.packageName }
         AppProfileEditor(
-            profile  = editTarget,
-            appLabel = appInfo?.label ?: editTarget.packageName,
-            appIcon  = appInfo?.icon,
-            saving   = vm.savingPkg.collectAsState().value == editTarget.packageName,
+            profile   = editTarget,
+            appLabel  = appInfo?.label ?: editTarget.packageName,
+            appIcon   = appInfo?.icon,
+            saving    = vm.savingPkg.collectAsState().value == editTarget.packageName,
             onDismiss = { vm.closeEditor() },
             onSave    = { vm.saveProfile(it) },
         )
     }
 }
+
+// ─── State screens ────────────────────────────────────────────────────────────
 
 @Composable
 private fun LoadingContent() {
@@ -103,6 +108,8 @@ private fun ErrorContent(msg: String, onRetry: () -> Unit) {
     }
 }
 
+// ─── Main content ─────────────────────────────────────────────────────────────
+
 @Composable
 private fun ReadyContent(state: AppsUiState.Ready, vm: AppProfileViewModel) {
     var searchQuery by remember { mutableStateOf("") }
@@ -112,9 +119,7 @@ private fun ReadyContent(state: AppsUiState.Ready, vm: AppProfileViewModel) {
         state.apps.filter { app ->
             val matchSearch = app.label.contains(searchQuery, ignoreCase = true) ||
                               app.packageName.contains(searchQuery, ignoreCase = true)
-            val matchFilter = if (filterEnabled) {
-                state.profiles[app.packageName]?.enabled == true
-            } else true
+            val matchFilter = if (filterEnabled) state.profiles[app.packageName]?.enabled == true else true
             matchSearch && matchFilter
         }
     }
@@ -122,37 +127,31 @@ private fun ReadyContent(state: AppsUiState.Ready, vm: AppProfileViewModel) {
     val activeCount = state.profiles.values.count { it.enabled }
 
     Column(Modifier.fillMaxSize()) {
-        // Header bar
         AppProfileHeader(
-            activeCount    = activeCount,
-            monitorRunning = state.monitorRunning,
+            activeCount     = activeCount,
+            monitorRunning  = state.monitorRunning,
             onToggleMonitor = { vm.toggleMonitor(it) },
         )
-
-        // Search + filter
         SearchFilterBar(
-            query        = searchQuery,
-            onQueryChange = { searchQuery = it },
-            filterEnabled = filterEnabled,
+            query          = searchQuery,
+            onQueryChange  = { searchQuery = it },
+            filterEnabled  = filterEnabled,
             onToggleFilter = { filterEnabled = !filterEnabled },
-            activeCount  = activeCount,
         )
-
-        // App list
         if (filtered.isEmpty()) {
             EmptyListHint(searchQuery.isNotEmpty())
         } else {
             LazyColumn(
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
+                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
                 modifier = Modifier.fillMaxSize()
             ) {
                 items(filtered, key = { it.packageName }) { app ->
                     val profile = state.profiles[app.packageName]
                     AppListItem(
-                        app     = app,
-                        profile = profile,
-                        onClick = { vm.openEditor(app) },
+                        app      = app,
+                        profile  = profile,
+                        onClick  = { vm.openEditor(app) },
                         onDelete = if (profile != null) {{ vm.deleteProfile(app.packageName) }} else null,
                     )
                 }
@@ -161,6 +160,8 @@ private fun ReadyContent(state: AppsUiState.Ready, vm: AppProfileViewModel) {
         }
     }
 }
+
+// ─── Header ───────────────────────────────────────────────────────────────────
 
 @Composable
 private fun AppProfileHeader(
@@ -173,76 +174,82 @@ private fun AppProfileHeader(
         tonalElevation = 0.dp,
         modifier = Modifier.fillMaxWidth(),
     ) {
-        Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 14.dp)) {
-            Row(
-                Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
-            ) {
-                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            // Title + active count
+            Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                Text(
+                    "App Profiles",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                )
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+                    val dotColor = if (activeCount > 0) MaterialTheme.colorScheme.primary
+                                   else MaterialTheme.colorScheme.outline
+                    Box(Modifier.size(6.dp).clip(CircleShape).background(dotColor))
                     Text(
-                        "App Profiles",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
+                        if (activeCount > 0) "$activeCount aktif" else "Tidak ada profile aktif",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = if (activeCount > 0) MaterialTheme.colorScheme.primary
+                                else MaterialTheme.colorScheme.onSurfaceVariant,
                     )
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                        val dotColor = if (activeCount > 0) MaterialTheme.colorScheme.primary
-                                       else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-                        Box(
-                            Modifier.size(7.dp).clip(CircleShape)
-                                .background(dotColor)
-                        )
-                        Text(
-                            if (activeCount > 0) "$activeCount profile aktif" else "Tidak ada profile aktif",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = if (activeCount > 0) MaterialTheme.colorScheme.primary
-                                    else MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
                 }
+            }
 
-                // Monitor toggle card
-                Surface(
-                    shape = RoundedCornerShape(14.dp),
-                    color = if (monitorRunning)
-                        MaterialTheme.colorScheme.primaryContainer
-                    else MaterialTheme.colorScheme.surfaceVariant,
+            // Monitor toggle pill
+            val monitorBg by animateColorAsState(
+                if (monitorRunning) MaterialTheme.colorScheme.primaryContainer
+                else MaterialTheme.colorScheme.surfaceVariant,
+                label = "monitor_bg"
+            )
+            val monitorFg by animateColorAsState(
+                if (monitorRunning) MaterialTheme.colorScheme.primary
+                else MaterialTheme.colorScheme.onSurfaceVariant,
+                label = "monitor_fg"
+            )
+            Surface(
+                shape = RoundedCornerShape(50),
+                color = monitorBg,
+                border = if (!monitorRunning) BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)) else null,
+            ) {
+                Row(
+                    Modifier.padding(start = 10.dp, end = 4.dp, top = 4.dp, bottom = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
-                    Row(
-                        Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        val monitorColor by animateColorAsState(
-                            if (monitorRunning) MaterialTheme.colorScheme.primary
-                            else MaterialTheme.colorScheme.onSurfaceVariant,
-                            label = "monitor_color"
+                    Icon(
+                        if (monitorRunning) Icons.Filled.FiberManualRecord else Icons.Outlined.RadioButtonUnchecked,
+                        null,
+                        tint = monitorFg,
+                        modifier = Modifier.size(10.dp),
+                    )
+                    Text(
+                        if (monitorRunning) "Monitor ON" else "Monitor OFF",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        color = monitorFg,
+                    )
+                    Switch(
+                        checked = monitorRunning,
+                        onCheckedChange = onToggleMonitor,
+                        modifier = Modifier.scale(0.7f),
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
+                            checkedTrackColor = MaterialTheme.colorScheme.primary,
                         )
-                        Icon(
-                            if (monitorRunning) Icons.Filled.RadioButtonChecked else Icons.Filled.RadioButtonUnchecked,
-                            null, tint = monitorColor, modifier = Modifier.size(14.dp)
-                        )
-                        Text(
-                            if (monitorRunning) "Monitor ON" else "Monitor OFF",
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.SemiBold,
-                            color = monitorColor,
-                        )
-                        Switch(
-                            checked  = monitorRunning,
-                            onCheckedChange = onToggleMonitor,
-                            modifier = Modifier.scale(0.75f).padding(0.dp),
-                            colors   = SwitchDefaults.colors(
-                                checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
-                                checkedTrackColor = MaterialTheme.colorScheme.primary,
-                            )
-                        )
-                    }
+                    )
                 }
             }
         }
     }
 }
+
+// ─── Search / Filter bar ──────────────────────────────────────────────────────
 
 @Composable
 private fun SearchFilterBar(
@@ -250,10 +257,11 @@ private fun SearchFilterBar(
     onQueryChange: (String) -> Unit,
     filterEnabled: Boolean,
     onToggleFilter: () -> Unit,
-    activeCount: Int,
 ) {
     Row(
-        Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+        Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp, vertical = 8.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -263,7 +271,7 @@ private fun SearchFilterBar(
             placeholder  = { Text("Cari aplikasi…", style = MaterialTheme.typography.bodySmall) },
             leadingIcon  = { Icon(Icons.Outlined.Search, null, modifier = Modifier.size(18.dp)) },
             trailingIcon = if (query.isNotEmpty()) {{
-                IconButton(onClick = { onQueryChange("") }, modifier = Modifier.size(32.dp)) {
+                IconButton(onClick = { onQueryChange("") }, modifier = Modifier.size(30.dp)) {
                     Icon(Icons.Filled.Clear, null, modifier = Modifier.size(16.dp))
                 }
             }} else null,
@@ -273,13 +281,13 @@ private fun SearchFilterBar(
             textStyle    = MaterialTheme.typography.bodySmall,
         )
         FilterChip(
-            selected  = filterEnabled,
-            onClick   = onToggleFilter,
-            label     = { Text("Aktif", style = MaterialTheme.typography.labelSmall) },
+            selected    = filterEnabled,
+            onClick     = onToggleFilter,
+            label       = { Text("Aktif", style = MaterialTheme.typography.labelSmall) },
             leadingIcon = if (filterEnabled) {{
                 Icon(Icons.Filled.Check, null, modifier = Modifier.size(14.dp))
             }} else null,
-            shape     = RoundedCornerShape(12.dp),
+            shape = RoundedCornerShape(12.dp),
         )
     }
 }
@@ -290,7 +298,9 @@ private fun EmptyListHint(isSearch: Boolean) {
         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Icon(
                 if (isSearch) Icons.Outlined.SearchOff else Icons.Outlined.AppsOutage,
-                null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(40.dp)
+                null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(40.dp)
             )
             Text(
                 if (isSearch) "Tidak ada hasil" else "Belum ada app profile",
@@ -301,6 +311,8 @@ private fun EmptyListHint(isSearch: Boolean) {
     }
 }
 
+// ─── App List Item ────────────────────────────────────────────────────────────
+
 @Composable
 private fun AppListItem(
     app: AppInfo,
@@ -310,63 +322,39 @@ private fun AppListItem(
 ) {
     val hasProfile = profile != null
     val isEnabled  = profile?.enabled == true
-
     var showDeleteDialog by remember { mutableStateOf(false) }
+
+    // Load icon bitmap asynchronously to avoid janky scroll
+    val iconBitmap by produceState<Bitmap?>(initialValue = null, key1 = app.packageName) {
+        value = withContext(Dispatchers.IO) {
+            runCatching { app.icon?.let { drawableToBitmap(it) } }.getOrNull()
+        }
+    }
 
     Surface(
         onClick  = onClick,
-        shape    = RoundedCornerShape(16.dp),
+        shape    = RoundedCornerShape(14.dp),
         color    = if (isEnabled)
-            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f)
+            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
         else MaterialTheme.colorScheme.surfaceContainer,
-        border   = if (isEnabled) BorderStroke(
-            1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.35f)
-        ) else null,
+        border   = if (isEnabled) BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)) else null,
         modifier = Modifier.fillMaxWidth(),
     ) {
         Row(
-            Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
+            Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            // App icon - real icon from PackageManager
-            Box(
-                Modifier.size(44.dp).clip(RoundedCornerShape(12.dp)),
-                contentAlignment = Alignment.Center,
-            ) {
-                val drawable = app.icon
-                val bitmap = remember(app.packageName) {
-                    if (drawable != null) {
-                        drawableToBitmap(drawable)
-                    } else null
-                }
-                if (bitmap != null) {
-                    Image(
-                        painter = BitmapPainter(bitmap.asImageBitmap()),
-                        contentDescription = app.label,
-                        modifier = Modifier.fillMaxSize(),
-                    )
-                } else {
-                    Box(
-                        Modifier.fillMaxSize()
-                            .background(
-                                if (isEnabled) MaterialTheme.colorScheme.primary
-                                else MaterialTheme.colorScheme.secondaryContainer
-                            ),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text(
-                            app.label.take(1).uppercase(),
-                            style     = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color     = if (isEnabled) MaterialTheme.colorScheme.onPrimary
-                                        else MaterialTheme.colorScheme.onSecondaryContainer,
-                        )
-                    }
-                }
-            }
+            // App icon
+            AppIconView(
+                bitmap     = iconBitmap,
+                label      = app.label,
+                isEnabled  = isEnabled,
+                size       = 44.dp,
+                cornerSize = 12.dp,
+            )
 
-            // App info
+            // App label + pkg + badges
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(
                     app.label,
@@ -385,39 +373,29 @@ private fun AppListItem(
                 if (hasProfile && isEnabled) {
                     val gov = profile!!.cpuGovernor
                     val rr  = profile.refreshRate
-                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        if (gov != "default") {
-                            ProfileBadge(gov.replaceFirstChar { it.uppercase() }, Icons.Filled.Memory)
-                        }
-                        if (rr != "default") {
-                            ProfileBadge("$rr Hz", Icons.Filled.DisplaySettings)
-                        }
+                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        if (gov != "default") ProfileBadge(gov.replaceFirstChar { it.uppercase() }, Icons.Filled.Memory)
+                        if (rr  != "default") ProfileBadge("$rr Hz", Icons.Filled.DisplaySettings)
                     }
                 }
             }
 
-            // Trailing actions
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            // Trailing
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(2.dp)) {
                 if (isEnabled) {
-                    Icon(
-                        Icons.Filled.CheckCircle, null,
-                        tint     = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(18.dp)
-                    )
+                    Icon(Icons.Filled.CheckCircle, null,
+                        tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
                 }
                 if (onDelete != null) {
-                    IconButton(
-                        onClick  = { showDeleteDialog = true },
-                        modifier = Modifier.size(32.dp)
-                    ) {
+                    IconButton(onClick = { showDeleteDialog = true }, modifier = Modifier.size(30.dp)) {
                         Icon(Icons.Outlined.DeleteOutline, null,
                             modifier = Modifier.size(18.dp),
-                            tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f))
+                            tint = MaterialTheme.colorScheme.error.copy(alpha = 0.6f))
                     }
                 }
                 Icon(Icons.Filled.ChevronRight, null,
                     modifier = Modifier.size(20.dp),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
             }
         }
     }
@@ -440,26 +418,67 @@ private fun AppListItem(
     }
 }
 
+// ─── Shared icon view ─────────────────────────────────────────────────────────
+
+@Composable
+private fun AppIconView(
+    bitmap: Bitmap?,
+    label: String,
+    isEnabled: Boolean,
+    size: Dp,
+    cornerSize: Dp,
+) {
+    Box(
+        Modifier.size(size).clip(RoundedCornerShape(cornerSize)),
+        contentAlignment = Alignment.Center,
+    ) {
+        if (bitmap != null) {
+            Image(
+                painter = BitmapPainter(bitmap.asImageBitmap()),
+                contentDescription = label,
+                modifier = Modifier.fillMaxSize(),
+            )
+        } else {
+            Box(
+                Modifier.fillMaxSize().background(
+                    if (isEnabled) MaterialTheme.colorScheme.primary
+                    else MaterialTheme.colorScheme.secondaryContainer
+                ),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    label.take(1).uppercase(),
+                    style      = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color      = if (isEnabled) MaterialTheme.colorScheme.onPrimary
+                                 else MaterialTheme.colorScheme.onSecondaryContainer,
+                )
+            }
+        }
+    }
+}
+
+// ─── Profile badge ────────────────────────────────────────────────────────────
+
 @Composable
 private fun ProfileBadge(text: String, icon: ImageVector) {
     Surface(
-        shape = RoundedCornerShape(8.dp),
-        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+        shape = RoundedCornerShape(6.dp),
+        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
     ) {
         Row(
-            Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+            Modifier.padding(horizontal = 5.dp, vertical = 2.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(3.dp)
         ) {
-            Icon(icon, null, modifier = Modifier.size(10.dp),
-                tint = MaterialTheme.colorScheme.primary)
+            Icon(icon, null, modifier = Modifier.size(10.dp), tint = MaterialTheme.colorScheme.primary)
             Text(text, style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.primary, fontSize = 10.sp)
         }
     }
 }
 
-// ─── App Profile Editor Bottom Sheet ────────────────────────────────────────
+// ─── Bottom Sheet Editor ──────────────────────────────────────────────────────
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -473,11 +492,18 @@ fun AppProfileEditor(
 ) {
     var draft by remember(profile) { mutableStateOf(profile) }
 
+    // Load icon async
+    val iconBitmap by produceState<Bitmap?>(initialValue = null, key1 = profile.packageName) {
+        value = withContext(Dispatchers.IO) {
+            runCatching { appIcon?.let { drawableToBitmap(it) } }.getOrNull()
+        }
+    }
+
     ModalBottomSheet(
         onDismissRequest = onDismiss,
-        sheetState = rememberModalBottomSheetState(),
-        dragHandle  = { BottomSheetDefaults.DragHandle() },
-        shape       = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+        sheetState    = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        dragHandle    = { BottomSheetDefaults.DragHandle() },
+        shape         = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
         containerColor = MaterialTheme.colorScheme.surface,
     ) {
         Column(
@@ -494,39 +520,19 @@ fun AppProfileEditor(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(14.dp)
             ) {
-                Box(
-                    Modifier.size(52.dp).clip(RoundedCornerShape(14.dp)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    val editorDrawable = appIcon
-                    val editorBitmap = remember(profile.packageName) {
-                        if (editorDrawable != null) drawableToBitmap(editorDrawable) else null
-                    }
-                    if (editorBitmap != null) {
-                        Image(
-                            painter = BitmapPainter(editorBitmap.asImageBitmap()),
-                            contentDescription = appLabel,
-                            modifier = Modifier.fillMaxSize(),
-                        )
-                    } else {
-                        Box(
-                            Modifier.fillMaxSize()
-                                .background(MaterialTheme.colorScheme.primaryContainer),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Text(
-                                appLabel.take(1).uppercase(),
-                                style = MaterialTheme.typography.headlineSmall,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer,
-                            )
-                        }
-                    }
-                }
-                Column(Modifier.weight(1f)) {
-                    Text(appLabel, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                AppIconView(
+                    bitmap     = iconBitmap,
+                    label      = appLabel,
+                    isEnabled  = draft.enabled,
+                    size       = 52.dp,
+                    cornerSize = 14.dp,
+                )
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Text(appLabel, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold,
+                        maxLines = 1, overflow = TextOverflow.Ellipsis)
                     Text(draft.packageName, style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
                 // Enable toggle
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -549,45 +555,42 @@ fun AppProfileEditor(
 
             HorizontalDivider()
 
-            // CPU Governor section
-            EditorSectionHeader(icon = Icons.Filled.Memory, title = "CPU Governor")
+            // CPU Governor
+            EditorSectionHeader(Icons.Filled.Memory, "CPU Governor")
             GovernorSelector(
-                selected  = draft.cpuGovernor,
-                onSelect  = { draft = draft.copy(cpuGovernor = it) },
-                enabled   = draft.enabled,
+                selected = draft.cpuGovernor,
+                onSelect = { draft = draft.copy(cpuGovernor = it) },
+                enabled  = draft.enabled,
             )
 
-            // Refresh Rate section
-            EditorSectionHeader(icon = Icons.Filled.DisplaySettings, title = "Refresh Rate")
+            // Refresh Rate
+            EditorSectionHeader(Icons.Filled.DisplaySettings, "Refresh Rate")
             RefreshRateSelector(
                 selected = draft.refreshRate,
                 onSelect = { draft = draft.copy(refreshRate = it) },
                 enabled  = draft.enabled,
             )
 
-            // Extra Tweaks section
-            EditorSectionHeader(icon = Icons.Filled.Tune, title = "Tweaks Tambahan")
+            // Extra Tweaks
+            EditorSectionHeader(Icons.Filled.Tune, "Tweaks Tambahan")
             ExtraTweaksPanel(
-                tweaks  = draft.extraTweaks,
-                enabled = draft.enabled,
+                tweaks   = draft.extraTweaks,
+                enabled  = draft.enabled,
                 onChange = { draft = draft.copy(extraTweaks = it) },
             )
 
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(4.dp))
 
             // Save button
             Button(
                 onClick  = { onSave(draft) },
                 enabled  = !saving,
-                modifier = Modifier.fillMaxWidth().height(52.dp),
-                shape    = RoundedCornerShape(16.dp),
+                modifier = Modifier.fillMaxWidth().height(50.dp),
+                shape    = RoundedCornerShape(14.dp),
             ) {
                 if (saving) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(20.dp),
-                        strokeWidth = 2.dp,
-                        color = MaterialTheme.colorScheme.onPrimary,
-                    )
+                    CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp,
+                        color = MaterialTheme.colorScheme.onPrimary)
                 } else {
                     Icon(Icons.Filled.Save, null, modifier = Modifier.size(18.dp))
                     Spacer(Modifier.width(8.dp))
@@ -598,33 +601,24 @@ fun AppProfileEditor(
     }
 }
 
+// ─── Editor sub-components ────────────────────────────────────────────────────
+
 @Composable
 private fun EditorSectionHeader(icon: ImageVector, title: String) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        Icon(icon, null, modifier = Modifier.size(18.dp),
-            tint = MaterialTheme.colorScheme.primary)
-        Text(title, style = MaterialTheme.typography.labelLarge,
-            fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.primary)
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Icon(icon, null, modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.primary)
+        Text(title, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.primary)
     }
 }
 
 @Composable
 private fun GovernorSelector(selected: String, onSelect: (String) -> Unit, enabled: Boolean) {
-    val governors = CpuGovernors.primary
-    val labels    = CpuGovernors.labels
-
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        // Top row: default + performance + powersave
-        Row(
-            Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             listOf("default", "performance", "powersave").forEach { gov ->
                 GovernorChip(
-                    label    = labels[gov] ?: gov,
+                    label    = CpuGovernors.labels[gov] ?: gov,
                     icon     = govIcon(gov),
                     selected = selected == gov,
                     enabled  = enabled,
@@ -633,14 +627,10 @@ private fun GovernorSelector(selected: String, onSelect: (String) -> Unit, enabl
                 )
             }
         }
-        // Bottom row: ondemand + conservative
-        Row(
-            Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             listOf("ondemand", "conservative").forEach { gov ->
                 GovernorChip(
-                    label    = labels[gov] ?: gov,
+                    label    = CpuGovernors.labels[gov] ?: gov,
                     icon     = govIcon(gov),
                     selected = selected == gov,
                     enabled  = enabled,
@@ -649,20 +639,14 @@ private fun GovernorSelector(selected: String, onSelect: (String) -> Unit, enabl
                 )
             }
         }
-        // Description
         AnimatedContent(selected, label = "gov_desc") { gov ->
             val desc = govDescription(gov)
             if (desc.isNotEmpty()) {
-                Surface(
-                    color = MaterialTheme.colorScheme.surfaceVariant,
-                    shape = RoundedCornerShape(10.dp),
-                ) {
-                    Row(
-                        Modifier.padding(10.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.Top,
-                    ) {
-                        Icon(Icons.Outlined.Info, null, modifier = Modifier.size(14.dp).padding(top = 1.dp),
+                Surface(color = MaterialTheme.colorScheme.surfaceVariant, shape = RoundedCornerShape(10.dp)) {
+                    Row(Modifier.padding(10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.Top) {
+                        Icon(Icons.Outlined.Info, null,
+                            modifier = Modifier.size(13.dp).padding(top = 1.dp),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant)
                         Text(desc, style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -694,21 +678,19 @@ private fun GovernorChip(
         label = "gov_chip_fg"
     )
     Surface(
-        onClick   = { if (enabled) onClick() },
-        modifier  = modifier,
-        shape     = RoundedCornerShape(12.dp),
-        color     = bg,
-        border    = if (selected) null else BorderStroke(
-            1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
-        ),
-        enabled   = enabled,
+        onClick  = { if (enabled) onClick() },
+        modifier = modifier,
+        shape    = RoundedCornerShape(12.dp),
+        color    = bg,
+        border   = if (!selected) BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.25f)) else null,
+        enabled  = enabled,
     ) {
         Column(
             Modifier.padding(horizontal = 8.dp, vertical = 10.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            Icon(icon, null, modifier = Modifier.size(20.dp), tint = fg)
+            Icon(icon, null, modifier = Modifier.size(18.dp), tint = fg)
             Text(label, style = MaterialTheme.typography.labelSmall,
                 fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
                 color = fg, maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -718,14 +700,11 @@ private fun GovernorChip(
 
 @Composable
 private fun RefreshRateSelector(selected: String, onSelect: (String) -> Unit, enabled: Boolean) {
-    val rates = RefreshRates.all
-    val labels = RefreshRates.labels
-
     Row(
         Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        rates.forEach { rate ->
+        RefreshRates.all.forEach { rate ->
             val isSelected = selected == rate
             val bg by animateColorAsState(
                 if (isSelected) MaterialTheme.colorScheme.secondary
@@ -743,9 +722,7 @@ private fun RefreshRateSelector(selected: String, onSelect: (String) -> Unit, en
                 shape    = RoundedCornerShape(12.dp),
                 color    = bg,
                 enabled  = enabled,
-                border   = if (isSelected) null else BorderStroke(
-                    1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
-                ),
+                border   = if (!isSelected) BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.25f)) else null,
             ) {
                 Column(
                     Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
@@ -753,7 +730,7 @@ private fun RefreshRateSelector(selected: String, onSelect: (String) -> Unit, en
                     verticalArrangement = Arrangement.spacedBy(2.dp)
                 ) {
                     Icon(Icons.Filled.Refresh, null, modifier = Modifier.size(18.dp), tint = fg)
-                    Text(labels[rate] ?: rate, style = MaterialTheme.typography.labelSmall,
+                    Text(RefreshRates.labels[rate] ?: rate, style = MaterialTheme.typography.labelSmall,
                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                         color = fg)
                 }
@@ -769,55 +746,30 @@ private fun ExtraTweaksPanel(
     onChange: (AppExtraTweaks) -> Unit,
 ) {
     Surface(
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(14.dp),
         color = MaterialTheme.colorScheme.surfaceContainer,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.15f)),
     ) {
         Column(Modifier.fillMaxWidth()) {
-            TweakToggleRow(
-                icon     = Icons.Outlined.BatterySaver,
-                title    = "Disable Doze",
-                subtitle = "Cegah Doze mode saat app aktif",
-                checked  = tweaks.disableDoze,
-                enabled  = enabled,
-                onChange = { onChange(tweaks.copy(disableDoze = it)) },
-            )
-            HorizontalDivider(Modifier.padding(horizontal = 16.dp), thickness = 0.5.dp)
-            TweakToggleRow(
-                icon     = Icons.Outlined.Speed,
-                title    = "Lock CPU Min Freq",
-                subtitle = "Kunci frekuensi minimum CPU agar tidak drop",
-                checked  = tweaks.lockCpuMin,
-                enabled  = enabled,
-                onChange = { onChange(tweaks.copy(lockCpuMin = it)) },
-            )
-            HorizontalDivider(Modifier.padding(horizontal = 16.dp), thickness = 0.5.dp)
-            TweakToggleRow(
-                icon     = Icons.Outlined.CleaningServices,
-                title    = "Kill Background Apps",
-                subtitle = "Matikan semua background app saat dibuka",
-                checked  = tweaks.killBackground,
-                enabled  = enabled,
-                onChange = { onChange(tweaks.copy(killBackground = it)) },
-            )
-            HorizontalDivider(Modifier.padding(horizontal = 16.dp), thickness = 0.5.dp)
-            TweakToggleRow(
-                icon     = Icons.Outlined.Videocam,
-                title    = "GPU Boost",
-                subtitle = "Set GPU governor ke performance",
-                checked  = tweaks.gpuBoost,
-                enabled  = enabled,
-                onChange = { onChange(tweaks.copy(gpuBoost = it)) },
-            )
-            HorizontalDivider(Modifier.padding(horizontal = 16.dp), thickness = 0.5.dp)
-            TweakToggleRow(
-                icon     = Icons.Outlined.Storage,
-                title    = "I/O Latency Opt",
-                subtitle = "Kurangi read-ahead I/O untuk latency lebih rendah",
-                checked  = tweaks.ioLatency,
-                enabled  = enabled,
-                onChange = { onChange(tweaks.copy(ioLatency = it)) },
-                isLast   = true,
-            )
+            TweakToggleRow(Icons.Outlined.BatterySaver, "Disable Doze",
+                "Cegah Doze mode saat app aktif",
+                tweaks.disableDoze, enabled) { onChange(tweaks.copy(disableDoze = it)) }
+            HorizontalDivider(Modifier.padding(horizontal = 14.dp), thickness = 0.5.dp)
+            TweakToggleRow(Icons.Outlined.Speed, "Lock CPU Min Freq",
+                "Kunci frekuensi minimum CPU agar tidak drop",
+                tweaks.lockCpuMin, enabled) { onChange(tweaks.copy(lockCpuMin = it)) }
+            HorizontalDivider(Modifier.padding(horizontal = 14.dp), thickness = 0.5.dp)
+            TweakToggleRow(Icons.Outlined.CleaningServices, "Kill Background Apps",
+                "Matikan semua background app saat dibuka",
+                tweaks.killBackground, enabled) { onChange(tweaks.copy(killBackground = it)) }
+            HorizontalDivider(Modifier.padding(horizontal = 14.dp), thickness = 0.5.dp)
+            TweakToggleRow(Icons.Outlined.Videocam, "GPU Boost",
+                "Set GPU governor ke performance",
+                tweaks.gpuBoost, enabled) { onChange(tweaks.copy(gpuBoost = it)) }
+            HorizontalDivider(Modifier.padding(horizontal = 14.dp), thickness = 0.5.dp)
+            TweakToggleRow(Icons.Outlined.Storage, "I/O Latency Opt",
+                "Kurangi read-ahead I/O untuk latency lebih rendah",
+                tweaks.ioLatency, enabled, isLast = true) { onChange(tweaks.copy(ioLatency = it)) }
         }
     }
 }
@@ -829,19 +781,19 @@ private fun TweakToggleRow(
     subtitle: String,
     checked: Boolean,
     enabled: Boolean,
-    onChange: (Boolean) -> Unit,
     isLast: Boolean = false,
+    onChange: (Boolean) -> Unit,
 ) {
     Row(
         Modifier
             .fillMaxWidth()
             .clickable(enabled = enabled) { onChange(!checked) }
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .padding(horizontal = 14.dp, vertical = 11.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Box(
-            Modifier.size(36.dp).clip(RoundedCornerShape(10.dp))
+            Modifier.size(34.dp).clip(RoundedCornerShape(10.dp))
                 .background(
                     if (checked && enabled) MaterialTheme.colorScheme.primaryContainer
                     else MaterialTheme.colorScheme.surfaceVariant
@@ -850,22 +802,22 @@ private fun TweakToggleRow(
         ) {
             Icon(
                 icon, null,
-                modifier = Modifier.size(18.dp),
+                modifier = Modifier.size(17.dp),
                 tint = if (checked && enabled) MaterialTheme.colorScheme.onPrimaryContainer
                        else MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
-        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(1.dp)) {
             Text(title, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Medium)
             Text(subtitle, style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         Switch(
-            checked  = checked,
+            checked         = checked,
             onCheckedChange = { if (enabled) onChange(it) },
-            enabled  = enabled,
-            modifier = Modifier.scale(0.8f),
-            colors   = SwitchDefaults.colors(
+            enabled         = enabled,
+            modifier        = Modifier.scale(0.75f),
+            colors          = SwitchDefaults.colors(
                 checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
                 checkedTrackColor = MaterialTheme.colorScheme.primary,
             )
@@ -873,14 +825,12 @@ private fun TweakToggleRow(
     }
 }
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 private fun drawableToBitmap(drawable: android.graphics.drawable.Drawable): Bitmap {
-    if (drawable is BitmapDrawable && drawable.bitmap != null) {
-        return drawable.bitmap
-    }
-    val w = drawable.intrinsicWidth.coerceAtLeast(1)
-    val h = drawable.intrinsicHeight.coerceAtLeast(1)
+    if (drawable is BitmapDrawable && drawable.bitmap != null) return drawable.bitmap
+    val w = drawable.intrinsicWidth.coerceIn(1, 512)
+    val h = drawable.intrinsicHeight.coerceIn(1, 512)
     val bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
     val canvas = Canvas(bitmap)
     drawable.setBounds(0, 0, canvas.width, canvas.height)
@@ -889,22 +839,22 @@ private fun drawableToBitmap(drawable: android.graphics.drawable.Drawable): Bitm
 }
 
 private fun govIcon(gov: String): ImageVector = when (gov) {
-    "performance"   -> Icons.Filled.FlashOn
-    "powersave"     -> Icons.Filled.BatterySaver
-    "ondemand"      -> Icons.Filled.AutoMode
-    "conservative"  -> Icons.Filled.TrendingDown
-    "schedutil"     -> Icons.Filled.Schedule
-    "interactive"   -> Icons.Filled.TouchApp
-    else            -> Icons.Filled.Tune
+    "performance"  -> Icons.Filled.FlashOn
+    "powersave"    -> Icons.Filled.BatterySaver
+    "ondemand"     -> Icons.Filled.AutoMode
+    "conservative" -> Icons.Filled.TrendingDown
+    "schedutil"    -> Icons.Filled.Schedule
+    "interactive"  -> Icons.Filled.TouchApp
+    else           -> Icons.Filled.Tune
 }
 
 private fun govDescription(gov: String): String = when (gov) {
-    "default"       -> "Gunakan governor default sistem. Tidak ada perubahan yang diterapkan."
-    "performance"   -> "CPU berjalan di frekuensi maksimum terus-menerus. Performa tertinggi, konsumsi baterai besar."
-    "powersave"     -> "CPU berjalan di frekuensi minimum. Hemat baterai, performa rendah."
-    "ondemand"      -> "CPU naik cepat saat load tinggi, turun saat idle. Balance antara performa dan baterai."
-    "conservative"  -> "CPU naik/turun perlahan mengikuti load. Lebih hemat dari ondemand, lebih lambat merespons."
-    "schedutil"     -> "Berdasarkan scheduler kernel, responsif dan efisien. Direkomendasikan untuk kernel modern."
-    "interactive"   -> "Dioptimasi untuk interaksi user, cepat naik saat ada input layar."
-    else            -> ""
+    "default"      -> "Gunakan governor default sistem. Tidak ada perubahan yang diterapkan."
+    "performance"  -> "CPU berjalan di frekuensi maksimum terus-menerus. Performa tertinggi, konsumsi baterai besar."
+    "powersave"    -> "CPU berjalan di frekuensi minimum. Hemat baterai, performa rendah."
+    "ondemand"     -> "CPU naik cepat saat load tinggi, turun saat idle. Balance antara performa dan baterai."
+    "conservative" -> "CPU naik/turun perlahan mengikuti load. Lebih hemat dari ondemand, lebih lambat merespons."
+    "schedutil"    -> "Berdasarkan scheduler kernel, responsif dan efisien. Direkomendasikan untuk kernel modern."
+    "interactive"  -> "Dioptimasi untuk interaksi user, cepat naik saat ada input layar."
+    else           -> ""
 }

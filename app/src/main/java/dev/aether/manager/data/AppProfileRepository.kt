@@ -92,7 +92,6 @@ object AppProfileRepository {
         val content = json.toString()
         val path = "$PROFILE_DIR/${profile.packageName}.json"
         RootUtils.sh("mkdir -p $PROFILE_DIR && printf '%s' '${content.replace("'", "'\\''")}' > $path")
-        // Regenerate monitor script after each save
         writeMonitorScript()
     }
 
@@ -129,7 +128,6 @@ object AppProfileRepository {
                 val block = buildString {
                     appendLine("    \"$pkg\")")
                     if (gov != "default") {
-                        // Validate governor exists on this device before applying
                         appendLine("      _GOV=$gov")
                         appendLine("      _AVAIL=\$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors 2>/dev/null)")
                         appendLine("      if echo \"\$_AVAIL\" | grep -qw \"\$_GOV\"; then")
@@ -137,7 +135,6 @@ object AppProfileRepository {
                         appendLine("          echo \"\$_GOV\" > \"\$cpu\" 2>/dev/null")
                         appendLine("        done")
                         appendLine("      else")
-                        // fallback chain: schedutil → ondemand → interactive → first available
                         appendLine("        _FB=\$(echo \"\$_AVAIL\" | tr ' ' '\n' | grep -m1 -E '^(schedutil|ondemand|interactive)' || echo \"\$_AVAIL\" | awk '{print \$1}')")
                         appendLine("        for cpu in /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor; do")
                         appendLine("          echo \"\$_FB\" > \"\$cpu\" 2>/dev/null")
@@ -145,15 +142,10 @@ object AppProfileRepository {
                         appendLine("      fi")
                     }
                     if (rr != "default") {
-                        // Try multiple methods for refresh rate — ROM-agnostic
                         appendLine("      _RR=$rr")
-                        // Method A: SurfaceFlinger binder call (varies by Android version)
                         appendLine("      service call SurfaceFlinger 1035 i32 \$_RR 2>/dev/null || true")
-                        // Method B: Settings provider (works on most OEMs)
                         appendLine("      settings put system peak_refresh_rate \$_RR 2>/dev/null || true")
                         appendLine("      settings put system min_refresh_rate \$_RR 2>/dev/null || true")
-                        // Method C: OEM-specific sysfs paths
-                        appendLine("      for f in /sys/class/drm/*/modes /sys/kernel/gpu/gpu_max_clock; do [ -f \"\$f\" ] && true; done")
                         appendLine("      echo \$_RR > /sys/devices/platform/soc/soc:qcom,dsi-display*/refresh_rate 2>/dev/null || true")
                         appendLine("      echo \$_RR > /sys/class/display/panel0/max_refresh_rate 2>/dev/null || true")
                         appendLine("      echo \$_RR > /proc/drm/card0/max_refresh_rate 2>/dev/null || true")
@@ -163,7 +155,6 @@ object AppProfileRepository {
                         appendLine("      dumpsys deviceidle step 2>/dev/null || true")
                     }
                     if (tweaks.optBoolean("lock_cpu_min", false)) {
-                        // Lock min freq to 50% of max — universal path
                         appendLine("      for f in /sys/devices/system/cpu/cpu*/cpufreq/scaling_min_freq; do")
                         appendLine("        _MAX=\$(cat \"\${f%min*}max_freq\" 2>/dev/null || cat \"\${f/min/max}\" 2>/dev/null)")
                         appendLine("        [ -n \"\$_MAX\" ] && echo \$((_MAX/2)) > \"\$f\" 2>/dev/null")
@@ -173,20 +164,15 @@ object AppProfileRepository {
                         appendLine("      am kill-all 2>/dev/null || true")
                     }
                     if (tweaks.optBoolean("gpu_boost", false)) {
-                        // Qualcomm (kgsl)
                         appendLine("      echo performance > /sys/class/kgsl/kgsl-3d0/devfreq/governor 2>/dev/null || true")
-                        // MediaTek (gpufreq)
                         appendLine("      echo 0 > /proc/gpufreq/gpufreq_opp_freq 2>/dev/null || true")
                         appendLine("      echo performance > /sys/kernel/gpu/gpu_policy 2>/dev/null || true")
-                        // Generic devfreq (Exynos / Unisoc / others)
                         appendLine("      for gf in /sys/class/devfreq/*.gpu /sys/class/devfreq/gpufreq /sys/class/devfreq/ff9a0000.gpu /sys/class/devfreq/mali; do")
                         appendLine("        [ -d \"\$gf\" ] && echo performance > \"\$gf/governor\" 2>/dev/null || true")
                         appendLine("      done")
-                        // Mali GPU governor path (Exynos / Dimensity)
                         appendLine("      echo performance > /sys/devices/platform/mali/power_policy 2>/dev/null || true")
                     }
                     if (tweaks.optBoolean("io_latency", false)) {
-                        // Apply to all block devices, not just sda
                         appendLine("      for blk in /sys/block/sda /sys/block/sdb /sys/block/mmcblk0 /sys/block/nvme0n1 /sys/block/dm-*; do")
                         appendLine("        [ -f \"\$blk/queue/read_ahead_kb\" ] && echo 0 > \"\$blk/queue/read_ahead_kb\" 2>/dev/null || true")
                         appendLine("        [ -f \"\$blk/queue/scheduler\" ] && (echo deadline > \"\$blk/queue/scheduler\" 2>/dev/null || echo noop > \"\$blk/queue/scheduler\" 2>/dev/null || true)")
@@ -200,7 +186,6 @@ object AppProfileRepository {
 
         val script = """#!/system/bin/sh
 # Aether App Profile Monitor — auto-generated, do not edit manually
-# Apply per-app profiles when foreground app changes
 
 LAST=""
 PROFILE_DIR=$PROFILE_DIR
@@ -210,44 +195,52 @@ apply_profile() {
   case "${'$'}pkg" in
 ${cases}
     *)
-      # Restore defaults — pick best available governor
-      _DEF=$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors 2>/dev/null | tr ' ' '
+      _DEF=${'$'}(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors 2>/dev/null | tr ' ' '
 ' | grep -m1 -E '^(schedutil|ondemand|interactive)' || echo "ondemand")
       for cpu in /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor; do
         echo "${'$'}_DEF" > "${'$'}cpu" 2>/dev/null || true
       done
-      # Restore refresh rate to device default
       settings put system peak_refresh_rate 0 2>/dev/null || true
       settings delete system min_refresh_rate 2>/dev/null || true
-      # Restore GPU governor to default
       for gf in /sys/class/kgsl/kgsl-3d0/devfreq /sys/class/devfreq/*.gpu /sys/class/devfreq/gpufreq /sys/class/devfreq/mali /sys/devices/platform/mali; do
-        [ -d "${'$'}gf" ] && echo msm-adreno-tz > "${'$'}gf/governor" 2>/dev/null ||                              echo simple_ondemand > "${'$'}gf/governor" 2>/dev/null || true
+        [ -d "${'$'}gf" ] && echo msm-adreno-tz > "${'$'}gf/governor" 2>/dev/null || \
+                             echo simple_ondemand > "${'$'}gf/governor" 2>/dev/null || true
       done
       ;;
   esac
 }
 
 get_foreground_pkg() {
-  # Method 1: mCurrentFocus (most reliable on most ROMs)
-  local pkg
-  pkg=$(dumpsys window windows 2>/dev/null | grep -E 'mCurrentFocus' | head -1 | grep -oE '[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]+)+' | head -1)
-  [ -n "${'$'}pkg" ] && { echo "${'$'}pkg"; return; }
+  local _line _pkg
 
-  # Method 2: ResumedActivity from activity manager
-  pkg=$(dumpsys activity activities 2>/dev/null | grep -E 'ResumedActivity' | head -1 | grep -oE '[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]+)+' | head -1)
-  [ -n "${'$'}pkg" ] && { echo "${'$'}pkg"; return; }
+  # Method 1: mCurrentFocus — format: Window{hex u0 pkg/Activity}
+  _line=${'$'}(dumpsys window windows 2>/dev/null | grep 'mCurrentFocus' | head -1)
+  _pkg=${'$'}(echo "${'$'}_line" | sed 's/.*{ *[^ ]* [^ ]* //;s/[/ ].*//' | grep -E '^[a-zA-Z][a-zA-Z0-9_.]+\.[a-zA-Z]')
+  [ -n "${'$'}_pkg" ] && { echo "${'$'}_pkg"; return 0; }
 
-  # Method 3: mFocusedApp fallback
-  pkg=$(dumpsys window windows 2>/dev/null | grep -E 'mFocusedApp' | head -1 | grep -oE '[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]+)+' | head -1)
-  [ -n "${'$'}pkg" ] && { echo "${'$'}pkg"; return; }
+  # Method 2: ResumedActivity — format: ResumedActivity: ActivityRecord{hex u0 pkg/.Activity ...}
+  _line=${'$'}(dumpsys activity activities 2>/dev/null | grep 'ResumedActivity' | head -1)
+  _pkg=${'$'}(echo "${'$'}_line" | sed 's/.*{ *[^ ]* [^ ]* //;s/[/ ].*//' | grep -E '^[a-zA-Z][a-zA-Z0-9_.]+\.[a-zA-Z]')
+  [ -n "${'$'}_pkg" ] && { echo "${'$'}_pkg"; return 0; }
 
-  # Method 4: top process visible
-  pkg=$(dumpsys activity top 2>/dev/null | grep 'TASK\|ACTIVITY' | grep -oE '[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]+)+' | head -1)
-  echo "${'$'}pkg"
+  # Method 3: mFocusedApp
+  _line=${'$'}(dumpsys window windows 2>/dev/null | grep 'mFocusedApp' | head -1)
+  _pkg=${'$'}(echo "${'$'}_line" | sed 's/.*{ *[^ ]* [^ ]* //;s/[/ ].*//' | grep -E '^[a-zA-Z][a-zA-Z0-9_.]+\.[a-zA-Z]')
+  [ -n "${'$'}_pkg" ] && { echo "${'$'}_pkg"; return 0; }
+
+  # Method 4: dumpsys activity top — "  ACTIVITY pkg/.Activity ..."
+  _pkg=${'$'}(dumpsys activity top 2>/dev/null | grep -E '^ {2}ACTIVITY ' | head -1 | awk '{print ${'$'}2}' | cut -d'/' -f1)
+  [ -n "${'$'}_pkg" ] && { echo "${'$'}_pkg"; return 0; }
+
+  # Method 5: cmd window get-focused-app (Android 12+)
+  _pkg=${'$'}(cmd window get-focused-app 2>/dev/null | grep -oE '[a-zA-Z][a-zA-Z0-9_.]+\.[a-zA-Z][a-zA-Z0-9_]+' | head -1)
+  [ -n "${'$'}_pkg" ] && { echo "${'$'}_pkg"; return 0; }
+
+  return 1
 }
 
 while true; do
-  CURRENT=$(get_foreground_pkg)
+  CURRENT=${'$'}(get_foreground_pkg)
   if [ -n "${'$'}CURRENT" ] && [ "${'$'}CURRENT" != "${'$'}LAST" ]; then
     LAST="${'$'}CURRENT"
     apply_profile "${'$'}CURRENT"
@@ -268,7 +261,7 @@ done
         val svc = """#!/system/bin/sh
 # Aether App Profile Service starter
 pkill -f app_monitor.sh 2>/dev/null
-nohup $MONITOR_SCRIPT &>/dev/null &
+nohup $MONITOR_SCRIPT >/dev/null 2>&1 &
 """
         val escaped = svc.replace("'", "'\\''")
         RootUtils.sh(
