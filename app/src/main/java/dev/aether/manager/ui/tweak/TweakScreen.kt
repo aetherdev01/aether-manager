@@ -16,6 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -32,6 +33,8 @@ fun TweakScreen(vm: MainViewModel) {
     val deviceState by vm.deviceInfo.collectAsState()
     val applying    by vm.applyingTweak.collectAsState()
     val scrollState = rememberScrollState()
+    val context     = LocalContext.current
+    val activity    = context as? android.app.Activity
 
     Box(Modifier.fillMaxSize()) {
         Column(
@@ -56,7 +59,7 @@ fun TweakScreen(vm: MainViewModel) {
 
             // ── Apply All button ──────────────────────────────
             Button(
-                onClick  = { vm.applyAll() },
+                onClick  = { vm.applyAll(activity) },
                 modifier = Modifier.fillMaxWidth().height(50.dp),
                 shape    = RoundedCornerShape(14.dp),
                 colors   = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),

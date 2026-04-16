@@ -10,45 +10,35 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
-import com.unity3d.ads.IUnityAdsInitializationListener
 import com.unity3d.ads.UnityAds
 import com.unity3d.services.banners.BannerErrorInfo
 import com.unity3d.services.banners.BannerView
 import com.unity3d.services.banners.UnityBannerSize
 
+/**
+ * Unity Ads banner composable.
+ * Relies on AetherApplication to have initialized the SDK already —
+ * so no double-init here. Just creates the BannerView and loads it.
+ */
 @Composable
 fun AdBannerView(
     modifier: Modifier = Modifier
         .fillMaxWidth()
         .wrapContentHeight()
 ) {
-    val context = LocalContext.current
-    val activity = context as? Activity
+    val context  = LocalContext.current
+    val activity = context as? Activity ?: return
 
     val bannerView = remember {
         BannerView(activity, AdManager.BANNER_PLACEMENT_ID, UnityBannerSize.getDynamicSize(context))
     }
 
     DisposableEffect(Unit) {
-        if (!UnityAds.isInitialized) {
-            UnityAds.initialize(
-                activity,
-                AdManager.GAME_ID,
-                AdManager.isTestMode,
-                object : IUnityAdsInitializationListener {
-                    override fun onInitializationComplete() {
-                        loadBanner(bannerView)
-                    }
-                    override fun onInitializationFailed(
-                        error: UnityAds.UnityAdsInitializationError?,
-                        message: String?
-                    ) { /* silent fail */ }
-                }
-            )
-        } else {
+        // SDK is already initialized by AetherApplication; just load the banner.
+        if (UnityAds.isInitialized) {
             loadBanner(bannerView)
         }
-
+        // If for some reason SDK isn't ready yet, banner will stay empty — no crash.
         onDispose {
             bannerView.destroy()
         }
@@ -56,9 +46,9 @@ fun AdBannerView(
 
     AndroidView(
         modifier = modifier,
-        factory = { _ ->
+        factory  = { _ ->
             FrameLayout(context).also { container ->
-                bannerView.parent?.let { (it as? FrameLayout)?.removeView(bannerView) }
+                (bannerView.parent as? FrameLayout)?.removeView(bannerView)
                 container.addView(bannerView)
             }
         }
@@ -67,11 +57,14 @@ fun AdBannerView(
 
 private fun loadBanner(banner: BannerView) {
     banner.listener = object : BannerView.IListener {
-        override fun onBannerLoaded(bannerAdView: BannerView?) { /* loaded */ }
-        override fun onBannerShown(bannerAdView: BannerView?) { /* shown */ }
-        override fun onBannerClick(bannerAdView: BannerView?) { /* clicked */ }
-        override fun onBannerFailedToLoad(bannerAdView: BannerView?, errorInfo: BannerErrorInfo?) { /* silent */ }
-        override fun onBannerLeftApplication(bannerAdView: BannerView?) { /* left app */ }
+        override fun onBannerLoaded(bannerAdView: BannerView?)         { /* ok */ }
+        override fun onBannerShown(bannerAdView: BannerView?)          { /* ok */ }
+        override fun onBannerClick(bannerAdView: BannerView?)          { /* ok */ }
+        override fun onBannerLeftApplication(bannerAdView: BannerView?) { /* ok */ }
+        override fun onBannerFailedToLoad(
+            bannerAdView: BannerView?,
+            errorInfo: BannerErrorInfo?
+        ) { /* silent fail — banner just won't show */ }
     }
     banner.load()
 }

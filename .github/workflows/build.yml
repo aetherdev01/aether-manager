@@ -30,7 +30,7 @@ jobs:
       - name: Grant Gradle permission
         run: chmod +x gradlew
 
-      - name: Build Release APK (R8 + minify + resource shrink)
+      - name: Build Release APK
         run: ./gradlew assembleRelease --no-daemon --stacktrace
         env:
           ANDROID_NDK_HOME: ${{ env.ANDROID_SDK_ROOT }}/ndk/27.0.12077973

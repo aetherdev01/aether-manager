@@ -127,6 +127,10 @@ val StringsEn = AppStrings(
     tweakIoScheduler = "I/O Scheduler",
 
     // About
+    aboutSectionDev = "Developer",
+    aboutSectionAppInfo = "App Information",
+    aboutSectionLinks = "Community & Links",
+    aboutDevDesc = "Android & Root Module Developer",
     aboutApp = "App",
     aboutVersion = "Version",
     aboutMode = "Mode",

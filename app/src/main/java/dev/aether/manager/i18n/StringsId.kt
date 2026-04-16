@@ -151,6 +151,10 @@ val StringsId = AppStrings(
     tweakIoScheduler = "I/O Scheduler",
 
     // About
+    aboutSectionDev = "Developer",
+    aboutSectionAppInfo = "Informasi Aplikasi",
+    aboutSectionLinks = "Komunitas & Tautan",
+    aboutDevDesc = "Android & Root Module Developer",
     aboutApp = "Aplikasi",
     aboutVersion = "Versi",
     aboutMode = "Mode",

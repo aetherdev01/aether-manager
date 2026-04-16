@@ -133,6 +133,10 @@ data class AppStrings(
     val tweakIoScheduler: String,
 
     // ── About ────────────────────────────────────────────────
+    val aboutSectionDev: String,
+    val aboutSectionAppInfo: String,
+    val aboutSectionLinks: String,
+    val aboutDevDesc: String,
     val aboutApp: String,
     val aboutVersion: String,
     val aboutMode: String,
