@@ -171,37 +171,24 @@ private fun AppProfileHeader(
     monitorRunning: Boolean,
     onToggleMonitor: (Boolean) -> Unit,
 ) {
-    Surface(
-        color = MaterialTheme.colorScheme.surfaceContainer,
-        tonalElevation = 0.dp,
-        modifier = Modifier.fillMaxWidth(),
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.surfaceContainer)
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
+        // Row 1: Title kiri, Monitor toggle kanan — sejajar vertical center
         Row(
-            Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp),
+            Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
-            // Title + active count
-            Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                Text(
-                    "App Profiles",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                )
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
-                    val dotColor = if (activeCount > 0) MaterialTheme.colorScheme.primary
-                                   else MaterialTheme.colorScheme.outline
-                    Box(Modifier.size(6.dp).clip(CircleShape).background(dotColor))
-                    Text(
-                        if (activeCount > 0) "$activeCount aktif" else "Tidak ada profile aktif",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = if (activeCount > 0) MaterialTheme.colorScheme.primary
-                                else MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-            }
+            Text(
+                "App Profiles",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+            )
 
             // Monitor toggle pill
             val monitorBg by animateColorAsState(
@@ -220,15 +207,15 @@ private fun AppProfileHeader(
                 border = if (!monitorRunning) BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)) else null,
             ) {
                 Row(
-                    Modifier.padding(start = 10.dp, end = 4.dp, top = 4.dp, bottom = 4.dp),
+                    Modifier.padding(start = 10.dp, end = 6.dp, top = 3.dp, bottom = 3.dp),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
                     Icon(
                         if (monitorRunning) Icons.Filled.FiberManualRecord else Icons.Outlined.RadioButtonUnchecked,
-                        null,
+                        contentDescription = null,
                         tint = monitorFg,
-                        modifier = Modifier.size(10.dp),
+                        modifier = Modifier.size(8.dp),
                     )
                     Text(
                         if (monitorRunning) "Monitor ON" else "Monitor OFF",
@@ -239,7 +226,9 @@ private fun AppProfileHeader(
                     Switch(
                         checked = monitorRunning,
                         onCheckedChange = onToggleMonitor,
-                        modifier = Modifier.scale(0.7f),
+                        modifier = Modifier
+                            .height(24.dp)
+                            .scale(0.65f),
                         colors = SwitchDefaults.colors(
                             checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
                             checkedTrackColor = MaterialTheme.colorScheme.primary,
@@ -247,6 +236,27 @@ private fun AppProfileHeader(
                     )
                 }
             }
+        }
+
+        // Row 2: Status dot + teks aktif — di bawah title, tidak berdesakan dengan toggle
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(5.dp),
+        ) {
+            val dotColor = if (activeCount > 0) MaterialTheme.colorScheme.primary
+                           else MaterialTheme.colorScheme.outline
+            Box(
+                Modifier
+                    .size(6.dp)
+                    .clip(CircleShape)
+                    .background(dotColor)
+            )
+            Text(
+                if (activeCount > 0) "$activeCount profile aktif" else "Tidak ada profile aktif",
+                style = MaterialTheme.typography.labelSmall,
+                color = if (activeCount > 0) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
     }
 }

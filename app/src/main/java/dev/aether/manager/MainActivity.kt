@@ -29,6 +29,9 @@ import dev.aether.manager.ui.appprofile.AppProfileScreen
 import dev.aether.manager.ui.components.RebootBottomSheet
 import dev.aether.manager.ui.home.HomeScreen
 import dev.aether.manager.ui.tweak.TweakScreen
+import androidx.compose.ui.platform.LocalContext
+import dev.aether.manager.ads.InterstitialAdManager
+import dev.aether.manager.ads.InterstitialAdTrigger
 import dev.aether.manager.update.UpdateDialogHost
 import dev.aether.manager.update.UpdateViewModel
 import dev.aether.manager.util.RootUtils
@@ -57,8 +60,15 @@ private enum class Screen { HOME, TWEAK, APPS, ABOUT }
 @Composable
 fun AetherApp(vm: MainViewModel, apVm: AppProfileViewModel, updateVm: UpdateViewModel) {
     val s = LocalStrings.current
+    val context = LocalContext.current
     var currentScreen by remember { mutableStateOf(Screen.HOME) }
     var showReboot by remember { mutableStateOf(false) }
+
+    // Trigger interstitial saat app pertama kali dibuka
+    InterstitialAdTrigger(key = Unit)
+
+    // Trigger interstitial saat pindah tab
+    InterstitialAdTrigger(key = currentScreen)
     val snack by vm.snackMessage.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -89,7 +99,10 @@ fun AetherApp(vm: MainViewModel, apVm: AppProfileViewModel, updateVm: UpdateView
             TopAppBar(
                 title = { Text("Aether Manager", fontWeight = FontWeight.Medium, fontSize = 20.sp) },
                 actions = {
-                    IconButton(onClick = { showReboot = true }) {
+                    IconButton(onClick = {
+                        InterstitialAdManager.showIfReady(context as android.app.Activity)
+                        showReboot = true
+                    }) {
                         Icon(Icons.Outlined.RestartAlt, null)
                     }
                 },

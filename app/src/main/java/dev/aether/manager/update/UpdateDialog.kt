@@ -101,7 +101,7 @@ fun UpdateDialog(
 
                 // Title
                 Text(
-                    text = if (info.isForceUpdate) "Update Wajib Tersedia" else "Update Tersedia",
+                    text = if (info.isForceUpdate) "Update Tersedia" else "Update Tersedia",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Center,
@@ -302,7 +302,7 @@ private fun ForceUpdateNotice() {
                 modifier = Modifier.size(16.dp),
             )
             Text(
-                text  = "Update ini wajib dipasang untuk melanjutkan menggunakan aplikasi.",
+                text  = "Update Aether Manager Sekarang untuk Mendapatkan Fitur Baru Dan Permbaruan.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onErrorContainer,
             )
