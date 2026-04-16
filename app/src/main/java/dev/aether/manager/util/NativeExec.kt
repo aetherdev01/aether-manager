@@ -4,78 +4,21 @@ import android.util.Log
 import java.io.File
 
 /**
- * NativeExec — JNI bridge ke libaether-x.so
+ * NativeExec — Pure Java/Kotlin shell executor (NO JNI, NO .so required)
  *
- * FIX: exec() sekarang mengirim seluruh script sebagai SATU string
- *      via nExecSuCmd() agar variable shell persist dalam satu sesi.
+ * Semua eksekusi shell menggunakan ProcessBuilder langsung via stdin-pipe.
+ * Variable shell PERSIST dalam satu sesi karena script dikirim sebagai
+ * satu stdin session ke process su.
  *
- * Fallback ke Java Runtime.exec() kalau .so belum di-build atau gagal load.
+ * JNI dihapus sepenuhnya — tidak ada System.loadLibrary(), tidak ada
+ * external fun, tidak ada libaether-x.so dependency.
  */
 object NativeExec {
 
     private const val TAG = "NativeExec"
 
-    /** true kalau libaether-x.so berhasil di-load */
-    val nativeAvailable: Boolean
-
-    init {
-        nativeAvailable = try {
-            System.loadLibrary("aether-x")
-            true
-        } catch (e: UnsatisfiedLinkError) {
-            Log.w(TAG, "libaether-x.so tidak tersedia, pakai Java fallback: ${e.message}")
-            false
-        }
-    }
-
-    // ── Native declarations ───────────────────────────────────────────────
-
-    @JvmStatic
-    external fun nHasRoot(): Boolean
-
-    /**
-     * Kirim array of commands — setiap item satu baris.
-     * Return: [exitCode_string, stdout, stderr]
-     */
-    @JvmStatic
-    external fun nExecSu(cmds: Array<String>): Array<String>
-
-    /**
-     * Kirim satu string cmd (boleh multi-line script).
-     * Return: [exitCode_string, stdout, stderr]
-     * FIX: ini yang dipakai exec(script) agar variable shell persist.
-     */
-    @JvmStatic
-    external fun nExecSuCmd(cmd: String): Array<String>
-
-    // ── Kotlin convenience wrappers ───────────────────────────────────────
-
-    data class ShellResult(val exitCode: Int, val stdout: String, val stderr: String)
-
-    /**
-     * Eksekusi satu script (boleh multi-line).
-     * FIX: pakai nExecSuCmd() — script dikirim sebagai stdin satu sesi.
-     * Variable shell ($x, $y, dll) persist sepanjang script.
-     */
-    fun exec(script: String): ShellResult {
-        if (script.isBlank()) return ShellResult(0, "", "")
-        return if (nativeAvailable) {
-            val raw = nExecSuCmd(script)
-            ShellResult(raw[0].toIntOrNull() ?: -1, raw[1], raw[2])
-        } else {
-            javaExec(script)
-        }
-    }
-
-    /** Legacy overload: gabung array jadi satu script */
-    fun exec(vararg cmds: String): ShellResult =
-        exec(cmds.joinToString("\n"))
-
-    fun execCmd(cmd: String): ShellResult = exec(cmd)
-
-    fun output(cmd: String): String = exec(cmd).stdout.trim()
-
-    fun ok(vararg cmds: String): Boolean = exec(*cmds).exitCode == 0
+    // Selalu true — tidak ada native dependency
+    val nativeAvailable: Boolean = false
 
     // ── Su binary resolver ────────────────────────────────────────────────
 
@@ -94,8 +37,32 @@ object NativeExec {
         } ?: "su"
     }
 
-    // ── Java fallback shell ───────────────────────────────────────────────
-    // Kirim script sebagai satu stdin-session agar variable persist.
+    // ── Result type ───────────────────────────────────────────────────────
+
+    data class ShellResult(val exitCode: Int, val stdout: String, val stderr: String)
+
+    // ── Core exec — stdin-pipe, satu sesi, variable persist ──────────────
+
+    /**
+     * Eksekusi script (boleh multi-line) sebagai satu stdin session.
+     * Variable shell ($x, $y, dll) persist sepanjang script.
+     */
+    fun exec(script: String): ShellResult {
+        if (script.isBlank()) return ShellResult(0, "", "")
+        return javaExec(script)
+    }
+
+    /** Legacy overload: gabung array jadi satu script */
+    fun exec(vararg cmds: String): ShellResult =
+        exec(cmds.joinToString("\n"))
+
+    fun execCmd(cmd: String): ShellResult = exec(cmd)
+
+    fun output(cmd: String): String = exec(cmd).stdout.trim()
+
+    fun ok(vararg cmds: String): Boolean = exec(*cmds).exitCode == 0
+
+    // ── Java shell executor ───────────────────────────────────────────────
 
     fun javaExec(script: String): ShellResult {
         return try {
@@ -132,7 +99,7 @@ object NativeExec {
         }
     }
 
-    // ── javaHasRoot ───────────────────────────────────────────────────────
+    // ── Root check ────────────────────────────────────────────────────────
 
     fun javaHasRoot(): Boolean {
         if (javaHasRootStdin()) return true
@@ -158,6 +125,7 @@ object NativeExec {
             writeThread.join(5_000)
             readThread.join(8_000)
             val code = try { process.waitFor() } catch (_: Exception) { -1 }
+            process.destroy()
             Log.d(TAG, "javaHasRootStdin: out='${out.trim()}' exit=$code su=$suBinary")
             out.contains("aether_root_ok") && code == 0
         } catch (e: Exception) {
@@ -176,6 +144,7 @@ object NativeExec {
             t.start()
             t.join(8_000)
             val code = try { p.waitFor() } catch (_: Exception) { -1 }
+            p.destroy()
             Log.d(TAG, "javaHasRootArgC: out='${out.trim()}' exit=$code")
             out.contains("aether_root_ok") && code == 0
         } catch (e: Exception) {

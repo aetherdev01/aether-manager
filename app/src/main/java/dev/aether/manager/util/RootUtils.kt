@@ -6,7 +6,7 @@ import kotlinx.coroutines.withContext
 /**
  * RootUtils — utilitas root shell untuk AetherManager.
  *
- * Semua eksekusi shell melalui NativeExec (libaether-x.so).
+ * Semua eksekusi shell melalui NativeExec (pure Java ProcessBuilder).
  * FIX: getMonitorState() & writeTweakConf() sekarang pakai single
  *      heredoc/inline-script agar variable shell persist dalam satu sesi.
  */
@@ -142,7 +142,7 @@ object RootUtils {
         val profile = tweaks["profile"] ?: "balance"
         val governor = when (profile) {
             "performance" -> "performance"
-            "battery"     -> "schedutil"
+            "battery"     -> "powersave"
             else          -> "schedutil"
         }
         sb.appendLine("for p in /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor; do [ -f \$p ] && echo $governor > \$p 2>/dev/null; done")

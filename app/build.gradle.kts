@@ -7,7 +7,6 @@ plugins {
 android {
     namespace   = "dev.aether.manager"
     compileSdk  = 36
-    ndkVersion  = "27.0.12077973"
 
     defaultConfig {
         applicationId = "dev.aether.manager"
@@ -17,27 +16,6 @@ android {
         versionName   = "2.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-
-        ndk {
-            abiFilters += listOf("arm64-v8a", "armeabi-v7a")
-        }
-
-        externalNativeBuild {
-            cmake {
-                cppFlags += "-std=c++17"
-                arguments += listOf(
-                    "-DANDROID_STL=c++_static",
-                    "-DANDROID_HOST_TAG=linux-x86_64"
-                )
-            }
-        }
-    }
-
-    externalNativeBuild {
-        cmake {
-            path    = file("src/main/cpp/CMakeLists.txt")
-            version = "3.22.1"
-        }
     }
 
     buildTypes {
@@ -48,13 +26,11 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            ndk { debugSymbolLevel = "NONE" }
             multiDexEnabled = false
         }
         debug {
             isMinifyEnabled = false
             multiDexEnabled = true
-            ndk { debugSymbolLevel = "FULL" }
         }
     }
 
@@ -90,9 +66,6 @@ android {
                 "kotlin/**",
                 "META-INF/com/**"
             )
-        }
-        jniLibs {
-            useLegacyPackaging = true
         }
     }
 }
