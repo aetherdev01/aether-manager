@@ -130,17 +130,16 @@ private fun ReadyContent(state: AppsUiState.Ready, vm: AppProfileViewModel) {
 
     Column(Modifier.fillMaxSize()) {
         // ── Section header ────────────────────────────────────────────
-        Column(
-            modifier = Modifier
+        Box(
+            Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp)
-                .padding(top = 8.dp, bottom = 4.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+                .padding(top = 8.dp)
         ) {
-            TabSectionTitle(
-                icon  = Icons.Outlined.Apps,
-                title = "App Profiles",
-                trailing = {
+        TabSectionTitle(
+            icon  = Icons.Outlined.Apps,
+            title = "App Profiles",
+            trailing = {
                     val monitorBg by animateColorAsState(
                         if (state.monitorRunning) MaterialTheme.colorScheme.primaryContainer
                         else MaterialTheme.colorScheme.surfaceVariant,
@@ -177,24 +176,27 @@ private fun ReadyContent(state: AppsUiState.Ready, vm: AppProfileViewModel) {
                     }
                 }
             )
+        } // end Box TabSectionTitle
 
-            // Stats row
-            Row(
-                Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                AppStatChip(
-                    icon  = Icons.Outlined.PhoneAndroid,
-                    label = "$totalCount Aplikasi",
-                    modifier = Modifier.weight(1f),
-                )
-                AppStatChip(
-                    icon   = Icons.Outlined.Tune,
-                    label  = "$activeCount Profile Aktif",
-                    active = activeCount > 0,
-                    modifier = Modifier.weight(1f),
-                )
-            }
+        // Stats row
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+                .padding(top = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            AppStatChip(
+                icon  = Icons.Outlined.PhoneAndroid,
+                label = "$totalCount Aplikasi",
+                modifier = Modifier.weight(1f),
+            )
+            AppStatChip(
+                icon   = Icons.Outlined.Tune,
+                label  = "$activeCount Profile Aktif",
+                active = activeCount > 0,
+                modifier = Modifier.weight(1f),
+            )
         }
 
         // ── Search / Filter bar ──────────────────────────────────────

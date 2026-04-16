@@ -88,12 +88,10 @@ fun UpdateDialog(
     }
 
     Dialog(
-        onDismissRequest = {
-            if (!info.isForceUpdate) onDismiss()
-        },
+        onDismissRequest = {},
         properties = DialogProperties(
-            dismissOnBackPress    = !info.isForceUpdate,
-            dismissOnClickOutside = !info.isForceUpdate,
+            dismissOnBackPress    = false,
+            dismissOnClickOutside = false,
             usePlatformDefaultWidth = false,
         )
     ) {
