@@ -2,12 +2,11 @@ package dev.aether.manager.ui.about
 
 import android.content.Intent
 import android.net.Uri
-import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -20,33 +19,32 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.aether.manager.R
 import dev.aether.manager.data.MainViewModel
-import dev.aether.manager.i18n.LanguageDropdown
+import dev.aether.manager.i18n.AppLanguage
+import dev.aether.manager.i18n.LocalLanguage
+import dev.aether.manager.i18n.LocalSetLanguage
 import dev.aether.manager.i18n.LocalStrings
 import dev.aether.manager.ui.home.TabSectionTitle
-import dev.aether.manager.util.BackupManager
 
 @Composable
-fun AboutScreen(vm: MainViewModel) {
+fun AboutScreen(
+    vm          : MainViewModel,
+    onOpenSettings: () -> Unit,
+) {
     val s           = LocalStrings.current
     val ctx         = LocalContext.current
     val scrollState = rememberScrollState()
-
-    val backupList    by vm.backupList.collectAsState()
-    val working       by vm.backupWorking.collectAsState()
-    var showReset     by remember { mutableStateOf(false) }
-    var restoreTarget by remember { mutableStateOf<String?>(null) }
-
-    LaunchedEffect(Unit) { vm.loadBackups() }
 
     Column(
         modifier = Modifier
@@ -56,149 +54,36 @@ fun AboutScreen(vm: MainViewModel) {
             .padding(top = 8.dp, bottom = 100.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        // ── Section: Language ─────────────────────────────────
-        TabSectionTitle(
-            icon  = Icons.Outlined.Language,
-            title = "Language / Bahasa / Язык / 语言"
-        )
-        Surface(
-            shape  = RoundedCornerShape(20.dp),
-            color  = MaterialTheme.colorScheme.surfaceContainerLow,
-            border = androidx.compose.foundation.BorderStroke(
-                1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
-            ),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Row(
-                modifier              = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 14.dp),
-                verticalAlignment     = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    Text(
-                        "Display Language",
-                        style      = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        color      = MaterialTheme.colorScheme.onSurface,
-                    )
-                    Text(
-                        "Changes UI language instantly",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-                LanguageDropdown()
-            }
-        }
 
-        // ── Section: Backup & Reset ───────────────────────────
-        TabSectionTitle(
-            icon  = Icons.Outlined.Archive,
-            title = "Backup & Reset"
-        )
-
-        // Progress indicator
-        AnimatedVisibility(working) {
-            LinearProgressIndicator(
-                modifier = Modifier.fillMaxWidth(),
-                color    = MaterialTheme.colorScheme.primary
-            )
-        }
-
-        // Action buttons
+        // ── Header action row: Language + Settings ────────────────────────
         Row(
-            modifier            = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
+            modifier              = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.End,
+            verticalAlignment     = Alignment.CenterVertically
         ) {
-            OutlinedButton(
-                onClick  = { vm.createBackup() },
-                enabled  = !working,
-                modifier = Modifier.weight(1f).height(48.dp),
-                shape    = RoundedCornerShape(14.dp)
-            ) {
-                Icon(Icons.Outlined.Save, null, Modifier.size(17.dp))
-                Spacer(Modifier.width(6.dp))
-                Text("Backup", fontWeight = FontWeight.Medium)
-            }
-            Button(
-                onClick  = { showReset = true },
-                enabled  = !working,
-                modifier = Modifier.weight(1f).height(48.dp),
-                shape    = RoundedCornerShape(14.dp),
-                colors   = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.errorContainer,
-                    contentColor   = MaterialTheme.colorScheme.onErrorContainer
+            // Language picker (no flag, text only)
+            AboutLanguageDropdown()
+
+            Spacer(Modifier.width(4.dp))
+
+            // Settings button → SettingsScreen
+            IconButton(onClick = onOpenSettings) {
+                Icon(
+                    Icons.Outlined.Settings,
+                    contentDescription = "Pengaturan",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-            ) {
-                Icon(Icons.Outlined.RestartAlt, null, Modifier.size(17.dp))
-                Spacer(Modifier.width(6.dp))
-                Text("Reset Default", fontWeight = FontWeight.SemiBold)
             }
         }
 
-        // Backup list
-        if (backupList.isEmpty()) {
-            Surface(
-                shape    = RoundedCornerShape(16.dp),
-                color    = MaterialTheme.colorScheme.surfaceContainerLow,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Row(
-                    modifier             = Modifier.padding(16.dp),
-                    verticalAlignment    = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Icon(
-                        Icons.Outlined.FolderOff, null,
-                        tint     = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Text(
-                        "Belum ada backup tersimpan",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-        } else {
-            Surface(
-                shape    = RoundedCornerShape(16.dp),
-                color    = MaterialTheme.colorScheme.surfaceContainerLow,
-                border   = androidx.compose.foundation.BorderStroke(
-                    1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
-                ),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column {
-                    backupList.forEachIndexed { index, entry ->
-                        AboutBackupItem(
-                            entry     = entry,
-                            working   = working,
-                            onRestore = { restoreTarget = entry.filename },
-                            onDelete  = { vm.deleteBackup(entry.filename) }
-                        )
-                        if (index < backupList.lastIndex) {
-                            HorizontalDivider(
-                                modifier  = Modifier.padding(start = 56.dp, end = 16.dp),
-                                color     = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f),
-                                thickness = 0.5.dp
-                            )
-                        }
-                    }
-                }
-            }
-        }
-
-        // ── Section: Developer ────────────────────────────────
+        // ── Section: Developer ────────────────────────────────────────────
         TabSectionTitle(
             icon  = Icons.Outlined.Person,
             title = s.aboutSectionDev
         )
         DevProfileCard()
 
-        // ── Section: Komunitas ────────────────────────────────
+        // ── Section: Komunitas & Tautan ───────────────────────────────────
         TabSectionTitle(
             icon  = Icons.Outlined.Language,
             title = s.aboutSectionLinks
@@ -208,121 +93,132 @@ fun AboutScreen(vm: MainViewModel) {
                 icon     = Icons.Outlined.Code,
                 label    = s.aboutGithub,
                 subtitle = "github.com/aetherdev01",
-                onClick  = { ctx.startActivity(Intent(Intent.ACTION_VIEW,
-                    Uri.parse("https://github.com/aetherdev01"))) }
+                onClick  = {
+                    ctx.startActivity(
+                        Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/aetherdev01"))
+                    )
+                }
             )
             AboutDivider()
             LinkRow(
                 icon     = Icons.Outlined.Send,
                 label    = s.aboutTelegram,
                 subtitle = "@get01projects",
-                onClick  = { ctx.startActivity(Intent(Intent.ACTION_VIEW,
-                    Uri.parse("https://t.me/get01projects"))) }
+                onClick  = {
+                    ctx.startActivity(
+                        Intent(Intent.ACTION_VIEW, Uri.parse("https://t.me/get01projects"))
+                    )
+                }
             )
             AboutDivider()
             LinkRow(
                 icon     = Icons.Outlined.Favorite,
                 label    = s.aboutSaweriaLabel,
                 subtitle = s.aboutSaweria,
-                onClick  = { ctx.startActivity(Intent(Intent.ACTION_VIEW,
-                    Uri.parse("https://saweria.co/AetherDev"))) }
+                onClick  = {
+                    ctx.startActivity(
+                        Intent(Intent.ACTION_VIEW, Uri.parse("https://saweria.co/AetherDev"))
+                    )
+                }
             )
         }
-    } // end Column
-
-    // ── Confirm reset ─────────────────────────────────────────────────────
-    if (showReset) {
-        AlertDialog(
-            onDismissRequest = { showReset = false },
-            icon  = { Icon(Icons.Outlined.Warning, null, tint = MaterialTheme.colorScheme.error) },
-            title = { Text("Reset ke Default?") },
-            text  = {
-                Text(
-                    "Semua tweak dinonaktifkan dan nilai sistem dikembalikan ke default Android. " +
-                    "File backup yang ada tidak terhapus."
-                )
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = { showReset = false; vm.resetToDefaults() },
-                    colors  = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
-                ) { Text("Reset") }
-            },
-            dismissButton = {
-                TextButton(onClick = { showReset = false }) { Text("Batal") }
-            }
-        )
-    }
-
-    // ── Confirm restore ───────────────────────────────────────────────────
-    restoreTarget?.let { fname ->
-        AlertDialog(
-            onDismissRequest = { restoreTarget = null },
-            icon  = { Icon(Icons.Outlined.Restore, null) },
-            title = { Text("Restore Backup?") },
-            text  = { Text("Setting aktif diganti dengan backup ini dan langsung diterapkan ke sistem.") },
-            confirmButton = {
-                TextButton(onClick = { restoreTarget = null; vm.restoreBackup(fname) }) {
-                    Text("Restore")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { restoreTarget = null }) { Text("Batal") }
-            }
-        )
     }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// BACKUP ITEM (inline di About)
+// LANGUAGE DROPDOWN — no flag, text only
 // ─────────────────────────────────────────────────────────────────────────────
 
 @Composable
-private fun AboutBackupItem(
-    entry    : BackupManager.BackupEntry,
-    working  : Boolean,
-    onRestore: () -> Unit,
-    onDelete : () -> Unit,
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 14.dp, vertical = 10.dp),
-        verticalAlignment     = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(10.dp)
-    ) {
-        Box(
-            modifier = Modifier
-                .size(36.dp)
-                .background(
-                    MaterialTheme.colorScheme.surfaceContainerHigh,
-                    RoundedCornerShape(10.dp)
-                ),
-            contentAlignment = Alignment.Center
+private fun AboutLanguageDropdown(modifier: Modifier = Modifier) {
+    val currentLanguage = LocalLanguage.current
+    val setLanguage     = LocalSetLanguage.current
+    var expanded        by remember { mutableStateOf(false) }
+    val arrowRotation   by animateFloatAsState(
+        targetValue   = if (expanded) 180f else 0f,
+        animationSpec = tween(200),
+        label         = "lang_arrow"
+    )
+
+    Box(modifier = modifier) {
+        // Trigger chip
+        Surface(
+            shape         = RoundedCornerShape(12.dp),
+            tonalElevation = 2.dp,
+            onClick       = { expanded = true }
         ) {
-            Icon(
-                Icons.Outlined.Archive, null,
-                tint     = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(18.dp)
-            )
+            Row(
+                verticalAlignment     = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                modifier              = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
+            ) {
+                Icon(
+                    Icons.Outlined.Language,
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp),
+                    tint     = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text      = currentLanguage.nativeName,
+                    style     = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.SemiBold,
+                    color     = MaterialTheme.colorScheme.onSurface,
+                )
+                Icon(
+                    Icons.Default.KeyboardArrowDown,
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp).rotate(arrowRotation),
+                    tint     = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
         }
-        Column(Modifier.weight(1f)) {
-            Text(
-                entry.timestamp,
-                style      = MaterialTheme.typography.bodySmall,
-                fontWeight = FontWeight.Medium
-            )
-            Text(
-                "Profile: ${entry.profile}",
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-        IconButton(onClick = onRestore, enabled = !working) {
-            Icon(Icons.Outlined.Restore, "Restore", tint = MaterialTheme.colorScheme.primary)
-        }
-        IconButton(onClick = onDelete, enabled = !working) {
-            Icon(Icons.Outlined.Delete, "Hapus", tint = MaterialTheme.colorScheme.error)
+
+        // Dropdown
+        DropdownMenu(
+            expanded          = expanded,
+            onDismissRequest  = { expanded = false },
+            offset            = DpOffset(0.dp, 4.dp),
+        ) {
+            AppLanguage.entries.forEach { lang ->
+                val isSelected = lang == currentLanguage
+                DropdownMenuItem(
+                    text = {
+                        Column {
+                            Text(
+                                text       = lang.nativeName,
+                                style      = MaterialTheme.typography.bodyMedium,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                color      = if (isSelected)
+                                    MaterialTheme.colorScheme.primary
+                                else
+                                    MaterialTheme.colorScheme.onSurface,
+                            )
+                            Text(
+                                text  = lang.displayName,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    },
+                    trailingIcon = if (isSelected) ({
+                        Icon(
+                            Icons.Filled.Check, null,
+                            tint     = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }) else null,
+                    onClick = {
+                        setLanguage(lang)
+                        expanded = false
+                    },
+                    modifier = Modifier.background(
+                        if (isSelected)
+                            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+                        else
+                            Color.Transparent
+                    )
+                )
+            }
         }
     }
 }
@@ -367,7 +263,6 @@ private fun DevProfileCard() {
             }
 
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                // Name + verified badge
                 Row(
                     verticalAlignment     = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(5.dp)
@@ -429,52 +324,15 @@ private fun AboutDivider() = HorizontalDivider(
 )
 
 // ─────────────────────────────────────────────────────────────────────────────
-// ABOUT ROW
-// ─────────────────────────────────────────────────────────────────────────────
-
-@Composable
-private fun AboutRow(
-    key: String, value: String,
-    icon: ImageVector, iconTint: Color
-) {
-    Row(
-        modifier              = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalAlignment     = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        Box(
-            modifier         = Modifier.size(36.dp).clip(RoundedCornerShape(10.dp))
-                .background(iconTint.copy(alpha = 0.12f)),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(icon, null, tint = iconTint, modifier = Modifier.size(17.dp))
-        }
-        Text(
-            key,
-            style    = MaterialTheme.typography.bodySmall,
-            color    = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.width(76.dp)
-        )
-        Text(
-            value,
-            style      = MaterialTheme.typography.bodySmall,
-            fontWeight = FontWeight.SemiBold,
-            color      = MaterialTheme.colorScheme.onSurface,
-            modifier   = Modifier.weight(1f)
-        )
-    }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
 // LINK ROW
 // ─────────────────────────────────────────────────────────────────────────────
 
 @Composable
 private fun LinkRow(
-    icon: ImageVector,
-    label: String,
+    icon    : ImageVector,
+    label   : String,
     subtitle: String,
-    onClick: () -> Unit
+    onClick : () -> Unit,
 ) {
     Surface(onClick = onClick, color = Color.Transparent) {
         Row(
@@ -493,7 +351,6 @@ private fun LinkRow(
                     modifier = Modifier.size(20.dp)
                 )
             }
-
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
                 Text(
                     label,
@@ -507,7 +364,6 @@ private fun LinkRow(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-
             Icon(
                 Icons.Outlined.OpenInNew, null,
                 tint     = MaterialTheme.colorScheme.outline,

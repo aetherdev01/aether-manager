@@ -28,6 +28,7 @@ import dev.aether.manager.ui.about.AboutScreen
 import dev.aether.manager.ui.appprofile.AppProfileScreen
 import dev.aether.manager.ui.components.RebootBottomSheet
 import dev.aether.manager.ui.home.HomeScreen
+import dev.aether.manager.ui.settings.SettingsScreen
 import dev.aether.manager.ui.tweak.TweakScreen
 import androidx.compose.ui.platform.LocalContext
 import dev.aether.manager.ads.InterstitialAdManager
@@ -62,14 +63,16 @@ private enum class Screen { HOME, TWEAK, APPS, ABOUT }
 fun AetherApp(vm: MainViewModel, apVm: AppProfileViewModel, updateVm: UpdateViewModel) {
     val s = LocalStrings.current
     val context = LocalContext.current
-    var currentScreen by remember { mutableStateOf(Screen.HOME) }
-    var showReboot by remember { mutableStateOf(false) }
+    var currentScreen  by remember { mutableStateOf(Screen.HOME) }
+    var showReboot     by remember { mutableStateOf(false) }
+    var showSettings   by remember { mutableStateOf(false) }   // ← SettingsScreen overlay
 
     // Trigger interstitial saat app pertama kali dibuka
     InterstitialAdTrigger(key = Unit)
 
     // Trigger interstitial saat pindah tab
     InterstitialAdTrigger(key = currentScreen)
+
     val snack by vm.snackMessage.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -94,6 +97,16 @@ fun AetherApp(vm: MainViewModel, apVm: AppProfileViewModel, updateVm: UpdateView
         }
     }
 
+    // ── SettingsScreen overlay (full-screen, di atas Scaffold) ────────────
+    if (showSettings) {
+        SettingsScreen(
+            vm     = vm,
+            onBack = { showSettings = false }
+        )
+        return
+    }
+
+    // ── Main scaffold ─────────────────────────────────────────────────────
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
@@ -108,7 +121,7 @@ fun AetherApp(vm: MainViewModel, apVm: AppProfileViewModel, updateVm: UpdateView
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
+                    containerColor        = MaterialTheme.colorScheme.surface,
                     scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer,
                 )
             )
@@ -157,7 +170,10 @@ fun AetherApp(vm: MainViewModel, apVm: AppProfileViewModel, updateVm: UpdateView
                     Screen.HOME  -> HomeScreen(vm)
                     Screen.TWEAK -> TweakScreen(vm)
                     Screen.APPS  -> AppProfileScreen(apVm)
-                    Screen.ABOUT -> AboutScreen(vm)
+                    Screen.ABOUT -> AboutScreen(
+                        vm             = vm,
+                        onOpenSettings = { showSettings = true }
+                    )
                 }
             }
         }
