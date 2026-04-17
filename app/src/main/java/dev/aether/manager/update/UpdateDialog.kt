@@ -222,7 +222,7 @@ fun UpdateDialog(
                                 Icon(Icons.Outlined.Download, null, Modifier.size(18.dp))
                                 Spacer(Modifier.width(8.dp))
                                 Text(
-                                    "Download & Install  ${info.latestVersion}",
+                                    "Download & Install",
                                     style = MaterialTheme.typography.labelLarge
                                 )
                             }
@@ -253,7 +253,7 @@ fun UpdateDialog(
                         LaunchedEffect(dl.apkFile) { installApk(context, dl.apkFile) }
                         DownloadProgressBar(percent = 100, downloadedBytes = -1L, totalBytes = -1L)
                         Text(
-                            "Membuka installer…",
+                            "Menginstall Pembaruan…",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -589,7 +589,7 @@ private suspend fun downloadAndInstall(
         }
 
         val totalBytes = conn.contentLengthLong
-        val outFile    = File(context.cacheDir, "aether-manager-update.apk")
+        val outFile    = File(context.cacheDir, "update.apk")
 
         conn.inputStream.use { input ->
             outFile.outputStream().use { output ->

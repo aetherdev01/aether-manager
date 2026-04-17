@@ -29,7 +29,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -251,20 +250,59 @@ fun SetupScreen(onDone: () -> Unit) {
                     }
 
                     if (pg.permissionType == null && idx == pages.size - 1 && allPermsGranted) {
-                        SetupCompleteAnimation()
+                        Surface(
+                            shape    = RoundedCornerShape(50),
+                            color    = Color(0xFF4CAF50).copy(alpha = 0.15f),
+                        ) {
+                            Row(
+                                modifier              = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
+                                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                verticalAlignment     = Alignment.CenterVertically,
+                            ) {
+                                Icon(
+                                    Icons.Outlined.CheckCircle, null,
+                                    tint     = Color(0xFF4CAF50),
+                                    modifier = Modifier.size(16.dp),
+                                )
+                                Text(
+                                    text       = "Semua izin terpenuhi",
+                                    fontSize   = 13.sp,
+                                    color      = Color(0xFF4CAF50),
+                                    fontWeight = FontWeight.SemiBold,
+                                )
+                            }
+                        }
                     }
 
                     if (pg.permissionType == "LANGUAGE") {
-                        Spacer(Modifier.height(12.dp))
-                        Box(
-                            modifier          = Modifier.fillMaxWidth(),
-                            contentAlignment  = Alignment.Center,
+                        Surface(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape    = RoundedCornerShape(16.dp),
+                            color    = MaterialTheme.colorScheme.surfaceContainerHigh,
                         ) {
-                            LanguageDropdown(
-                                modifier = Modifier
-                                    .widthIn(max = 280.dp)
-                                    .fillMaxWidth(0.85f)
-                            )
+                            Column(
+                                modifier            = Modifier.padding(16.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(8.dp),
+                            ) {
+                                Row(
+                                    verticalAlignment     = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                ) {
+                                    Icon(
+                                        Icons.Outlined.Language, null,
+                                        modifier = Modifier.size(14.dp),
+                                        tint     = MaterialTheme.colorScheme.primary,
+                                    )
+                                    Text(
+                                        text      = s.setupLangTitle,
+                                        style     = MaterialTheme.typography.labelMedium,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color     = MaterialTheme.colorScheme.primary,
+                                    )
+                                }
+                                LanguageDropdown(modifier = Modifier.fillMaxWidth())
+                            }
                         }
                     }
 
@@ -492,166 +530,5 @@ private fun PermissionBlock(
     }
 }
 
-// ─────────────────────────────────────────────────────────────
-// Setup Complete Animation
-// ─────────────────────────────────────────────────────────────
 
-@Composable
-private fun SetupCompleteAnimation() {
-    // Trigger satu kali saat composable masuk
-    var started by remember { mutableStateOf(false) }
-    LaunchedEffect(Unit) { started = true }
 
-    // ── Ring scale: muncul dari kecil lalu sedikit bounce ──
-    val ringScale by animateFloatAsState(
-        targetValue   = if (started) 1f else 0.3f,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness    = Spring.StiffnessMediumLow
-        ),
-        label = "ring_scale"
-    )
-
-    // ── Checkmark draw progress (0→1) ──
-    val checkProgress by animateFloatAsState(
-        targetValue   = if (started) 1f else 0f,
-        animationSpec = tween(durationMillis = 600, delayMillis = 250, easing = FastOutSlowInEasing),
-        label = "check_progress"
-    )
-
-    // ── Badge alpha: muncul setelah animasi utama ──
-    val badgeAlpha by animateFloatAsState(
-        targetValue   = if (started) 1f else 0f,
-        animationSpec = tween(durationMillis = 400, delayMillis = 700),
-        label = "badge_alpha"
-    )
-
-    // ── Pulse ring: berkedip lembut tanpa henti ──
-    val pulseAlpha by animateFloatAsState(
-        targetValue   = if (started) 0f else 0.35f,
-        animationSpec = infiniteRepeatable(
-            animation  = tween(1200, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "pulse_alpha"
-    )
-    val pulseScale by animateFloatAsState(
-        targetValue   = if (started) 1.35f else 1f,
-        animationSpec = infiniteRepeatable(
-            animation  = tween(1200, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "pulse_scale"
-    )
-
-    val green       = Color(0xFF4CAF50)
-    val greenLight  = Color(0xFFA5D6A7)
-    val greenBg     = Color(0xFF1B5E20).copy(alpha = 0.12f)
-
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Box(contentAlignment = Alignment.Center) {
-            // Pulse ring di belakang
-            Box(
-                modifier = Modifier
-                    .size(120.dp)
-                    .graphicsLayer {
-                        scaleX = pulseScale
-                        scaleY = pulseScale
-                        alpha  = pulseAlpha
-                    }
-                    .clip(CircleShape)
-                    .background(greenLight.copy(alpha = 0.25f))
-            )
-
-            // Lingkaran utama dengan scale bounce
-            Box(
-                modifier = Modifier
-                    .size(96.dp)
-                    .graphicsLayer { scaleX = ringScale; scaleY = ringScale }
-                    .clip(CircleShape)
-                    .background(greenBg),
-                contentAlignment = Alignment.Center
-            ) {
-                // Checkmark via Canvas dengan draw progress
-                androidx.compose.foundation.Canvas(modifier = Modifier.size(48.dp)) {
-                    val strokePx = 4.dp.toPx()
-                    val paint = androidx.compose.ui.graphics.Paint().apply {
-                        color       = green
-                        strokeWidth = strokePx
-                        strokeCap   = androidx.compose.ui.graphics.StrokeCap.Round
-                        strokeJoin  = androidx.compose.ui.graphics.StrokeJoin.Round
-                        style       = androidx.compose.ui.graphics.PaintingStyle.Stroke
-                    }
-                    // Path checkmark: dari (0.2,0.5) → (0.42,0.72) → (0.78,0.3) dalam unit size
-                    val w = size.width
-                    val h = size.height
-                    val p1x = w * 0.18f; val p1y = h * 0.50f
-                    val p2x = w * 0.42f; val p2y = h * 0.72f
-                    val p3x = w * 0.80f; val p3y = h * 0.28f
-
-                    // Segment 1: p1→p2 (panjang ~0.4 dari total)
-                    val seg1Len = 0.42f
-                    val seg2Len = 1f - seg1Len
-
-                    if (checkProgress > 0f) {
-                        if (checkProgress <= seg1Len) {
-                            val t = checkProgress / seg1Len
-                            drawContext.canvas.drawLine(
-                                androidx.compose.ui.geometry.Offset(p1x, p1y),
-                                androidx.compose.ui.geometry.Offset(
-                                    p1x + (p2x - p1x) * t,
-                                    p1y + (p2y - p1y) * t
-                                ),
-                                paint
-                            )
-                        } else {
-                            drawContext.canvas.drawLine(
-                                androidx.compose.ui.geometry.Offset(p1x, p1y),
-                                androidx.compose.ui.geometry.Offset(p2x, p2y),
-                                paint
-                            )
-                            val t = (checkProgress - seg1Len) / seg2Len
-                            drawContext.canvas.drawLine(
-                                androidx.compose.ui.geometry.Offset(p2x, p2y),
-                                androidx.compose.ui.geometry.Offset(
-                                    p2x + (p3x - p2x) * t,
-                                    p2y + (p3y - p2y) * t
-                                ),
-                                paint
-                            )
-                        }
-                    }
-                }
-            }
-        }
-
-        // ── Badge "Semua Siap" ──
-        Surface(
-            shape    = RoundedCornerShape(50),
-            color    = green.copy(alpha = 0.15f),
-            modifier = Modifier.alpha(badgeAlpha)
-        ) {
-            Row(
-                modifier              = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                verticalAlignment     = Alignment.CenterVertically,
-            ) {
-                Icon(
-                    Icons.Outlined.CheckCircle, null,
-                    tint     = green,
-                    modifier = Modifier.size(14.dp)
-                )
-                Text(
-                    text      = "Semua izin terpenuhi",
-                    fontSize  = 12.sp,
-                    color     = green,
-                    fontWeight = FontWeight.SemiBold
-                )
-            }
-        }
-    }
-}
