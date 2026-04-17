@@ -135,7 +135,18 @@ object AppProfileRepository {
                         appendLine("          echo \"\$_GOV\" > \"\$cpu\" 2>/dev/null")
                         appendLine("        done")
                         appendLine("      else")
-                        appendLine("        _FB=\$(echo \"\$_AVAIL\" | tr ' ' '\n' | grep -m1 -E '^(schedutil|ondemand|interactive)' || echo \"\$_AVAIL\" | awk '{print \$1}')")
+                        appendLine("        # Fallback: ondemand/conservative -> schedutil/interactive, performance/powersave langsung dicoba")
+                        appendLine("        case \"\$_GOV\" in")
+                        appendLine("          ondemand|conservative)")
+                        appendLine("            _FB=\$(echo \"\$_AVAIL\" | tr ' ' '\n' | grep -m1 -xE 'schedutil|interactive|ondemand|conservative' || echo \"\$_AVAIL\" | awk '{print \$1}')")
+                        appendLine("            ;;")
+                        appendLine("          performance|powersave)")
+                        appendLine("            _FB=\$_GOV")
+                        appendLine("            ;; ")
+                        appendLine("          *)")
+                        appendLine("            _FB=\$(echo \"\$_AVAIL\" | tr ' ' '\n' | grep -m1 -xE 'schedutil|ondemand|interactive' || echo \"\$_AVAIL\" | awk '{print \$1}')")
+                        appendLine("            ;;")
+                        appendLine("        esac")
                         appendLine("        for cpu in /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor; do")
                         appendLine("          echo \"\$_FB\" > \"\$cpu\" 2>/dev/null")
                         appendLine("        done")
@@ -155,6 +166,15 @@ object AppProfileRepository {
                         appendLine("      done")
                         appendLine("      [ -f /sys/class/display/panel0/max_refresh_rate ] && echo \$_RR > /sys/class/display/panel0/max_refresh_rate 2>/dev/null || true")
                         appendLine("      [ -f /sys/class/display/panel0/min_refresh_rate ] && echo \$_RR > /sys/class/display/panel0/min_refresh_rate 2>/dev/null || true")
+                        appendLine("      # Mediatek DRM paths")
+                        appendLine("      for _DRM in /sys/class/drm/card*-DSI-*/; do")
+                        appendLine("        [ -f \"\${_DRM}modes\" ] && echo \$_RR > \"\${_DRM}modes\" 2>/dev/null || true")
+                        appendLine("      done")
+                        appendLine("      [ -f /sys/devices/platform/mediatek-drm/drm/card0/card0-DSI-1/modes ] && echo \$_RR > /sys/devices/platform/mediatek-drm/drm/card0/card0-DSI-1/modes 2>/dev/null || true")
+                        appendLine("      # Exynos DRM paths")
+                        appendLine("      for _DRM in /sys/class/drm/card*-DSI-*/; do")
+                        appendLine("        [ -f \"\${_DRM}panel_refresh_rate\" ] && echo \$_RR > \"\${_DRM}panel_refresh_rate\" 2>/dev/null || true")
+                        appendLine("      done")
                     }
                     if (tweaks.optBoolean("disable_doze", false)) {
                         appendLine("      dumpsys deviceidle disable 2>/dev/null || true")
@@ -201,8 +221,7 @@ apply_profile() {
   case "${'$'}pkg" in
 ${cases}
     *)
-      _DEF=${'$'}(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors 2>/dev/null | tr ' ' '
-' | grep -m1 -E '^(schedutil|ondemand|interactive)' || echo "ondemand")
+      _DEF=${'$'}(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors 2>/dev/null | tr ' ' '\n' | grep -m1 -xE 'schedutil|ondemand|interactive' || echo "schedutil")
       for cpu in /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor; do
         echo "${'$'}_DEF" > "${'$'}cpu" 2>/dev/null || true
       done

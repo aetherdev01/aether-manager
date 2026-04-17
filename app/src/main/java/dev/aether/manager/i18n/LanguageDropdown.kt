@@ -19,12 +19,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 
 /**
- * A dropdown button that lets the user pick an [AppLanguage].
+ * A dropdown button that lets the user pick an [AppLanguage] (ID / EN only).
  *
- * Uses a Translate icon + language code pill — no flag emojis.
  * Reads current language from [LocalLanguage] and changes it via [LocalSetLanguage].
  */
 @Composable
@@ -141,8 +139,7 @@ fun LanguageDropdown(
 }
 
 /**
- * Compact language button for TopAppBar — shows Translate icon + lang code.
- * No flag emojis.
+ * Compact language button for TopAppBar — shows Translate icon only.
  */
 @Composable
 fun LanguageDropdownCompact(
@@ -155,17 +152,12 @@ fun LanguageDropdownCompact(
 
     Box(modifier = modifier) {
         IconButton(onClick = { expanded = true }) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(2.dp),
-            ) {
-                Icon(
-                    imageVector = Icons.Outlined.Translate,
-                    contentDescription = "Language",
-                    modifier = Modifier.size(20.dp),
-                    tint = MaterialTheme.colorScheme.onSurface,
-                )
-            }
+            Icon(
+                imageVector = Icons.Outlined.Translate,
+                contentDescription = "Language",
+                modifier = Modifier.size(20.dp),
+                tint = MaterialTheme.colorScheme.onSurface,
+            )
         }
 
         DropdownMenu(
@@ -180,20 +172,15 @@ fun LanguageDropdownCompact(
                 val isSelected = lang == currentLanguage
                 DropdownMenuItem(
                     text = {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(10.dp),
-                        ) {
-                            Text(
-                                text = lang.nativeName,
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                color = if (isSelected)
-                                    MaterialTheme.colorScheme.primary
-                                else
-                                    MaterialTheme.colorScheme.onSurface,
-                            )
-                        }
+                        Text(
+                            text = lang.nativeName,
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                            color = if (isSelected)
+                                MaterialTheme.colorScheme.primary
+                            else
+                                MaterialTheme.colorScheme.onSurface,
+                        )
                     },
                     onClick = {
                         setLanguage(lang)

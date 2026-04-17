@@ -135,7 +135,7 @@ object RootUtils {
             sb.appendLine("for p in /sys/devices/system/cpu/cpu*/cpufreq/scaling_min_freq; do [ -f \$p ] && cat \${p%min_freq}cpuinfo_max_freq > \$p 2>/dev/null; done")
         }
         if (profile == "battery") {
-            sb.appendLine("for p in /sys/devices/system/cpu/cpu*/cpufreq/scaling_max_freq; do [ -f \$p ] && echo 1516800 > \$p 2>/dev/null; done")
+            sb.appendLine("for p in /sys/devices/system/cpu/cpu*/cpufreq/scaling_max_freq; do [ -f \"\$p\" ] || continue; _MAX=\$(cat \"\${p%max_freq}cpuinfo_max_freq\" 2>/dev/null); [ -n \"\$_MAX\" ] && echo \$((_MAX/2)) > \"\$p\" 2>/dev/null; done")
         }
         val schedVal = if (tweaks["schedboost"] == "1") "1" else "0"
         sb.appendLine("[ -f /proc/sys/kernel/sched_boost ] && echo $schedVal > /proc/sys/kernel/sched_boost 2>/dev/null")

@@ -119,7 +119,7 @@ fun SplashScreen(onFinished: () -> Unit) {
             Text(
                 "Optimizing Your Android Experience",
                 color = primary.copy(alpha = 0.65f),
-                fontSize = 11.sp,
+                fontSize = 12.sp,
                 letterSpacing = 0.5.sp,
                 fontWeight = FontWeight.Medium
             )

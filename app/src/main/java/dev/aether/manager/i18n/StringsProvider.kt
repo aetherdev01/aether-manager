@@ -11,12 +11,10 @@ enum class AppLanguage(
     val code: String,
     val displayName: String,
     val nativeName: String,
-    val langIcon: String,   // 2-letter ISO abbrev shown in UI (no flag emoji)
+    val langIcon: String,   // 2-letter ISO abbrev shown in UI
 ) {
     INDONESIAN("id", "Indonesian", "Bahasa Indonesia", "ID"),
-    ENGLISH("en", "English", "English", "EN"),
-    RUSSIAN("ru", "Russian", "Русский", "RU"),
-    CHINESE("zh", "Chinese", "中文", "ZH");
+    ENGLISH("en", "English", "English", "EN");
 
     companion object {
         fun fromCode(code: String): AppLanguage =
@@ -26,8 +24,6 @@ enum class AppLanguage(
         fun fromSystemLocale(locale: Locale): AppLanguage =
             when (locale.language) {
                 "in", "id" -> INDONESIAN
-                "ru"       -> RUSSIAN
-                "zh"       -> CHINESE
                 else       -> ENGLISH
             }
     }
@@ -39,8 +35,6 @@ fun getStringsForLanguage(language: AppLanguage): AppStrings =
     when (language) {
         AppLanguage.INDONESIAN -> StringsId
         AppLanguage.ENGLISH    -> StringsEn
-        AppLanguage.RUSSIAN    -> StringsRu
-        AppLanguage.CHINESE    -> StringsZh
     }
 
 /** Legacy helper — kept for backward compatibility */
@@ -85,25 +79,11 @@ val LocalSetLanguage = staticCompositionLocalOf<(AppLanguage) -> Unit> {
  * Priority:
  *  1. User-saved preference (SharedPreferences)
  *  2. System locale
- *
- * Usage:
- * ```kotlin
- * ProvideStrings {
- *     AetherTheme { ... }
- * }
- * ```
- *
- * Change language from any composable:
- * ```kotlin
- * val setLanguage = LocalSetLanguage.current
- * setLanguage(AppLanguage.ENGLISH)
- * ```
  */
 @Composable
 fun ProvideStrings(content: @Composable () -> Unit) {
     val context = androidx.compose.ui.platform.LocalContext.current
 
-    // Resolve initial language: saved pref → system locale
     val initial = remember {
         loadSavedLanguage(context)
             ?: AppLanguage.fromSystemLocale(
