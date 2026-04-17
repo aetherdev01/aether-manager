@@ -12,8 +12,8 @@ android {
         applicationId = "dev.aether.manager"
         minSdk        = 26
         targetSdk     = 36
-        versionCode   = 120
-        versionName   = "1.2"
+        versionCode   = 130
+        versionName   = "1.3"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
