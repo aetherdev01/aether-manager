@@ -1,24 +1,23 @@
 package dev.aether.manager.ads
 
 /**
- * Central Unity Ads configuration.
- * Game ID: 6091240 (production)
+ * Central AdMob configuration.
+ * App ID  : ca-app-pub-5043818314955328~2380701071
+ * Ad Unit : ca-app-pub-5043818314955328/2309164833 (Interstitial)
  */
 object AdManager {
 
     // ── Credentials ───────────────────────────────────────────
-    const val GAME_ID                  = "6091240"
-    const val BANNER_PLACEMENT_ID      = "Banner_Android"
-    const val INTERSTITIAL_PLACEMENT_ID = "Interstitial_Android"
+    const val APP_ID              = "ca-app-pub-5043818314955328~2380701071"
+    const val INTERSTITIAL_AD_ID  = "ca-app-pub-5043818314955328/2309164833"
 
     // ── Anti-spam policy ──────────────────────────────────────
-    /** Minimum gap (ms) between two interstitial shows. Default: 10 minutes. */
-    const val INTERSTITIAL_COOLDOWN_MS = 1L * 30_000L   // 10 min
+    /** Minimum gap (ms) between two interstitial shows. */
+    const val INTERSTITIAL_COOLDOWN_MS = 1L * 60_000L   // 1 min
 
-    /** Minimum app session time (ms) before the first interstitial can appear. */
-    const val FIRST_SHOW_DELAY_MS      = 3L  * 30_000L   // 3 min after launch
+    /** Minimum session time (ms) before first interstitial. */
+    const val FIRST_SHOW_DELAY_MS      = 1L * 60_000L   // 1 min after launch
 
-    // ── Mode ──────────────────────────────────────────────────
     /** true = test mode (debug build), false = production */
     val isTestMode: Boolean
         get() = dev.aether.manager.BuildConfig.DEBUG
