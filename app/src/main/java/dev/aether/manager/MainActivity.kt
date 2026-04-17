@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.sp
 import dev.aether.manager.data.AppProfileViewModel
 import dev.aether.manager.data.MainViewModel
 import dev.aether.manager.i18n.LocalStrings
+import dev.aether.manager.i18n.LanguageDropdownCompact
 import dev.aether.manager.i18n.ProvideStrings
 import dev.aether.manager.ui.AetherTheme
 import dev.aether.manager.ui.about.AboutScreen
@@ -113,6 +114,10 @@ fun AetherApp(vm: MainViewModel, apVm: AppProfileViewModel, updateVm: UpdateView
             TopAppBar(
                 title = { Text("Aether Manager", fontWeight = FontWeight.Medium, fontSize = 20.sp) },
                 actions = {
+                    LanguageDropdownCompact()
+                    IconButton(onClick = { showSettings = true }) {
+                        Icon(Icons.Outlined.Settings, null)
+                    }
                     IconButton(onClick = {
                         InterstitialAdManager.showIfReady(context as android.app.Activity)
                         showReboot = true
@@ -170,10 +175,7 @@ fun AetherApp(vm: MainViewModel, apVm: AppProfileViewModel, updateVm: UpdateView
                     Screen.HOME  -> HomeScreen(vm)
                     Screen.TWEAK -> TweakScreen(vm)
                     Screen.APPS  -> AppProfileScreen(apVm)
-                    Screen.ABOUT -> AboutScreen(
-                        vm             = vm,
-                        onOpenSettings = { showSettings = true }
-                    )
+                    Screen.ABOUT -> AboutScreen(vm = vm)
                 }
             }
         }

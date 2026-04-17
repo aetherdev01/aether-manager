@@ -40,7 +40,6 @@ import dev.aether.manager.ui.home.TabSectionTitle
 @Composable
 fun AboutScreen(
     vm          : MainViewModel,
-    onOpenSettings: () -> Unit,
 ) {
     val s           = LocalStrings.current
     val ctx         = LocalContext.current
@@ -54,27 +53,6 @@ fun AboutScreen(
             .padding(top = 8.dp, bottom = 100.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-
-        // ── Header action row: Language + Settings ────────────────────────
-        Row(
-            modifier              = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.End,
-            verticalAlignment     = Alignment.CenterVertically
-        ) {
-            // Language picker (no flag, text only)
-            AboutLanguageDropdown()
-
-            Spacer(Modifier.width(4.dp))
-
-            // Settings button → SettingsScreen
-            IconButton(onClick = onOpenSettings) {
-                Icon(
-                    Icons.Outlined.Settings,
-                    contentDescription = "Pengaturan",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
 
         // ── Section: Developer ────────────────────────────────────────────
         TabSectionTitle(
