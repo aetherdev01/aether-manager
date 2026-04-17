@@ -37,8 +37,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
-import dev.aether.manager.i18n.AppStrings       // ← ADD THIS
-import dev.aether.manager.i18n.LanguageDropdown
+import dev.aether.manager.i18n.AppStrings
 import dev.aether.manager.i18n.LocalStrings
 import dev.aether.manager.i18n.ProvideStrings
 import dev.aether.manager.ui.AetherTheme
@@ -128,8 +127,6 @@ fun SetupScreen(onDone: () -> Unit) {
     val pages = listOf(
         SetupPage(Icons.Outlined.Rocket, primaryContainer, onPrimaryContainer,
             s.setupWelcomeTitle, s.setupWelcomeDesc),
-        SetupPage(Icons.Outlined.Language, secContainer, onSecContainer,
-            s.setupLangTitle, s.setupLangDesc, "LANGUAGE"),
         SetupPage(Icons.Outlined.AdminPanelSettings, errContainer, onErrContainer,
             s.setupRootTitle, s.setupRootDesc, "ROOT", s.setupRootCta),
         SetupPage(Icons.Outlined.Notifications, secContainer, onSecContainer,
@@ -175,7 +172,6 @@ fun SetupScreen(onDone: () -> Unit) {
     }
 
     val canProceed = when (page.permissionType) {
-        "LANGUAGE"        -> true
         "ROOT"           -> rootState    == PermState.GRANTED
         "NOTIFICATION"   -> notifState   == PermState.GRANTED
         "WRITE_SETTINGS" -> writeState   == PermState.GRANTED
@@ -203,7 +199,6 @@ fun SetupScreen(onDone: () -> Unit) {
             ) { idx ->
                 val pg = pages[idx]
                 val permState = when (pg.permissionType) {
-                    "LANGUAGE"       -> PermState.IDLE
                     "ROOT"           -> rootState
                     "NOTIFICATION"   -> notifState
                     "WRITE_SETTINGS" -> writeState
@@ -275,11 +270,7 @@ fun SetupScreen(onDone: () -> Unit) {
                         }
                     }
 
-                    if (pg.permissionType == "LANGUAGE") {
-                        LanguageSelectorCard(strings = s)
-                    }
-
-                    if (pg.permissionType != null && pg.permissionType != "LANGUAGE") {
+                    if (pg.permissionType != null) {
                         PermissionBlock(
                             permType = pg.permissionType,
                             ctaLabel = pg.ctaLabel ?: s.setupBtnRetry,
@@ -403,10 +394,10 @@ private fun MissingPermsSummary(
                     color = MaterialTheme.colorScheme.onErrorContainer,
                     fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
             }
-            if (rootMissing)    MissingPermRow(strings.setupRootTitle,    2, onGoToPage)
-            if (notifMissing)   MissingPermRow(strings.setupNotifTitle,   3, onGoToPage)
-            if (writeMissing)   MissingPermRow(strings.setupWriteTitle,   4, onGoToPage)
-            if (storageMissing) MissingPermRow(strings.setupStorageTitle, 5, onGoToPage)
+            if (rootMissing)    MissingPermRow(strings.setupRootTitle,    1, onGoToPage)
+            if (notifMissing)   MissingPermRow(strings.setupNotifTitle,   2, onGoToPage)
+            if (writeMissing)   MissingPermRow(strings.setupWriteTitle,   3, onGoToPage)
+            if (storageMissing) MissingPermRow(strings.setupStorageTitle, 4, onGoToPage)
         }
     }
 }
@@ -419,43 +410,6 @@ private fun MissingPermRow(label: String, pageIdx: Int, onGoToPage: (Int) -> Uni
             tint = MaterialTheme.colorScheme.onErrorContainer, modifier = Modifier.size(14.dp))
         Spacer(Modifier.width(4.dp))
         Text("$label", color = MaterialTheme.colorScheme.onErrorContainer, fontSize = 12.sp)
-    }
-}
-
-@Composable
-private fun LanguageSelectorCard(strings: AppStrings) {
-    Surface(
-        modifier       = Modifier.fillMaxWidth(),
-        shape          = RoundedCornerShape(20.dp),
-        color          = MaterialTheme.colorScheme.surfaceContainerLow,
-        tonalElevation = 0.dp,
-    ) {
-        Row(
-            modifier              = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 14.dp),
-            verticalAlignment     = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
-        ) {
-            Row(
-                verticalAlignment     = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-            ) {
-                Icon(
-                    Icons.Outlined.Translate, null,
-                    tint     = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(20.dp),
-                )
-                Text(
-                    text       = "Bahasa",
-                    style      = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Medium,
-                    color      = MaterialTheme.colorScheme.onSurface,
-                )
-            }
-
-            LanguageDropdown(modifier = Modifier.widthIn(min = 160.dp))
-        }
     }
 }
 
