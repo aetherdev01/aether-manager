@@ -42,8 +42,8 @@ fun TweakScreen(vm: MainViewModel) {
                 .fillMaxSize()
                 .verticalScroll(scrollState)
                 .padding(horizontal = 16.dp)
-                .padding(top = 12.dp, bottom = 100.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp)
+                .padding(top = 8.dp, bottom = 100.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             AnimatedVisibility(visible = applying,
                 enter = fadeIn() + expandVertically(), exit = fadeOut() + shrinkVertically()) {
@@ -57,18 +57,6 @@ fun TweakScreen(vm: MainViewModel) {
                 ProfileGrid(current = current, onSelect = { vm.setProfile(it) })
             }
 
-            // ── Apply All button ──────────────────────────────
-            Button(
-                onClick  = { vm.applyAll(activity) },
-                modifier = Modifier.fillMaxWidth().height(50.dp),
-                shape    = RoundedCornerShape(14.dp),
-                colors   = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                enabled  = !applying
-            ) {
-                Icon(Icons.Filled.PlayArrow, null, modifier = Modifier.size(18.dp))
-                Spacer(Modifier.width(8.dp))
-                Text(s.tweakApplyAll, fontWeight = FontWeight.SemiBold)
-            }
 
             // ── CPU & Kernel ──────────────────────────────────
             TweakSection(s.tweakSectionCpu) {

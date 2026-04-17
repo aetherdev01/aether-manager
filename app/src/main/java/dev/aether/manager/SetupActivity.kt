@@ -283,22 +283,24 @@ fun SetupScreen(onDone: () -> Unit) {
                             Column(
                                 modifier            = Modifier.padding(16.dp),
                                 horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalArrangement = Arrangement.spacedBy(10.dp),
                             ) {
                                 Row(
                                     verticalAlignment     = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                    horizontalArrangement = Arrangement.Center,
+                                    modifier              = Modifier.fillMaxWidth(),
                                 ) {
                                     Icon(
                                         Icons.Outlined.Language, null,
                                         modifier = Modifier.size(14.dp),
                                         tint     = MaterialTheme.colorScheme.primary,
                                     )
+                                    Spacer(Modifier.width(6.dp))
                                     Text(
-                                        text      = s.setupLangTitle,
-                                        style     = MaterialTheme.typography.labelMedium,
+                                        text       = s.setupLangTitle,
+                                        style      = MaterialTheme.typography.labelMedium,
                                         fontWeight = FontWeight.SemiBold,
-                                        color     = MaterialTheme.colorScheme.primary,
+                                        color      = MaterialTheme.colorScheme.primary,
                                     )
                                 }
                                 LanguageDropdown(modifier = Modifier.fillMaxWidth())

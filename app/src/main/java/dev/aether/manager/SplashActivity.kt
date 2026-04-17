@@ -117,7 +117,7 @@ fun SplashScreen(onFinished: () -> Unit) {
 
             // Subtitle
             Text(
-                "Root Optimizer",
+                "Giving You The Best Experience By Using Aether Manager",
                 color = primary.copy(alpha = 0.65f),
                 fontSize = 11.sp,
                 letterSpacing = 2.sp,
@@ -150,7 +150,7 @@ fun SplashScreen(onFinished: () -> Unit) {
 
         // Version
         Text(
-            "v1.2 (Release)",
+            "v1.2",
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .padding(bottom = 28.dp),

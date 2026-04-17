@@ -3,7 +3,6 @@ package dev.aether.manager.i18n
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -63,12 +62,6 @@ fun LanguageDropdown(
                     tint = MaterialTheme.colorScheme.onSurface,
                 )
                 Text(
-                    text = currentLanguage.langIcon,
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary,
-                )
-                Text(
                     text = currentLanguage.nativeName,
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.SemiBold,
@@ -103,27 +96,6 @@ fun LanguageDropdown(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(10.dp),
                         ) {
-                            // ── Lang code pill ────────────────────────────────
-                            Surface(
-                                shape = RoundedCornerShape(6.dp),
-                                color = if (isSelected)
-                                    MaterialTheme.colorScheme.primary
-                                else
-                                    MaterialTheme.colorScheme.surfaceContainerHighest,
-                                modifier = Modifier.size(width = 36.dp, height = 24.dp)
-                            ) {
-                                Box(contentAlignment = Alignment.Center) {
-                                    Text(
-                                        text = lang.langIcon,
-                                        style = MaterialTheme.typography.labelSmall,
-                                        fontWeight = FontWeight.Bold,
-                                        color = if (isSelected)
-                                            MaterialTheme.colorScheme.onPrimary
-                                        else
-                                            MaterialTheme.colorScheme.onSurfaceVariant,
-                                    )
-                                }
-                            }
                             Column {
                                 Text(
                                     text = lang.nativeName,
@@ -212,26 +184,6 @@ fun LanguageDropdownCompact(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(10.dp),
                         ) {
-                            Surface(
-                                shape = RoundedCornerShape(6.dp),
-                                color = if (isSelected)
-                                    MaterialTheme.colorScheme.primary
-                                else
-                                    MaterialTheme.colorScheme.surfaceContainerHighest,
-                                modifier = Modifier.size(width = 36.dp, height = 24.dp)
-                            ) {
-                                Box(contentAlignment = Alignment.Center) {
-                                    Text(
-                                        text = lang.langIcon,
-                                        style = MaterialTheme.typography.labelSmall,
-                                        fontWeight = FontWeight.Bold,
-                                        color = if (isSelected)
-                                            MaterialTheme.colorScheme.onPrimary
-                                        else
-                                            MaterialTheme.colorScheme.onSurfaceVariant,
-                                    )
-                                }
-                            }
                             Text(
                                 text = lang.nativeName,
                                 style = MaterialTheme.typography.bodyMedium,
