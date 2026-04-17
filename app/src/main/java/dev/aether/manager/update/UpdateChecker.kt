@@ -7,12 +7,11 @@ import java.net.HttpURLConnection
 import java.net.URL
 
 data class ReleaseInfo(
-    val latestVersion: String,      // e.g. "2.1"
-    val latestVersionCode: Int,     // e.g. 3
-    val releaseNotes: String,       // body dari GitHub Release
-    val downloadUrl: String,        // direct APK download URL
-    val releasePageUrl: String,     // html_url dari release
-    val isForceUpdate: Boolean,     // dari tag name prefix "force-" atau field di body
+    val latestVersion    : String,   // e.g. "v1.6"
+    val latestVersionCode: Int,      // e.g. 160
+    val releaseNotes     : String,
+    val downloadUrl      : String,
+    val releasePageUrl   : String,
 )
 
 sealed class UpdateResult {
@@ -28,10 +27,12 @@ object UpdateChecker {
 
     /**
      * Cek update dari GitHub Releases API.
-     * Harus dipanggil dari coroutine (IO dispatcher).
+     * Dialog update muncul otomatis jika ada versi baru — tanpa flag force_update.
      *
-     * Force update dikontrol dengan menambahkan baris di body release:
-     *   `force_update: true`
+     * Format tag yang didukung:
+     *   "v1.5"    → code 150  |  "v1.6"    → code 160  ✓ update
+     *   "v1.5.1"  → code 151  |  "v2.0"    → code 200
+     *   "v1.5+12" → code 12   (explicit, lebih presisi)
      */
     suspend fun check(currentVersionCode: Int): UpdateResult = withContext(Dispatchers.IO) {
         try {
@@ -52,21 +53,16 @@ object UpdateChecker {
             conn.disconnect()
 
             val json        = JSONObject(body)
-            val tagName     = json.getString("tag_name")          // e.g. "v2.1" atau "v2.1+3"
-            val releaseBody = json.optString("body", "")
+            val tagName     = json.getString("tag_name")
+            val releaseBody = json.optString("body", "").trim()
             val htmlUrl     = json.getString("html_url")
 
-            // Parse versi dari tag: support format "v2.1" dan "v2.1+3"
             val (versionName, versionCode) = parseTag(tagName)
                 ?: return@withContext UpdateResult.Error("Tag tidak valid: $tagName")
 
-            // Cari APK asset pertama
             val assets      = json.getJSONArray("assets")
             val downloadUrl = findApkDownloadUrl(assets)
                 ?: return@withContext UpdateResult.Error("Tidak ada APK di release ini")
-
-            // Cek force update dari body release
-            val isForce = releaseBody.contains("force_update: true", ignoreCase = true)
 
             if (versionCode <= currentVersionCode) {
                 return@withContext UpdateResult.UpToDate
@@ -74,12 +70,11 @@ object UpdateChecker {
 
             UpdateResult.UpdateAvailable(
                 ReleaseInfo(
-                    latestVersion     = versionName,
-                    latestVersionCode = versionCode,
-                    releaseNotes      = cleanReleaseNotes(releaseBody),
-                    downloadUrl       = downloadUrl,
-                    releasePageUrl    = htmlUrl,
-                    isForceUpdate     = isForce,
+                    latestVersion      = versionName,
+                    latestVersionCode  = versionCode,
+                    releaseNotes       = releaseBody,
+                    downloadUrl        = downloadUrl,
+                    releasePageUrl     = htmlUrl,
                 )
             )
         } catch (e: Exception) {
@@ -88,43 +83,59 @@ object UpdateChecker {
     }
 
     /**
-     * Parse tag name ke (versionName, versionCode).
-     * Support format:
-     *   - "v2.1"      → ("2.1", 0) — pakai 0 jika tidak ada versionCode, fallback string compare
-     *   - "v2.1+3"    → ("2.1", 3) — format recommended
-     *   - "2.1+3"     → ("2.1", 3)
+     * Parse tag → Pair<versionName, versionCode>
+     *
+     * Rules:
+     *   "v1.5+12" → ("v1.5", 12)   — explicit versionCode setelah '+'
+     *   "v1.6"    → ("v1.6", 160)  — major*100 + minor*10
+     *   "v1.5.2"  → ("v1.5.2", 152)
+     *   "v2.0"    → ("v2.0", 200)
+     *
+     * Name selalu include 'v' prefix agar tampil "v1.5 → v1.6" di dialog.
      */
     private fun parseTag(tag: String): Pair<String, Int>? {
-        val clean = tag.trimStart('v', 'V')
-        return if (clean.contains('+')) {
-            val parts = clean.split('+')
-            val name  = parts[0]
-            val code  = parts[1].toIntOrNull() ?: return null
-            name to code
-        } else {
-            // Tidak ada versionCode di tag — konversi dari versionName
-            // "2.1" → 21, "2.10" → 210, dst
-            val code = clean.replace(".", "").toIntOrNull() ?: return null
-            clean to code
+        val raw = tag.trim()
+
+        // Explicit versionCode: "v1.5+12"
+        if (raw.contains('+')) {
+            val idx  = raw.indexOf('+')
+            val name = ensureVPrefix(raw.substring(0, idx))
+            val code = raw.substring(idx + 1).toIntOrNull() ?: return null
+            return name to code
         }
+
+        val clean    = raw.trimStart('v', 'V')
+        val segments = clean.split('.')
+        if (segments.isEmpty()) return null
+
+        val name = "v$clean"
+        val code = when (segments.size) {
+            1    -> (segments[0].toIntOrNull() ?: return null) * 100
+            2    -> {
+                val major = segments[0].toIntOrNull() ?: return null
+                val minor = segments[1].toIntOrNull() ?: return null
+                major * 100 + minor * 10
+            }
+            else -> {
+                val major = segments[0].toIntOrNull() ?: return null
+                val minor = segments[1].toIntOrNull() ?: return null
+                val patch = segments[2].toIntOrNull() ?: return null
+                major * 100 + minor * 10 + patch
+            }
+        }
+        return name to code
     }
+
+    private fun ensureVPrefix(s: String): String =
+        if (s.startsWith('v') || s.startsWith('V')) s.trim() else "v${s.trim()}"
 
     private fun findApkDownloadUrl(assets: org.json.JSONArray): String? {
         for (i in 0 until assets.length()) {
             val asset = assets.getJSONObject(i)
-            val name  = asset.getString("name")
-            if (name.endsWith(".apk", ignoreCase = true)) {
+            if (asset.getString("name").endsWith(".apk", ignoreCase = true)) {
                 return asset.getString("browser_download_url")
             }
         }
         return null
-    }
-
-    private fun cleanReleaseNotes(body: String): String {
-        // Hapus baris kontrol internal (force_update: true, dsb)
-        return body.lines()
-            .filterNot { it.trim().startsWith("force_update:", ignoreCase = true) }
-            .joinToString("\n")
-            .trim()
     }
 }

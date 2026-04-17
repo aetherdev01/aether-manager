@@ -32,7 +32,7 @@ import java.net.HttpURLConnection
 import java.net.URL
 
 // ─────────────────────────────────────────────────────────────
-// Entry point
+// Entry point — dialog muncul otomatis jika ada update
 // ─────────────────────────────────────────────────────────────
 
 @Composable
@@ -54,10 +54,10 @@ fun UpdateDialogHost(viewModel: UpdateViewModel) {
 // ─────────────────────────────────────────────────────────────
 
 private sealed class DownloadState {
-    object Idle                          : DownloadState()
-    data class Progress(val percent: Int): DownloadState()
-    data class Done(val apkFile: File)   : DownloadState()
-    data class Failed(val reason: String): DownloadState()
+    object Idle                           : DownloadState()
+    data class Progress(val percent: Int) : DownloadState()
+    data class Done(val apkFile: File)    : DownloadState()
+    data class Failed(val reason: String) : DownloadState()
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -66,20 +66,18 @@ private sealed class DownloadState {
 
 @Composable
 fun UpdateDialog(
-    info: ReleaseInfo,
-    onDismiss: () -> Unit,
+    info      : ReleaseInfo,
+    onDismiss : () -> Unit,
 ) {
-    val context   = LocalContext.current
-    val scope     = rememberCoroutineScope()
-    var dlState   by remember { mutableStateOf<DownloadState>(DownloadState.Idle) }
+    val context  = LocalContext.current
+    val scope    = rememberCoroutineScope()
+    var dlState  by remember { mutableStateOf<DownloadState>(DownloadState.Idle) }
 
-    // Tab: "Deskripsi" atau "Changelog"
-    var selectedTab by remember { mutableIntStateOf(0) }
-    // Changelog yang di-fetch langsung dari GitHub Release API
-    var changelog by remember { mutableStateOf(info.releaseNotes) }
+    var selectedTab      by remember { mutableIntStateOf(0) }
+    var changelog        by remember { mutableStateOf(info.releaseNotes) }
     var fetchingChangelog by remember { mutableStateOf(false) }
 
-    // Fetch changelog segar dari repo saat dialog dibuka
+    // Fetch changelog fresh dari GitHub saat dialog dibuka
     LaunchedEffect(info.releasePageUrl) {
         fetchingChangelog = true
         val fresh = fetchChangelogFromGitHub(info.releasePageUrl)
@@ -88,29 +86,40 @@ fun UpdateDialog(
     }
 
     Dialog(
-        onDismissRequest = {},
+        onDismissRequest = { /* biarkan user tutup lewat tombol */ },
         properties = DialogProperties(
-            dismissOnBackPress    = false,
-            dismissOnClickOutside = false,
+            dismissOnBackPress      = true,
+            dismissOnClickOutside   = false,
             usePlatformDefaultWidth = false,
         )
     ) {
         Surface(
-            modifier = Modifier
-                .fillMaxWidth(0.92f)
-                .wrapContentHeight(),
+            modifier       = Modifier.fillMaxWidth(0.92f).wrapContentHeight(),
             shape          = RoundedCornerShape(28.dp),
             tonalElevation = 6.dp,
             color          = MaterialTheme.colorScheme.surface,
         ) {
             Column(
-                modifier = Modifier.padding(top = 24.dp, start = 24.dp, end = 24.dp, bottom = 20.dp),
+                modifier            = Modifier.padding(top = 24.dp, start = 24.dp, end = 24.dp, bottom = 20.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(14.dp),
             ) {
 
                 // ── Header icon ───────────────────────────────────
-                UpdateHeaderBadge(isForce = info.isForceUpdate)
+                Box(
+                    modifier = Modifier
+                        .size(64.dp)
+                        .clip(RoundedCornerShape(18.dp))
+                        .background(MaterialTheme.colorScheme.primaryContainer),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        imageVector        = Icons.Outlined.NewReleases,
+                        contentDescription = null,
+                        tint               = MaterialTheme.colorScheme.onPrimaryContainer,
+                        modifier           = Modifier.size(32.dp),
+                    )
+                }
 
                 // ── Title ─────────────────────────────────────────
                 Column(
@@ -118,31 +127,29 @@ fun UpdateDialog(
                     verticalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
                     Text(
-                        text = if (info.isForceUpdate) "Update Wajib Tersedia" else "Update Tersedia",
-                        style = MaterialTheme.typography.titleLarge,
+                        text       = "Update Tersedia",
+                        style      = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
-                        textAlign = TextAlign.Center,
+                        textAlign  = TextAlign.Center,
                     )
                     Text(
-                        text = "Aether Manager",
+                        text  = "Aether Manager",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
 
-                // ── Version chip ──────────────────────────────────
-                VersionChip(version = info.latestVersion)
+                // ── Version chip: "versi saat ini → versi baru" ──
+                VersionArrowChip(newVersion = info.latestVersion)
 
                 // ── Tab: Deskripsi / Changelog ────────────────────
                 val tabs = listOf("Deskripsi", "Changelog")
                 TabRow(
                     selectedTabIndex = selectedTab,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(12.dp)),
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                    indicator = {},
-                    divider   = {},
+                    modifier         = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)),
+                    containerColor   = MaterialTheme.colorScheme.surfaceVariant,
+                    indicator        = {},
+                    divider          = {},
                 ) {
                     tabs.forEachIndexed { idx, label ->
                         val selected = selectedTab == idx
@@ -154,16 +161,16 @@ fun UpdateDialog(
                                 .clip(RoundedCornerShape(10.dp))
                                 .background(
                                     if (selected) MaterialTheme.colorScheme.surface
-                                    else androidx.compose.ui.graphics.Color.Transparent
+                                    else          androidx.compose.ui.graphics.Color.Transparent
                                 ),
                         ) {
                             Text(
-                                text = label,
-                                style = MaterialTheme.typography.labelMedium,
+                                text       = label,
+                                style      = MaterialTheme.typography.labelMedium,
                                 fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
-                                color = if (selected) MaterialTheme.colorScheme.primary
-                                        else MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.padding(vertical = 8.dp),
+                                color      = if (selected) MaterialTheme.colorScheme.primary
+                                             else          MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier   = Modifier.padding(vertical = 8.dp),
                             )
                         }
                     }
@@ -171,20 +178,15 @@ fun UpdateDialog(
 
                 // ── Tab content ───────────────────────────────────
                 AnimatedContent(
-                    targetState = selectedTab,
+                    targetState  = selectedTab,
                     transitionSpec = { fadeIn(tween(200)) togetherWith fadeOut(tween(150)) },
-                    label = "tab_content",
+                    label        = "tab_content",
                 ) { tab ->
                     when (tab) {
-                        0 -> DescriptionBox(isForce = info.isForceUpdate)
-                        1 -> ChangelogBox(notes = changelog, loading = fetchingChangelog)
+                        0    -> DescriptionBox()
+                        1    -> ChangelogBox(notes = changelog, loading = fetchingChangelog)
                         else -> Unit
                     }
-                }
-
-                // ── Force notice ──────────────────────────────────
-                if (info.isForceUpdate) {
-                    ForceUpdateNotice()
                 }
 
                 // ── Buttons ───────────────────────────────────────
@@ -195,7 +197,7 @@ fun UpdateDialog(
                             verticalArrangement = Arrangement.spacedBy(8.dp),
                         ) {
                             Button(
-                                onClick = {
+                                onClick  = {
                                     scope.launch {
                                         downloadAndInstall(
                                             context    = context,
@@ -211,20 +213,22 @@ fun UpdateDialog(
                             ) {
                                 Icon(Icons.Outlined.Download, null, Modifier.size(18.dp))
                                 Spacer(Modifier.width(8.dp))
-                                Text("Download & Install  v${info.latestVersion}",
-                                    style = MaterialTheme.typography.labelLarge)
+                                Text(
+                                    "Download & Install  ${info.latestVersion}",
+                                    style = MaterialTheme.typography.labelLarge
+                                )
                             }
 
-                            // Tombol "Nanti Saja" hanya untuk soft update
-                            if (!info.isForceUpdate) {
-                                OutlinedButton(
-                                    onClick  = onDismiss,
-                                    modifier = Modifier.fillMaxWidth().height(44.dp),
-                                    shape    = RoundedCornerShape(14.dp),
-                                ) {
-                                    Text("Nanti Saja", style = MaterialTheme.typography.labelLarge,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                }
+                            OutlinedButton(
+                                onClick  = onDismiss,
+                                modifier = Modifier.fillMaxWidth().height(44.dp),
+                                shape    = RoundedCornerShape(14.dp),
+                            ) {
+                                Text(
+                                    "Nanti Saja",
+                                    style = MaterialTheme.typography.labelLarge,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
                             }
                         }
                     }
@@ -236,9 +240,11 @@ fun UpdateDialog(
                     is DownloadState.Done -> {
                         LaunchedEffect(dl.apkFile) { installApk(context, dl.apkFile) }
                         DownloadProgressBar(percent = 100)
-                        Text("Membuka installer…",
+                        Text(
+                            "Membuka installer…",
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
 
                     is DownloadState.Failed -> {
@@ -250,9 +256,9 @@ fun UpdateDialog(
                             ) {
                                 Text(
                                     "Gagal: ${dl.reason}",
-                                    modifier = Modifier.padding(12.dp),
-                                    style    = MaterialTheme.typography.bodySmall,
-                                    color    = MaterialTheme.colorScheme.onErrorContainer,
+                                    modifier  = Modifier.padding(12.dp),
+                                    style     = MaterialTheme.typography.bodySmall,
+                                    color     = MaterialTheme.colorScheme.onErrorContainer,
                                     textAlign = TextAlign.Center,
                                 )
                             }
@@ -263,7 +269,9 @@ fun UpdateDialog(
                             ) { Text("Coba Lagi") }
                             TextButton(
                                 onClick  = {
-                                    context.startActivity(Intent(Intent.ACTION_VIEW, info.releasePageUrl.toUri()))
+                                    context.startActivity(
+                                        Intent(Intent.ACTION_VIEW, info.releasePageUrl.toUri())
+                                    )
                                 },
                                 modifier = Modifier.fillMaxWidth(),
                             ) { Text("Buka di Browser") }
@@ -279,71 +287,65 @@ fun UpdateDialog(
 // Sub-composables
 // ─────────────────────────────────────────────────────────────
 
+/** Chip: "→ v1.6" — menunjukkan versi tujuan update */
 @Composable
-private fun UpdateHeaderBadge(isForce: Boolean) {
-    val color = if (isForce) MaterialTheme.colorScheme.errorContainer
-                else MaterialTheme.colorScheme.primaryContainer
-    val iconColor = if (isForce) MaterialTheme.colorScheme.onErrorContainer
-                   else MaterialTheme.colorScheme.onPrimaryContainer
-
-    Box(
-        modifier = Modifier.size(64.dp).clip(RoundedCornerShape(18.dp)).background(color),
-        contentAlignment = Alignment.Center,
+private fun VersionArrowChip(newVersion: String) {
+    Surface(
+        shape = RoundedCornerShape(50),
+        color = MaterialTheme.colorScheme.secondaryContainer
     ) {
-        Icon(
-            imageVector = if (isForce) Icons.Outlined.Warning else Icons.Outlined.NewReleases,
-            contentDescription = null,
-            tint     = iconColor,
-            modifier = Modifier.size(32.dp),
-        )
+        Row(
+            modifier            = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
+            verticalAlignment   = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            Icon(
+                Icons.Outlined.ArrowForward, null,
+                tint     = MaterialTheme.colorScheme.onSecondaryContainer,
+                modifier = Modifier.size(14.dp)
+            )
+            Text(
+                text       = newVersion,   // sudah include 'v' prefix dari parseTag
+                style      = MaterialTheme.typography.labelLarge,
+                color      = MaterialTheme.colorScheme.onSecondaryContainer,
+                fontWeight = FontWeight.SemiBold,
+            )
+        }
     }
 }
 
 @Composable
-private fun VersionChip(version: String) {
-    Surface(shape = RoundedCornerShape(50), color = MaterialTheme.colorScheme.secondaryContainer) {
-        Text(
-            text     = "v$version",
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
-            style    = MaterialTheme.typography.labelLarge,
-            color    = MaterialTheme.colorScheme.onSecondaryContainer,
-            fontWeight = FontWeight.SemiBold,
-        )
-    }
-}
-
-@Composable
-private fun DescriptionBox(isForce: Boolean) {
+private fun DescriptionBox() {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape    = RoundedCornerShape(12.dp),
         color    = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
     ) {
         Column(
-            modifier = Modifier.padding(14.dp),
+            modifier            = Modifier.padding(14.dp),
             verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
             Row(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically,
+                verticalAlignment     = Alignment.CenterVertically,
             ) {
-                Icon(Icons.Outlined.Info, null,
+                Icon(
+                    Icons.Outlined.Info, null,
                     modifier = Modifier.size(15.dp),
-                    tint = MaterialTheme.colorScheme.primary)
-                Text("Tentang Update Ini",
-                    style = MaterialTheme.typography.labelMedium,
+                    tint     = MaterialTheme.colorScheme.primary
+                )
+                Text(
+                    "Tentang Update Ini",
+                    style      = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.primary)
+                    color      = MaterialTheme.colorScheme.primary
+                )
             }
             Text(
-                text = if (isForce)
-                    "Update ini wajib dipasang untuk melanjutkan penggunaan Aether Manager. " +
-                    "Versi ini mengandung perbaikan penting atau perubahan yang tidak kompatibel dengan versi lama."
-                else
-                    "Versi baru Aether Manager telah tersedia. Update direkomendasikan untuk mendapatkan " +
-                    "fitur terbaru, perbaikan bug, dan peningkatan performa.",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                text      = "Versi baru Aether Manager telah tersedia. Update direkomendasikan untuk " +
+                            "mendapatkan fitur terbaru, perbaikan bug, dan peningkatan performa.",
+                style     = MaterialTheme.typography.bodySmall,
+                color     = MaterialTheme.colorScheme.onSurfaceVariant,
                 lineHeight = 18.sp,
             )
         }
@@ -361,13 +363,18 @@ private fun ChangelogBox(notes: String, loading: Boolean) {
             Box(Modifier.fillMaxWidth().height(100.dp), contentAlignment = Alignment.Center) {
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
+                    verticalAlignment     = Alignment.CenterVertically,
                 ) {
-                    CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp,
-                        color = MaterialTheme.colorScheme.primary)
-                    Text("Memuat changelog…",
+                    CircularProgressIndicator(
+                        Modifier.size(16.dp),
+                        strokeWidth = 2.dp,
+                        color       = MaterialTheme.colorScheme.primary
+                    )
+                    Text(
+                        "Memuat changelog…",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
             }
         } else {
@@ -378,42 +385,13 @@ private fun ChangelogBox(notes: String, loading: Boolean) {
                     .padding(14.dp),
                 verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
-                if (notes.isBlank()) {
-                    Text("Tidak ada changelog tersedia.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant)
-                } else {
-                    Text(
-                        text  = notes,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        lineHeight = 18.sp,
-                    )
-                }
+                Text(
+                    text       = notes.ifBlank { "Tidak ada changelog tersedia." },
+                    style      = MaterialTheme.typography.bodySmall,
+                    color      = MaterialTheme.colorScheme.onSurfaceVariant,
+                    lineHeight = 18.sp,
+                )
             }
-        }
-    }
-}
-
-@Composable
-private fun ForceUpdateNotice() {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape    = RoundedCornerShape(12.dp),
-        color    = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.35f),
-    ) {
-        Row(
-            modifier = Modifier.padding(12.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Icon(Icons.Outlined.Warning, null,
-                tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(15.dp))
-            Text(
-                "Update ini wajib dipasang untuk melanjutkan menggunakan aplikasi.",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onErrorContainer,
-            )
         }
     }
 }
@@ -421,13 +399,23 @@ private fun ForceUpdateNotice() {
 @Composable
 private fun DownloadProgressBar(percent: Int) {
     val progress by animateFloatAsState(
-        targetValue = percent / 100f, animationSpec = tween(300), label = "dl_progress")
+        targetValue  = percent / 100f,
+        animationSpec = tween(300),
+        label        = "dl_progress"
+    )
     Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Text("Mengunduh APK…", style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Text("$percent%", style = MaterialTheme.typography.bodySmall,
-                fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.primary)
+            Text(
+                "Mengunduh APK…",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Text(
+                "$percent%",
+                style      = MaterialTheme.typography.bodySmall,
+                fontWeight = FontWeight.SemiBold,
+                color      = MaterialTheme.colorScheme.primary
+            )
         }
         LinearProgressIndicator(
             progress = { progress },
@@ -437,16 +425,14 @@ private fun DownloadProgressBar(percent: Int) {
 }
 
 // ─────────────────────────────────────────────────────────────
-// Fetch changelog segar dari GitHub Releases API
-// Ambil body release yang sesuai dengan releasePageUrl
+// Fetch changelog dari GitHub Releases API
 // ─────────────────────────────────────────────────────────────
 
 private suspend fun fetchChangelogFromGitHub(releasePageUrl: String): String? =
     withContext(Dispatchers.IO) {
         try {
-            // Konversi html_url ke API URL:
-            // https://github.com/owner/repo/releases/tag/vX.Y
-            // → https://api.github.com/repos/owner/repo/releases/tags/vX.Y
+            // html_url: https://github.com/owner/repo/releases/tag/vX.Y
+            // API url:  https://api.github.com/repos/owner/repo/releases/tags/vX.Y
             val apiUrl = releasePageUrl
                 .replace("https://github.com/", "https://api.github.com/repos/")
                 .replace("/releases/tag/", "/releases/tags/")
@@ -458,24 +444,13 @@ private suspend fun fetchChangelogFromGitHub(releasePageUrl: String): String? =
                 connectTimeout = 10_000
                 readTimeout    = 10_000
             }
-
             if (conn.responseCode != 200) return@withContext null
 
             val body = conn.inputStream.bufferedReader().readText()
             conn.disconnect()
 
-            val json = org.json.JSONObject(body)
-            val releaseBody = json.optString("body", "")
-
-            // Bersihkan baris kontrol internal (force_update: true)
-            releaseBody.lines()
-                .filterNot { it.trim().startsWith("force_update:", ignoreCase = true) }
-                .joinToString("\n")
-                .trim()
-                .takeIf { it.isNotBlank() }
-        } catch (_: Exception) {
-            null
-        }
+            org.json.JSONObject(body).optString("body", "").trim().takeIf { it.isNotBlank() }
+        } catch (_: Exception) { null }
     }
 
 // ─────────────────────────────────────────────────────────────
@@ -483,16 +458,16 @@ private suspend fun fetchChangelogFromGitHub(releasePageUrl: String): String? =
 // ─────────────────────────────────────────────────────────────
 
 private suspend fun downloadAndInstall(
-    context: Context,
-    url: String,
+    context   : Context,
+    url       : String,
     onProgress: (Int) -> Unit,
-    onDone: (File) -> Unit,
-    onFailed: (String) -> Unit,
+    onDone    : (File) -> Unit,
+    onFailed  : (String) -> Unit,
 ) = withContext(Dispatchers.IO) {
     try {
         val conn = (URL(url).openConnection() as HttpURLConnection).apply {
-            connectTimeout = 15_000
-            readTimeout    = 60_000
+            connectTimeout          = 15_000
+            readTimeout             = 60_000
             instanceFollowRedirects = true
         }
         conn.connect()
@@ -520,7 +495,6 @@ private suspend fun downloadAndInstall(
                 }
             }
         }
-
         withContext(Dispatchers.Main) { onDone(outFile) }
     } catch (e: Exception) {
         withContext(Dispatchers.Main) { onFailed(e.message ?: "Download gagal") }
@@ -530,13 +504,13 @@ private suspend fun downloadAndInstall(
 private fun installApk(context: Context, apkFile: File) {
     try {
         val uri = androidx.core.content.FileProvider.getUriForFile(
-            context, "${context.packageName}.provider", apkFile)
-        val intent = Intent(Intent.ACTION_VIEW).apply {
+            context, "${context.packageName}.provider", apkFile
+        )
+        context.startActivity(Intent(Intent.ACTION_VIEW).apply {
             setDataAndType(uri, "application/vnd.android.package-archive")
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        }
-        context.startActivity(intent)
+        })
     } catch (_: Exception) {
         context.startActivity(Intent(Intent.ACTION_VIEW, apkFile.toUri()).apply {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)

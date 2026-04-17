@@ -4,6 +4,7 @@ import android.app.Activity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dev.aether.manager.ads.InterstitialAdManager
+import dev.aether.manager.util.BackupManager
 import dev.aether.manager.util.DeviceInfo
 import dev.aether.manager.util.RootManager
 import dev.aether.manager.util.RootUtils
@@ -267,6 +268,65 @@ class MainViewModel : ViewModel() {
 
     fun reboot(mode: RootUtils.RebootMode) = viewModelScope.launch {
         RootUtils.reboot(mode)
+    }
+
+    // ── Backup & Reset ────────────────────────────────────────────────────
+
+    private val _backupList = MutableStateFlow<List<BackupManager.BackupEntry>>(emptyList())
+    val backupList: StateFlow<List<BackupManager.BackupEntry>> = _backupList.asStateFlow()
+
+    private val _backupWorking = MutableStateFlow(false)
+    val backupWorking: StateFlow<Boolean> = _backupWorking.asStateFlow()
+
+    fun loadBackups() = viewModelScope.launch(Dispatchers.IO) {
+        _backupList.value = BackupManager.listBackups()
+    }
+
+    fun createBackup() = viewModelScope.launch {
+        _backupWorking.value = true
+        val name = BackupManager.createBackup()
+        if (name != null) {
+            snack("Backup tersimpan: $name")
+            loadBackups()
+        } else {
+            snack("Gagal membuat backup")
+        }
+        _backupWorking.value = false
+    }
+
+    fun restoreBackup(filename: String) = viewModelScope.launch {
+        _backupWorking.value = true
+        val ok = BackupManager.restoreBackup(filename)
+        if (ok) {
+            // Reload tweaks dari conf yang baru di-restore
+            val map = RootUtils.readTweaksConf()
+            _tweaks.value = mapToTweaksState(map)
+            RootUtils.applyTweaksDirect(map)
+            snack("Restore berhasil ✓")
+        } else {
+            snack("Gagal restore backup")
+        }
+        _backupWorking.value = false
+    }
+
+    fun deleteBackup(filename: String) = viewModelScope.launch(Dispatchers.IO) {
+        BackupManager.deleteBackup(filename)
+        _backupList.value = BackupManager.listBackups()
+    }
+
+    fun resetToDefaults() = viewModelScope.launch {
+        _backupWorking.value = true
+        val ok = BackupManager.resetToDefaults()
+        if (ok) {
+            // Reload state setelah reset
+            _tweaks.value = TweaksState()  // semua default
+            val info = RootUtils.getDeviceInfo()
+            _deviceInfo.value = UiState.Success(info)
+            snack("Reset ke default berhasil ✓")
+        } else {
+            snack("Gagal reset ke default")
+        }
+        _backupWorking.value = false
     }
 
     fun snack(msg: String) { _snackMessage.value = msg }
