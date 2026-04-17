@@ -275,35 +275,46 @@ fun SetupScreen(onDone: () -> Unit) {
                     }
 
                     if (pg.permissionType == "LANGUAGE") {
-                        Surface(
-                            modifier = Modifier.fillMaxWidth(),
-                            shape    = RoundedCornerShape(16.dp),
-                            color    = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        Column(
+                            modifier            = Modifier.fillMaxWidth(),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(12.dp),
                         ) {
-                            Column(
-                                modifier            = Modifier.padding(16.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.spacedBy(10.dp),
+                            // Label section kecil di atas dropdown
+                            Row(
+                                verticalAlignment     = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center,
+                                modifier              = Modifier.fillMaxWidth(),
                             ) {
-                                Row(
-                                    verticalAlignment     = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.Center,
-                                    modifier              = Modifier.fillMaxWidth(),
+                                Icon(
+                                    Icons.Outlined.Language, null,
+                                    modifier = Modifier.size(14.dp),
+                                    tint     = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                                Spacer(Modifier.width(6.dp))
+                                Text(
+                                    text       = s.setupLangTitle,
+                                    style      = MaterialTheme.typography.labelMedium,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color      = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+
+                            // Dropdown language — full width, centered
+                            Surface(
+                                modifier = Modifier.fillMaxWidth(),
+                                shape    = RoundedCornerShape(14.dp),
+                                color    = MaterialTheme.colorScheme.surfaceContainerHigh,
+                                tonalElevation = 2.dp,
+                            ) {
+                                Box(
+                                    modifier          = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 4.dp, vertical = 4.dp),
+                                    contentAlignment  = Alignment.Center,
                                 ) {
-                                    Icon(
-                                        Icons.Outlined.Language, null,
-                                        modifier = Modifier.size(14.dp),
-                                        tint     = MaterialTheme.colorScheme.primary,
-                                    )
-                                    Spacer(Modifier.width(6.dp))
-                                    Text(
-                                        text       = s.setupLangTitle,
-                                        style      = MaterialTheme.typography.labelMedium,
-                                        fontWeight = FontWeight.SemiBold,
-                                        color      = MaterialTheme.colorScheme.primary,
-                                    )
+                                    LanguageDropdown(modifier = Modifier.fillMaxWidth())
                                 }
-                                LanguageDropdown(modifier = Modifier.fillMaxWidth())
                             }
                         }
                     }
