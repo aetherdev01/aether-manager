@@ -13,9 +13,9 @@ Some highlight features:
 
 - **Performance Profiles**: Switch between Balance, Performance, Gaming, and Battery Saver profiles
 - **Kernel Tweaks**: 17+ individual tweaks across CPU, GPU, memory, I/O, network, and battery
-- **System Monitor**: Real-time stats — SoC, RAM, CPU/GPU frequency, temperature, uptime
-- **Bootloop Guard**: Auto-detects boot failures and activates safe mode to protect your device
-
+- **System Monitor**: Real-time stats SoC, RAM, CPU/GPU frequency, temperature, uptime
+- **App Profile**: Per-app optimization with automatic profiles CPU, refresh rate, and system tweaks per application
+  
 ## Downloads
 
 [GitHub Releases](https://github.com/aetherdev01/aether-manager/releases) is the only official source for Aether Manager downloads.
@@ -43,11 +43,11 @@ For tweak issues, include device model, SoC, and a screenshot of the Log tab.
 
 ## Contributors
 
-- [@AetherDev01](https://github.com/aetherdev01) — Developer  
-- [topjohnwu](https://github.com/topjohnwu) — Magisk (Root framework & module system)  
-- [tiann](https://github.com/tiann) — KernelSU (Kernel-level root framework)  
-- [Android Open Source Project](https://source.android.com) — Platform foundation
-
+- [@AetherDev01](https://github.com/aetherdev01) Developer  
+- [topjohnwu](https://github.com/topjohnwu) Magisk
+- [tiann](https://github.com/tiann) KernelSu
+- [Android Open Source Project](https://source.android.com)
+- 
 ## License
 
     Copyright 2026 AetherDev (@AetherDev22)
