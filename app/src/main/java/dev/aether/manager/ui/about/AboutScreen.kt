@@ -2,9 +2,12 @@ package dev.aether.manager.ui.about
 
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -30,12 +33,20 @@ import dev.aether.manager.data.MainViewModel
 import dev.aether.manager.i18n.LanguageDropdown
 import dev.aether.manager.i18n.LocalStrings
 import dev.aether.manager.ui.home.TabSectionTitle
+import dev.aether.manager.util.BackupManager
 
 @Composable
 fun AboutScreen(vm: MainViewModel) {
     val s           = LocalStrings.current
     val ctx         = LocalContext.current
     val scrollState = rememberScrollState()
+
+    val backupList    by vm.backupList.collectAsState()
+    val working       by vm.backupWorking.collectAsState()
+    var showReset     by remember { mutableStateOf(false) }
+    var restoreTarget by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(Unit) { vm.loadBackups() }
 
     Column(
         modifier = Modifier
@@ -82,6 +93,104 @@ fun AboutScreen(vm: MainViewModel) {
             }
         }
 
+        // ── Section: Backup & Reset ───────────────────────────
+        TabSectionTitle(
+            icon  = Icons.Outlined.Archive,
+            title = "Backup & Reset"
+        )
+
+        // Progress indicator
+        AnimatedVisibility(working) {
+            LinearProgressIndicator(
+                modifier = Modifier.fillMaxWidth(),
+                color    = MaterialTheme.colorScheme.primary
+            )
+        }
+
+        // Action buttons
+        Row(
+            modifier            = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            OutlinedButton(
+                onClick  = { vm.createBackup() },
+                enabled  = !working,
+                modifier = Modifier.weight(1f).height(48.dp),
+                shape    = RoundedCornerShape(14.dp)
+            ) {
+                Icon(Icons.Outlined.Save, null, Modifier.size(17.dp))
+                Spacer(Modifier.width(6.dp))
+                Text("Backup", fontWeight = FontWeight.Medium)
+            }
+            Button(
+                onClick  = { showReset = true },
+                enabled  = !working,
+                modifier = Modifier.weight(1f).height(48.dp),
+                shape    = RoundedCornerShape(14.dp),
+                colors   = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.errorContainer,
+                    contentColor   = MaterialTheme.colorScheme.onErrorContainer
+                )
+            ) {
+                Icon(Icons.Outlined.RestartAlt, null, Modifier.size(17.dp))
+                Spacer(Modifier.width(6.dp))
+                Text("Reset Default", fontWeight = FontWeight.SemiBold)
+            }
+        }
+
+        // Backup list
+        if (backupList.isEmpty()) {
+            Surface(
+                shape    = RoundedCornerShape(16.dp),
+                color    = MaterialTheme.colorScheme.surfaceContainerLow,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(
+                    modifier             = Modifier.padding(16.dp),
+                    verticalAlignment    = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Icon(
+                        Icons.Outlined.FolderOff, null,
+                        tint     = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Text(
+                        "Belum ada backup tersimpan",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        } else {
+            Surface(
+                shape    = RoundedCornerShape(16.dp),
+                color    = MaterialTheme.colorScheme.surfaceContainerLow,
+                border   = androidx.compose.foundation.BorderStroke(
+                    1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                ),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column {
+                    backupList.forEachIndexed { index, entry ->
+                        AboutBackupItem(
+                            entry     = entry,
+                            working   = working,
+                            onRestore = { restoreTarget = entry.filename },
+                            onDelete  = { vm.deleteBackup(entry.filename) }
+                        )
+                        if (index < backupList.lastIndex) {
+                            HorizontalDivider(
+                                modifier  = Modifier.padding(start = 56.dp, end = 16.dp),
+                                color     = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f),
+                                thickness = 0.5.dp
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
         // ── Section: Developer ────────────────────────────────
         TabSectionTitle(
             icon  = Icons.Outlined.Person,
@@ -118,6 +227,102 @@ fun AboutScreen(vm: MainViewModel) {
                 onClick  = { ctx.startActivity(Intent(Intent.ACTION_VIEW,
                     Uri.parse("https://saweria.co/AetherDev"))) }
             )
+        }
+    } // end Column
+
+    // ── Confirm reset ─────────────────────────────────────────────────────
+    if (showReset) {
+        AlertDialog(
+            onDismissRequest = { showReset = false },
+            icon  = { Icon(Icons.Outlined.Warning, null, tint = MaterialTheme.colorScheme.error) },
+            title = { Text("Reset ke Default?") },
+            text  = {
+                Text(
+                    "Semua tweak dinonaktifkan dan nilai sistem dikembalikan ke default Android. " +
+                    "File backup yang ada tidak terhapus."
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = { showReset = false; vm.resetToDefaults() },
+                    colors  = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                ) { Text("Reset") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showReset = false }) { Text("Batal") }
+            }
+        )
+    }
+
+    // ── Confirm restore ───────────────────────────────────────────────────
+    restoreTarget?.let { fname ->
+        AlertDialog(
+            onDismissRequest = { restoreTarget = null },
+            icon  = { Icon(Icons.Outlined.Restore, null) },
+            title = { Text("Restore Backup?") },
+            text  = { Text("Setting aktif diganti dengan backup ini dan langsung diterapkan ke sistem.") },
+            confirmButton = {
+                TextButton(onClick = { restoreTarget = null; vm.restoreBackup(fname) }) {
+                    Text("Restore")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { restoreTarget = null }) { Text("Batal") }
+            }
+        )
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// BACKUP ITEM (inline di About)
+// ─────────────────────────────────────────────────────────────────────────────
+
+@Composable
+private fun AboutBackupItem(
+    entry    : BackupManager.BackupEntry,
+    working  : Boolean,
+    onRestore: () -> Unit,
+    onDelete : () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 14.dp, vertical = 10.dp),
+        verticalAlignment     = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(36.dp)
+                .background(
+                    MaterialTheme.colorScheme.surfaceContainerHigh,
+                    RoundedCornerShape(10.dp)
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                Icons.Outlined.Archive, null,
+                tint     = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(18.dp)
+            )
+        }
+        Column(Modifier.weight(1f)) {
+            Text(
+                entry.timestamp,
+                style      = MaterialTheme.typography.bodySmall,
+                fontWeight = FontWeight.Medium
+            )
+            Text(
+                "Profile: ${entry.profile}",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        IconButton(onClick = onRestore, enabled = !working) {
+            Icon(Icons.Outlined.Restore, "Restore", tint = MaterialTheme.colorScheme.primary)
+        }
+        IconButton(onClick = onDelete, enabled = !working) {
+            Icon(Icons.Outlined.Delete, "Hapus", tint = MaterialTheme.colorScheme.error)
         }
     }
 }
