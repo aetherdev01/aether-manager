@@ -24,6 +24,8 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.net.toUri
+import dev.aether.manager.i18n.AppStrings
+import dev.aether.manager.i18n.LocalStrings
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -76,6 +78,7 @@ fun UpdateDialog(
     onDismiss      : () -> Unit,
 ) {
     val context  = LocalContext.current
+    val s        = LocalStrings.current
     val scope    = rememberCoroutineScope()
     var dlState  by remember { mutableStateOf<DownloadState>(DownloadState.Idle) }
 
@@ -133,7 +136,7 @@ fun UpdateDialog(
                     verticalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
                     Text(
-                        text       = "Update Tersedia",
+                        text       = s.updateAvailable,
                         style      = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                         textAlign  = TextAlign.Center,
@@ -149,7 +152,7 @@ fun UpdateDialog(
                 VersionArrowChip(currentVersion = currentVersion, newVersion = info.latestVersion)
 
                 // ── Tab: Deskripsi / Changelog ────────────────────
-                val tabs = listOf("Deskripsi", "Changelog")
+                val tabs = listOf(s.updateTabDesc, s.updateTabChangelog)
                 TabRow(
                     selectedTabIndex = selectedTab,
                     modifier         = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)),
@@ -189,8 +192,8 @@ fun UpdateDialog(
                     label        = "tab_content",
                 ) { tab ->
                     when (tab) {
-                        0    -> DescriptionBox()
-                        1    -> ChangelogBox(notes = changelog, loading = fetchingChangelog)
+                        0    -> DescriptionBox(s)
+                        1    -> ChangelogBox(notes = changelog, loading = fetchingChangelog, s = s)
                         else -> Unit
                     }
                 }
@@ -222,7 +225,7 @@ fun UpdateDialog(
                                 Icon(Icons.Outlined.Download, null, Modifier.size(18.dp))
                                 Spacer(Modifier.width(8.dp))
                                 Text(
-                                    "Download & Install",
+                                    s.updateBtnDownload,
                                     style = MaterialTheme.typography.labelLarge
                                 )
                             }
@@ -233,7 +236,7 @@ fun UpdateDialog(
                                 shape    = RoundedCornerShape(14.dp),
                             ) {
                                 Text(
-                                    "Nanti Saja",
+                                    s.updateBtnLater,
                                     style = MaterialTheme.typography.labelLarge,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -253,7 +256,7 @@ fun UpdateDialog(
                         LaunchedEffect(dl.apkFile) { installApk(context, dl.apkFile) }
                         DownloadProgressBar(percent = 100, downloadedBytes = -1L, totalBytes = -1L)
                         Text(
-                            "Menginstall Pembaruan…",
+                            s.updateInstalling,
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -267,7 +270,7 @@ fun UpdateDialog(
                                 color    = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.4f),
                             ) {
                                 Text(
-                                    "Gagal: ${dl.reason}",
+                                    s.updateFailed.format(dl.reason),
                                     modifier  = Modifier.padding(12.dp),
                                     style     = MaterialTheme.typography.bodySmall,
                                     color     = MaterialTheme.colorScheme.onErrorContainer,
@@ -278,7 +281,7 @@ fun UpdateDialog(
                                 onClick  = { dlState = DownloadState.Idle },
                                 modifier = Modifier.fillMaxWidth(),
                                 shape    = RoundedCornerShape(12.dp),
-                            ) { Text("Coba Lagi") }
+                            ) { Text(s.updateBtnRetry) }
                             TextButton(
                                 onClick  = {
                                     context.startActivity(
@@ -286,7 +289,7 @@ fun UpdateDialog(
                                     )
                                 },
                                 modifier = Modifier.fillMaxWidth(),
-                            ) { Text("Buka di Browser") }
+                            ) { Text(s.updateBtnBrowser) }
                         }
                     }
                 }
@@ -333,7 +336,7 @@ private fun VersionArrowChip(currentVersion: String, newVersion: String) {
 }
 
 @Composable
-private fun DescriptionBox() {
+private fun DescriptionBox(s: AppStrings) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape    = RoundedCornerShape(12.dp),
@@ -353,15 +356,14 @@ private fun DescriptionBox() {
                     tint     = MaterialTheme.colorScheme.primary
                 )
                 Text(
-                    "Tentang Update Ini",
+                    s.updateAboutTitle,
                     style      = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.SemiBold,
                     color      = MaterialTheme.colorScheme.primary
                 )
             }
             Text(
-                text      = "Versi baru Aether Manager telah tersedia. Update direkomendasikan untuk " +
-                            "mendapatkan fitur terbaru, perbaikan bug, dan peningkatan performa.",
+                text      = s.updateAboutDesc,
                 style     = MaterialTheme.typography.bodySmall,
                 color     = MaterialTheme.colorScheme.onSurfaceVariant,
                 lineHeight = 18.sp,
@@ -371,7 +373,7 @@ private fun DescriptionBox() {
 }
 
 @Composable
-private fun ChangelogBox(notes: String, loading: Boolean) {
+private fun ChangelogBox(notes: String, loading: Boolean, s: AppStrings) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape    = RoundedCornerShape(12.dp),
@@ -389,7 +391,7 @@ private fun ChangelogBox(notes: String, loading: Boolean) {
                         color       = MaterialTheme.colorScheme.primary
                     )
                     Text(
-                        "Memuat changelog…",
+                        s.updateChangelogLoading,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -404,7 +406,7 @@ private fun ChangelogBox(notes: String, loading: Boolean) {
                 verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 Text(
-                    text       = notes.ifBlank { "Tidak ada changelog tersedia." },
+                    text       = notes.ifBlank { s.updateChangelogEmpty },
                     style      = MaterialTheme.typography.bodySmall,
                     color      = MaterialTheme.colorScheme.onSurfaceVariant,
                     lineHeight = 18.sp,
@@ -420,6 +422,7 @@ private fun DownloadProgressBar(
     downloadedBytes: Long,
     totalBytes     : Long,
 ) {
+    val s        = LocalStrings.current
     val progress by animateFloatAsState(
         targetValue   = percent / 100f,
         animationSpec = tween(300),
@@ -458,7 +461,7 @@ private fun DownloadProgressBar(
                             modifier = Modifier.size(14.dp)
                         )
                         Text(
-                            "Selesai diunduh",
+                            s.updateDownloadDone,
                             style  = MaterialTheme.typography.labelSmall,
                             color  = MaterialTheme.colorScheme.primary,
                             fontWeight = FontWeight.SemiBold,
@@ -470,7 +473,7 @@ private fun DownloadProgressBar(
                             color       = MaterialTheme.colorScheme.primary,
                         )
                         Text(
-                            "Mengunduh APK…",
+                            s.updateDownloading,
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )

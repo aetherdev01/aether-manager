@@ -174,6 +174,42 @@ val StringsId = AppStrings(
     aboutTagOpenSource = "Open Source",
     aboutTagAndroid = "Android",
 
+    // Settings
+    settingsTitle = "Pengaturan",
+    settingsSectionBackup = "Backup & Reset",
+    settingsBtnBackup = "Backup",
+    settingsBtnResetDefault = "Reset Default",
+    settingsNoBackup = "Belum ada backup tersimpan",
+    settingsResetTitle = "Reset ke Default?",
+    settingsResetDesc = "Semua tweak dinonaktifkan dan nilai sistem dikembalikan ke default Android. File backup yang ada tidak terhapus.",
+    settingsResetConfirm = "Reset",
+    settingsBtnCancel = "Batal",
+    settingsRestoreTitle = "Restore Backup?",
+    settingsRestoreDesc = "Setting aktif diganti dengan backup ini dan langsung diterapkan ke sistem.",
+    settingsRestoreConfirm = "Restore",
+    settingsBackupProfile = "Profile: %s",
+    settingsBtnDelete = "Hapus",
+
+    // Nav (extra)
+    navApps = "Aplikasi",
+
+    // Update dialog
+    updateAvailable = "Update Tersedia",
+    updateTabDesc = "Deskripsi",
+    updateTabChangelog = "Changelog",
+    updateBtnDownload = "Download & Install",
+    updateBtnLater = "Nanti Saja",
+    updateBtnRetry = "Coba Lagi",
+    updateBtnBrowser = "Buka di Browser",
+    updateInstalling = "Menginstall Pembaruan…",
+    updateFailed = "Gagal: %s",
+    updateDownloadDone = "Selesai diunduh",
+    updateDownloading = "Mengunduh APK…",
+    updateAboutTitle = "Tentang Update Ini",
+    updateAboutDesc = "Versi baru Aether Manager telah tersedia. Update direkomendasikan untuk mendapatkan fitur terbaru, perbaikan bug, dan peningkatan performa.",
+    updateChangelogLoading = "Memuat changelog…",
+    updateChangelogEmpty = "Tidak ada changelog tersedia.",
+
     // Log / Reboot
     logRebootOptions = "Opsi Reboot",
     logRebootSystem = "Reboot Sistem",

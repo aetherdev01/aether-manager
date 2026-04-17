@@ -150,6 +150,42 @@ val StringsEn = AppStrings(
     aboutTagOpenSource = "Open Source",
     aboutTagAndroid = "Android",
 
+    // Settings
+    settingsTitle = "Settings",
+    settingsSectionBackup = "Backup & Reset",
+    settingsBtnBackup = "Backup",
+    settingsBtnResetDefault = "Reset Default",
+    settingsNoBackup = "No backups saved yet",
+    settingsResetTitle = "Reset to Default?",
+    settingsResetDesc = "All tweaks will be disabled and system values restored to Android defaults. Existing backup files will not be deleted.",
+    settingsResetConfirm = "Reset",
+    settingsBtnCancel = "Cancel",
+    settingsRestoreTitle = "Restore Backup?",
+    settingsRestoreDesc = "Active settings will be replaced with this backup and applied to the system immediately.",
+    settingsRestoreConfirm = "Restore",
+    settingsBackupProfile = "Profile: %s",
+    settingsBtnDelete = "Delete",
+
+    // Nav (extra)
+    navApps = "Apps",
+
+    // Update dialog
+    updateAvailable = "Update Available",
+    updateTabDesc = "Description",
+    updateTabChangelog = "Changelog",
+    updateBtnDownload = "Download & Install",
+    updateBtnLater = "Later",
+    updateBtnRetry = "Try Again",
+    updateBtnBrowser = "Open in Browser",
+    updateInstalling = "Installing Update…",
+    updateFailed = "Failed: %s",
+    updateDownloadDone = "Download complete",
+    updateDownloading = "Downloading APK…",
+    updateAboutTitle = "About This Update",
+    updateAboutDesc = "A new version of Aether Manager is available. Updating is recommended to get the latest features, bug fixes, and performance improvements.",
+    updateChangelogLoading = "Loading changelog…",
+    updateChangelogEmpty = "No changelog available.",
+
     // Log / Reboot
     logRebootOptions = "Reboot Options",
     logRebootSystem = "Reboot System",

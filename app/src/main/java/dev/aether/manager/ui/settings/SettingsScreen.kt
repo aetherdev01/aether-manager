@@ -17,6 +17,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.aether.manager.data.MainViewModel
+import dev.aether.manager.i18n.LocalStrings
 import dev.aether.manager.ui.home.TabSectionTitle
 import dev.aether.manager.util.BackupManager
 
@@ -26,6 +27,7 @@ fun SettingsScreen(
     vm      : MainViewModel,
     onBack  : () -> Unit,
 ) {
+    val s             = LocalStrings.current
     val backupList    by vm.backupList.collectAsState()
     val working       by vm.backupWorking.collectAsState()
     var showReset     by remember { mutableStateOf(false) }
@@ -39,14 +41,14 @@ fun SettingsScreen(
             TopAppBar(
                 title = {
                     Text(
-                        "Pengaturan",
+                        s.settingsTitle,
                         fontWeight = FontWeight.Medium,
                         fontSize   = 20.sp
                     )
                 },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = s.setupBtnBack)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -70,7 +72,7 @@ fun SettingsScreen(
             // ── Section: Backup & Reset ───────────────────────────────────
             TabSectionTitle(
                 icon  = Icons.Outlined.Archive,
-                title = "Backup & Reset"
+                title = s.settingsSectionBackup
             )
 
             // Progress bar
@@ -81,7 +83,7 @@ fun SettingsScreen(
                 )
             }
 
-            // Tombol aksi
+            // Action buttons
             Row(
                 modifier              = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -94,7 +96,7 @@ fun SettingsScreen(
                 ) {
                     Icon(Icons.Outlined.Save, null, Modifier.size(18.dp))
                     Spacer(Modifier.width(6.dp))
-                    Text("Backup", fontWeight = FontWeight.Medium)
+                    Text(s.settingsBtnBackup, fontWeight = FontWeight.Medium)
                 }
                 Button(
                     onClick  = { showReset = true },
@@ -108,11 +110,11 @@ fun SettingsScreen(
                 ) {
                     Icon(Icons.Outlined.RestartAlt, null, Modifier.size(18.dp))
                     Spacer(Modifier.width(6.dp))
-                    Text("Reset Default", fontWeight = FontWeight.SemiBold)
+                    Text(s.settingsBtnResetDefault, fontWeight = FontWeight.SemiBold)
                 }
             }
 
-            // Daftar backup
+            // Backup list
             if (backupList.isEmpty()) {
                 Surface(
                     shape    = RoundedCornerShape(16.dp),
@@ -130,7 +132,7 @@ fun SettingsScreen(
                             modifier = Modifier.size(20.dp)
                         )
                         Text(
-                            "Belum ada backup tersimpan",
+                            s.settingsNoBackup,
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -148,10 +150,12 @@ fun SettingsScreen(
                     Column {
                         backupList.forEachIndexed { index, entry ->
                             SettingsBackupItem(
-                                entry     = entry,
-                                working   = working,
-                                onRestore = { restoreTarget = entry.filename },
-                                onDelete  = { vm.deleteBackup(entry.filename) }
+                                entry          = entry,
+                                working        = working,
+                                profileLabel   = s.settingsBackupProfile.format(entry.profile),
+                                deleteLabel    = s.settingsBtnDelete,
+                                onRestore      = { restoreTarget = entry.filename },
+                                onDelete       = { vm.deleteBackup(entry.filename) }
                             )
                             if (index < backupList.lastIndex) {
                                 HorizontalDivider(
@@ -172,21 +176,16 @@ fun SettingsScreen(
         AlertDialog(
             onDismissRequest = { showReset = false },
             icon  = { Icon(Icons.Outlined.Warning, null, tint = MaterialTheme.colorScheme.error) },
-            title = { Text("Reset ke Default?") },
-            text  = {
-                Text(
-                    "Semua tweak dinonaktifkan dan nilai sistem dikembalikan ke default Android. " +
-                    "File backup yang ada tidak terhapus."
-                )
-            },
+            title = { Text(s.settingsResetTitle) },
+            text  = { Text(s.settingsResetDesc) },
             confirmButton = {
                 TextButton(
                     onClick = { showReset = false; vm.resetToDefaults() },
                     colors  = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
-                ) { Text("Reset") }
+                ) { Text(s.settingsResetConfirm) }
             },
             dismissButton = {
-                TextButton(onClick = { showReset = false }) { Text("Batal") }
+                TextButton(onClick = { showReset = false }) { Text(s.settingsBtnCancel) }
             }
         )
     }
@@ -196,15 +195,15 @@ fun SettingsScreen(
         AlertDialog(
             onDismissRequest = { restoreTarget = null },
             icon  = { Icon(Icons.Outlined.Restore, null) },
-            title = { Text("Restore Backup?") },
-            text  = { Text("Setting aktif diganti dengan backup ini dan langsung diterapkan ke sistem.") },
+            title = { Text(s.settingsRestoreTitle) },
+            text  = { Text(s.settingsRestoreDesc) },
             confirmButton = {
                 TextButton(onClick = { restoreTarget = null; vm.restoreBackup(fname) }) {
-                    Text("Restore")
+                    Text(s.settingsRestoreConfirm)
                 }
             },
             dismissButton = {
-                TextButton(onClick = { restoreTarget = null }) { Text("Batal") }
+                TextButton(onClick = { restoreTarget = null }) { Text(s.settingsBtnCancel) }
             }
         )
     }
@@ -216,10 +215,12 @@ fun SettingsScreen(
 
 @Composable
 private fun SettingsBackupItem(
-    entry    : BackupManager.BackupEntry,
-    working  : Boolean,
-    onRestore: () -> Unit,
-    onDelete : () -> Unit,
+    entry        : BackupManager.BackupEntry,
+    working      : Boolean,
+    profileLabel : String,
+    deleteLabel  : String,
+    onRestore    : () -> Unit,
+    onDelete     : () -> Unit,
 ) {
     Row(
         modifier = Modifier
@@ -250,7 +251,7 @@ private fun SettingsBackupItem(
                 fontWeight = FontWeight.Medium
             )
             Text(
-                "Profile: ${entry.profile}",
+                profileLabel,
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -259,7 +260,7 @@ private fun SettingsBackupItem(
             Icon(Icons.Outlined.Restore, "Restore", tint = MaterialTheme.colorScheme.primary)
         }
         IconButton(onClick = onDelete, enabled = !working) {
-            Icon(Icons.Outlined.Delete, "Hapus", tint = MaterialTheme.colorScheme.error)
+            Icon(Icons.Outlined.Delete, deleteLabel, tint = MaterialTheme.colorScheme.error)
         }
     }
 }

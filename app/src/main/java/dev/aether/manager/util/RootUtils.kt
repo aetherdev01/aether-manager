@@ -198,7 +198,7 @@ object RootUtils {
         }
         if (tweaks["doh"] == "1") {
             sb.appendLine("settings put global private_dns_mode hostname 2>/dev/null")
-            sb.appendLine("settings put global private_dns_specifier dns.google 2>/dev/null")
+            sb.appendLine("settings put global private_dns_specifier one.one.one.one 2>/dev/null")
         } else {
             sb.appendLine("settings put global private_dns_mode off 2>/dev/null")
             sb.appendLine("settings delete global private_dns_specifier 2>/dev/null")

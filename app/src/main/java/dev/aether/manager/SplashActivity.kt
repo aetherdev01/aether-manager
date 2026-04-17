@@ -117,11 +117,11 @@ fun SplashScreen(onFinished: () -> Unit) {
 
             // Subtitle
             Text(
-                "Giving You The Best Experience By Using Aether Manager",
+                "Optimizing Your Android Experience",
                 color = primary.copy(alpha = 0.65f),
-                fontSize = 11.sp,
-                letterSpacing = 2.sp,
-                fontWeight = FontWeight.Medium
+                fontSize = 10.sp,
+                letterSpacing = 0.5.sp,
+                fontWeight = FontWeight.Normal
             )
 
             Spacer(Modifier.height(36.dp))

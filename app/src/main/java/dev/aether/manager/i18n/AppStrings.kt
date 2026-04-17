@@ -165,6 +165,42 @@ data class AppStrings(
     val logReloadUi: String,
     val logReloadUiDesc: String,
     val logBtnCancel: String,
+
+    // ── Settings screen ──────────────────────────────────────
+    val settingsTitle: String,
+    val settingsSectionBackup: String,
+    val settingsBtnBackup: String,
+    val settingsBtnResetDefault: String,
+    val settingsNoBackup: String,
+    val settingsResetTitle: String,
+    val settingsResetDesc: String,
+    val settingsResetConfirm: String,
+    val settingsBtnCancel: String,
+    val settingsRestoreTitle: String,
+    val settingsRestoreDesc: String,
+    val settingsRestoreConfirm: String,
+    val settingsBackupProfile: String,   // "Profile: %s"
+    val settingsBtnDelete: String,
+
+    // ── Nav (extra) ──────────────────────────────────────────
+    val navApps: String,
+
+    // ── Update dialog ────────────────────────────────────────
+    val updateAvailable: String,
+    val updateTabDesc: String,
+    val updateTabChangelog: String,
+    val updateBtnDownload: String,
+    val updateBtnLater: String,
+    val updateBtnRetry: String,
+    val updateBtnBrowser: String,
+    val updateInstalling: String,
+    val updateFailed: String,          // "Failed: %s"
+    val updateDownloadDone: String,
+    val updateDownloading: String,
+    val updateAboutTitle: String,
+    val updateAboutDesc: String,
+    val updateChangelogLoading: String,
+    val updateChangelogEmpty: String,
 )
 
 val LocalStrings = staticCompositionLocalOf<AppStrings> {

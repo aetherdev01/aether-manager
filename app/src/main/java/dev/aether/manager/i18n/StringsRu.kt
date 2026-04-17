@@ -150,6 +150,42 @@ val StringsRu = AppStrings(
     aboutTagOpenSource = "Open Source",
     aboutTagAndroid = "Android",
 
+    // Settings
+    settingsTitle = "Настройки",
+    settingsSectionBackup = "Резервное копирование и сброс",
+    settingsBtnBackup = "Создать резервную копию",
+    settingsBtnResetDefault = "Сброс по умолчанию",
+    settingsNoBackup = "Резервных копий ещё нет",
+    settingsResetTitle = "Сбросить до настроек по умолчанию?",
+    settingsResetDesc = "Все твики будут отключены, а значения системы восстановлены до значений Android по умолчанию. Существующие резервные копии не будут удалены.",
+    settingsResetConfirm = "Сбросить",
+    settingsBtnCancel = "Отмена",
+    settingsRestoreTitle = "Восстановить резервную копию?",
+    settingsRestoreDesc = "Активные настройки будут заменены на данные из резервной копии и сразу применены к системе.",
+    settingsRestoreConfirm = "Восстановить",
+    settingsBackupProfile = "Профиль: %s",
+    settingsBtnDelete = "Удалить",
+
+    // Nav (extra)
+    navApps = "Приложения",
+
+    // Update dialog
+    updateAvailable = "Доступно обновление",
+    updateTabDesc = "Описание",
+    updateTabChangelog = "Список изменений",
+    updateBtnDownload = "Скачать и установить",
+    updateBtnLater = "Позже",
+    updateBtnRetry = "Повторить",
+    updateBtnBrowser = "Открыть в браузере",
+    updateInstalling = "Установка обновления…",
+    updateFailed = "Ошибка: %s",
+    updateDownloadDone = "Загрузка завершена",
+    updateDownloading = "Загрузка APK…",
+    updateAboutTitle = "Об этом обновлении",
+    updateAboutDesc = "Доступна новая версия Aether Manager. Обновление рекомендуется для получения новых функций, исправлений ошибок и улучшений производительности.",
+    updateChangelogLoading = "Загрузка списка изменений…",
+    updateChangelogEmpty = "Список изменений недоступен.",
+
     // Log / Reboot
     logRebootOptions = "Варианты перезагрузки",
     logRebootSystem = "Перезагрузить систему",

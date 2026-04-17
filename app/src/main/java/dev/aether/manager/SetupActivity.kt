@@ -14,6 +14,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PageSize
@@ -275,48 +276,7 @@ fun SetupScreen(onDone: () -> Unit) {
                     }
 
                     if (pg.permissionType == "LANGUAGE") {
-                        Column(
-                            modifier            = Modifier.fillMaxWidth(),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(12.dp),
-                        ) {
-                            // Label section kecil di atas dropdown
-                            Row(
-                                verticalAlignment     = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.Center,
-                                modifier              = Modifier.fillMaxWidth(),
-                            ) {
-                                Icon(
-                                    Icons.Outlined.Language, null,
-                                    modifier = Modifier.size(14.dp),
-                                    tint     = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                                Spacer(Modifier.width(6.dp))
-                                Text(
-                                    text       = s.setupLangTitle,
-                                    style      = MaterialTheme.typography.labelMedium,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color      = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                            }
-
-                            // Dropdown language — full width, centered
-                            Surface(
-                                modifier = Modifier.fillMaxWidth(),
-                                shape    = RoundedCornerShape(14.dp),
-                                color    = MaterialTheme.colorScheme.surfaceContainerHigh,
-                                tonalElevation = 2.dp,
-                            ) {
-                                Box(
-                                    modifier          = Modifier
-                                        .fillMaxWidth()
-                                        .padding(horizontal = 4.dp, vertical = 4.dp),
-                                    contentAlignment  = Alignment.Center,
-                                ) {
-                                    LanguageDropdown(modifier = Modifier.fillMaxWidth())
-                                }
-                            }
-                        }
+                        LanguageSelectorCard(strings = s)
                     }
 
                     if (pg.permissionType != null && pg.permissionType != "LANGUAGE") {
@@ -459,6 +419,99 @@ private fun MissingPermRow(label: String, pageIdx: Int, onGoToPage: (Int) -> Uni
             tint = MaterialTheme.colorScheme.onErrorContainer, modifier = Modifier.size(14.dp))
         Spacer(Modifier.width(4.dp))
         Text("$label", color = MaterialTheme.colorScheme.onErrorContainer, fontSize = 12.sp)
+    }
+}
+
+@Composable
+private fun LanguageSelectorCard(strings: AppStrings) {
+    Surface(
+        modifier       = Modifier.fillMaxWidth(),
+        shape          = RoundedCornerShape(20.dp),
+        color          = MaterialTheme.colorScheme.surfaceContainerLow,
+        tonalElevation = 0.dp,
+    ) {
+        Column(
+            modifier            = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 20.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            // Header row
+            Row(
+                verticalAlignment     = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                Surface(
+                    shape = RoundedCornerShape(10.dp),
+                    color = MaterialTheme.colorScheme.secondaryContainer,
+                    modifier = Modifier.size(36.dp),
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            Icons.Outlined.Language, null,
+                            tint     = MaterialTheme.colorScheme.onSecondaryContainer,
+                            modifier = Modifier.size(18.dp),
+                        )
+                    }
+                }
+                Column {
+                    Text(
+                        text       = strings.setupLangTitle,
+                        style      = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        color      = MaterialTheme.colorScheme.onSurface,
+                    )
+                    Text(
+                        text  = strings.setupLangDesc,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                    )
+                }
+            }
+
+            HorizontalDivider(
+                color     = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+                thickness = 1.dp,
+            )
+
+            // Dropdown row dengan label di kiri
+            Row(
+                modifier          = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Row(
+                    verticalAlignment     = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    Icon(
+                        Icons.Outlined.Translate, null,
+                        tint     = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(20.dp),
+                    )
+                    Text(
+                        text       = "Bahasa",
+                        style      = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Medium,
+                        color      = MaterialTheme.colorScheme.onSurface,
+                    )
+                }
+
+                // Dropdown pill
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = MaterialTheme.colorScheme.surface,
+                    border = BorderStroke(
+                        1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f)
+                    ),
+                ) {
+                    Box(modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)) {
+                        LanguageDropdown(modifier = Modifier.widthIn(min = 160.dp))
+                    }
+                }
+            }
+        }
     }
 }
 

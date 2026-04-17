@@ -150,6 +150,42 @@ val StringsZh = AppStrings(
     aboutTagOpenSource = "开源",
     aboutTagAndroid = "Android",
 
+    // Settings
+    settingsTitle = "设置",
+    settingsSectionBackup = "备份与重置",
+    settingsBtnBackup = "备份",
+    settingsBtnResetDefault = "恢复默认",
+    settingsNoBackup = "暂无已保存的备份",
+    settingsResetTitle = "重置为默认设置？",
+    settingsResetDesc = "所有调整将被禁用，系统值将恢复为 Android 默认值。现有备份文件不会被删除。",
+    settingsResetConfirm = "重置",
+    settingsBtnCancel = "取消",
+    settingsRestoreTitle = "恢复备份？",
+    settingsRestoreDesc = "当前设置将被此备份替换并立即应用到系统。",
+    settingsRestoreConfirm = "恢复",
+    settingsBackupProfile = "配置文件: %s",
+    settingsBtnDelete = "删除",
+
+    // Nav (extra)
+    navApps = "应用",
+
+    // Update dialog
+    updateAvailable = "有可用更新",
+    updateTabDesc = "描述",
+    updateTabChangelog = "更新日志",
+    updateBtnDownload = "下载并安装",
+    updateBtnLater = "稍后",
+    updateBtnRetry = "重试",
+    updateBtnBrowser = "在浏览器中打开",
+    updateInstalling = "正在安装更新…",
+    updateFailed = "失败: %s",
+    updateDownloadDone = "下载完成",
+    updateDownloading = "正在下载 APK…",
+    updateAboutTitle = "关于此更新",
+    updateAboutDesc = "Aether Manager 的新版本已可用。建议更新以获取最新功能、错误修复和性能改进。",
+    updateChangelogLoading = "正在加载更新日志…",
+    updateChangelogEmpty = "暂无更新日志。",
+
     // Log / Reboot
     logRebootOptions = "重启选项",
     logRebootSystem = "重启系统",

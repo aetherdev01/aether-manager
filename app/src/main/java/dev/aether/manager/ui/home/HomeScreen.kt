@@ -544,6 +544,7 @@ private fun SwapRow(usedMb: Long, totalMb: Long) {
 
 @Composable
 private fun TempRow(cpuTemp: Float, batTemp: Float) {
+    val s   = LocalStrings.current
     val hot = cpuTemp > 60f
     val col = if (hot) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.tertiary
     Row(
@@ -564,7 +565,7 @@ private fun TempRow(cpuTemp: Float, batTemp: Float) {
             verticalAlignment    = Alignment.CenterVertically
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
-                Text("CPU", style = MaterialTheme.typography.labelSmall,
+                Text(s.homeTempCpu, style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Text(
                     if (cpuTemp > 0f) "%.1f°C".format(cpuTemp) else "—",
@@ -575,7 +576,7 @@ private fun TempRow(cpuTemp: Float, batTemp: Float) {
                 verticalArrangement  = Arrangement.spacedBy(1.dp),
                 horizontalAlignment  = Alignment.End
             ) {
-                Text("Battery", style = MaterialTheme.typography.labelSmall,
+                Text(s.homeTempBat, style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Text(
                     if (batTemp > 0f) "%.1f°C".format(batTemp) else "—",
@@ -589,6 +590,7 @@ private fun TempRow(cpuTemp: Float, batTemp: Float) {
 
 @Composable
 private fun GovernorUptimeRow(governor: String, uptime: String) {
+    val s   = LocalStrings.current
     val col = MaterialTheme.colorScheme.secondary
     Row(
         modifier             = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
@@ -608,7 +610,7 @@ private fun GovernorUptimeRow(governor: String, uptime: String) {
             verticalAlignment    = Alignment.CenterVertically
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
-                Text("Governor", style = MaterialTheme.typography.labelSmall,
+                Text(s.homeLabelGovernor, style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Text(
                     governor.ifBlank { "—" },
@@ -620,7 +622,7 @@ private fun GovernorUptimeRow(governor: String, uptime: String) {
                 verticalArrangement = Arrangement.spacedBy(1.dp),
                 horizontalAlignment = Alignment.End
             ) {
-                Text("Uptime", style = MaterialTheme.typography.labelSmall,
+                Text(s.homeLabelUptime, style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Text(
                     uptime.ifBlank { "—" },
@@ -661,6 +663,7 @@ private fun HeroSkeleton() {
 
 @Composable
 private fun HeroError(msg: String, onRetry: () -> Unit) {
+    val s = LocalStrings.current
     Surface(
         shape    = RoundedCornerShape(20.dp),
         color    = MaterialTheme.colorScheme.errorContainer,
@@ -686,7 +689,7 @@ private fun HeroError(msg: String, onRetry: () -> Unit) {
             ) {
                 Icon(Icons.Filled.Refresh, null, modifier = Modifier.size(16.dp))
                 Spacer(Modifier.width(6.dp))
-                Text("Coba Lagi")
+                Text(s.homeRetry)
             }
         }
     }
