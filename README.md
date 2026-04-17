@@ -43,11 +43,10 @@ For tweak issues, include device model, SoC, and a screenshot of the Log tab.
 
 ## Contributors
 
-Credits
-[@AetherDev01](https://github.com/aetherdev01) : Developer
-| [topjohnwu](https://github.com/topjohnwu) | Magisk — Root framework & module system |
-| [tiann](https://github.com/tiann) | KernelSU — Kernel-level root framework |
-| [Android Open Source Project](https://source.android.com) | Platform foundation |
+- [@AetherDev01](https://github.com/aetherdev01) — Developer  
+- [topjohnwu](https://github.com/topjohnwu) — Magisk (Root framework & module system)  
+- [tiann](https://github.com/tiann) — KernelSU (Kernel-level root framework)  
+- [Android Open Source Project](https://source.android.com) — Platform foundation
 
 ## License
 
