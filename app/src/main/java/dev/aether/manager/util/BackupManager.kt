@@ -77,11 +77,11 @@ object BackupManager {
         val script = """
             [ -f $path ] || exit 1
             content=$(cat $path)
-            # Ekstrak tweaks block
-            tweaks_block=$(echo "${'$'}content" | sed 's/.*"tweaks":{\(.*\)},.*/\1/')
-            # Tulis ulang tweaks.conf
+            # Ekstrak tweaks block: isi antara "tweaks":{ ... }
+            tweaks_block=$(echo "${'$'}content" | grep -o '"tweaks":{[^}]*}' | sed 's/"tweaks":{//;s/}$//')
+            # Tulis ulang tweaks.conf: konversi "key":"value" → key=value
             rm -f ${RootUtils.TWEAKS_CONF}
-            echo "${'$'}tweaks_block" | tr ',' '\n' | sed 's/["{} ]//g' | grep '.' >> ${RootUtils.TWEAKS_CONF}
+            echo "${'$'}tweaks_block" | tr ',' '\n' | sed 's/^[[:space:]]*"//;s/":[[:space:]]*"/=/;s/"[[:space:]]*$//' | grep '=' >> ${RootUtils.TWEAKS_CONF}
             # Profile
             profile=$(echo "${'$'}content" | grep -o '"profile":"[^"]*"' | sed 's/"profile":"//;s/"//')
             [ -n "${'$'}profile" ] && echo "${'$'}profile" > ${RootUtils.PROFILE_FILE}
