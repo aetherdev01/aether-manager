@@ -43,11 +43,11 @@ For tweak issues, include device model, SoC, and a screenshot of the Log tab.
 
 ## Contributors
 
-- [@AetherDev01](https://github.com/aetherdev01) Developer  
-- [topjohnwu](https://github.com/topjohnwu) Magisk
-- [tiann](https://github.com/tiann) KernelSu
-- [Android Open Source Project](https://source.android.com)
-- 
+- [@AetherDev01](https://github.com/aetherdev01) — Developer  
+- [topjohnwu](https://github.com/topjohnwu) — Magisk  
+- [tiann](https://github.com/tiann) — KernelSU  
+- [Android Open Source Project](https://source.android.com) — Platform Foundation
+  
 ## License
 
     Copyright 2026 AetherDev (@AetherDev22)
