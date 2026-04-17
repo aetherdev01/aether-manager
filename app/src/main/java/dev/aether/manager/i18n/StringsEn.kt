@@ -12,6 +12,8 @@ val StringsEn = AppStrings(
     // Setup
     setupWelcomeTitle = "Welcome!",
     setupWelcomeDesc = "Aether Manager is a powerful Android optimization tool built to boost performance, control memory usage, and apply advanced system tweaks. It provides an intuitive interface that lets you fine-tune your device for better speed, responsiveness, and overall stability.",
+    setupLangTitle = "Choose Language",
+    setupLangDesc = "Select your preferred language. You can change it anytime from Settings.",
     setupRootTitle = "Root Access",
     setupRootDesc = "This app requires root access (Magisk / KernelSU / APatch). Make sure superuser is granted for Aether Manager.",
     setupRootCta = "Check Root Now",

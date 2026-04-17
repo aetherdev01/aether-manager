@@ -18,6 +18,8 @@ data class AppStrings(
     // ── Setup ────────────────────────────────────────────────
     val setupWelcomeTitle: String,
     val setupWelcomeDesc: String,
+    val setupLangTitle: String,
+    val setupLangDesc: String,
     val setupRootTitle: String,
     val setupRootDesc: String,
     val setupRootCta: String,

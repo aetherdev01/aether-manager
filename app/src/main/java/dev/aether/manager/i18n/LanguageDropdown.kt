@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.outlined.Translate
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -24,14 +25,8 @@ import androidx.compose.ui.unit.sp
 /**
  * A dropdown button that lets the user pick an [AppLanguage].
  *
+ * Uses a Translate icon + language code pill — no flag emojis.
  * Reads current language from [LocalLanguage] and changes it via [LocalSetLanguage].
- * No parameters required — just drop it anywhere in the composable tree inside [ProvideStrings].
- *
- * Example:
- * ```kotlin
- * // In AboutScreen or Settings
- * LanguageDropdown()
- * ```
  */
 @Composable
 fun LanguageDropdown(
@@ -61,9 +56,17 @@ fun LanguageDropdown(
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
                 modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp)
             ) {
+                Icon(
+                    imageVector = Icons.Outlined.Translate,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp),
+                    tint = MaterialTheme.colorScheme.onSurface,
+                )
                 Text(
-                    text = currentLanguage.flag,
-                    fontSize = 18.sp,
+                    text = currentLanguage.langIcon,
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary,
                 )
                 Text(
                     text = currentLanguage.nativeName,
@@ -100,10 +103,27 @@ fun LanguageDropdown(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(10.dp),
                         ) {
-                            Text(
-                                text = lang.flag,
-                                fontSize = 20.sp,
-                            )
+                            // ── Lang code pill ────────────────────────────────
+                            Surface(
+                                shape = RoundedCornerShape(6.dp),
+                                color = if (isSelected)
+                                    MaterialTheme.colorScheme.primary
+                                else
+                                    MaterialTheme.colorScheme.surfaceContainerHighest,
+                                modifier = Modifier.size(width = 36.dp, height = 24.dp)
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Text(
+                                        text = lang.langIcon,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (isSelected)
+                                            MaterialTheme.colorScheme.onPrimary
+                                        else
+                                            MaterialTheme.colorScheme.onSurfaceVariant,
+                                    )
+                                }
+                            }
                             Column {
                                 Text(
                                     text = lang.nativeName,
@@ -128,12 +148,12 @@ fun LanguageDropdown(
                     },
                     trailingIcon = if (isSelected) ({
                         Icon(
-                            imageVector = Icons.Default.KeyboardArrowDown, // checkmark placeholder
+                            imageVector = Icons.Default.KeyboardArrowDown,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier
                                 .size(16.dp)
-                                .rotate(180f), // flip = up = "selected" hint
+                                .rotate(180f),
                         )
                     }) else null,
                     modifier = Modifier.background(
@@ -149,8 +169,8 @@ fun LanguageDropdown(
 }
 
 /**
- * A compact icon-only language button (shows flag + arrow).
- * Useful in TopAppBar trailing actions.
+ * Compact language button for TopAppBar — shows Translate icon + lang code.
+ * No flag emojis.
  */
 @Composable
 fun LanguageDropdownCompact(
@@ -163,10 +183,17 @@ fun LanguageDropdownCompact(
 
     Box(modifier = modifier) {
         IconButton(onClick = { expanded = true }) {
-            Text(
-                text = currentLanguage.flag,
-                fontSize = 22.sp,
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(2.dp),
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Translate,
+                    contentDescription = "Language",
+                    modifier = Modifier.size(20.dp),
+                    tint = MaterialTheme.colorScheme.onSurface,
+                )
+            }
         }
 
         DropdownMenu(
@@ -185,7 +212,26 @@ fun LanguageDropdownCompact(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(10.dp),
                         ) {
-                            Text(text = lang.flag, fontSize = 18.sp)
+                            Surface(
+                                shape = RoundedCornerShape(6.dp),
+                                color = if (isSelected)
+                                    MaterialTheme.colorScheme.primary
+                                else
+                                    MaterialTheme.colorScheme.surfaceContainerHighest,
+                                modifier = Modifier.size(width = 36.dp, height = 24.dp)
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Text(
+                                        text = lang.langIcon,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (isSelected)
+                                            MaterialTheme.colorScheme.onPrimary
+                                        else
+                                            MaterialTheme.colorScheme.onSurfaceVariant,
+                                    )
+                                }
+                            }
                             Text(
                                 text = lang.nativeName,
                                 style = MaterialTheme.typography.bodyMedium,

@@ -36,7 +36,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
-import dev.aether.manager.i18n.AppStrings
+import dev.aether.manager.i18n.LanguageDropdown
 import dev.aether.manager.i18n.LocalStrings
 import dev.aether.manager.i18n.ProvideStrings
 import dev.aether.manager.ui.AetherTheme
@@ -126,6 +126,8 @@ fun SetupScreen(onDone: () -> Unit) {
     val pages = listOf(
         SetupPage(Icons.Outlined.Rocket, primaryContainer, onPrimaryContainer,
             s.setupWelcomeTitle, s.setupWelcomeDesc),
+        SetupPage(Icons.Outlined.Language, secContainer, onSecContainer,
+            s.setupLangTitle, s.setupLangDesc, "LANGUAGE"),
         SetupPage(Icons.Outlined.AdminPanelSettings, errContainer, onErrContainer,
             s.setupRootTitle, s.setupRootDesc, "ROOT", s.setupRootCta),
         SetupPage(Icons.Outlined.Notifications, secContainer, onSecContainer,
@@ -171,6 +173,7 @@ fun SetupScreen(onDone: () -> Unit) {
     }
 
     val canProceed = when (page.permissionType) {
+        "LANGUAGE"        -> true
         "ROOT"           -> rootState    == PermState.GRANTED
         "NOTIFICATION"   -> notifState   == PermState.GRANTED
         "WRITE_SETTINGS" -> writeState   == PermState.GRANTED
@@ -198,6 +201,7 @@ fun SetupScreen(onDone: () -> Unit) {
             ) { idx ->
                 val pg = pages[idx]
                 val permState = when (pg.permissionType) {
+                    "LANGUAGE"       -> PermState.IDLE
                     "ROOT"           -> rootState
                     "NOTIFICATION"   -> notifState
                     "WRITE_SETTINGS" -> writeState
@@ -244,7 +248,12 @@ fun SetupScreen(onDone: () -> Unit) {
                         )
                     }
 
-                    if (pg.permissionType != null) {
+                    if (pg.permissionType == "LANGUAGE") {
+                        Spacer(Modifier.height(8.dp))
+                        LanguageDropdown(modifier = Modifier.fillMaxWidth())
+                    }
+
+                    if (pg.permissionType != null && pg.permissionType != "LANGUAGE") {
                         PermissionBlock(
                             permType = pg.permissionType,
                             ctaLabel = pg.ctaLabel ?: s.setupBtnRetry,
@@ -368,10 +377,10 @@ private fun MissingPermsSummary(
                     color = MaterialTheme.colorScheme.onErrorContainer,
                     fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
             }
-            if (rootMissing)    MissingPermRow(strings.setupRootTitle,    1, onGoToPage)
-            if (notifMissing)   MissingPermRow(strings.setupNotifTitle,   2, onGoToPage)
-            if (writeMissing)   MissingPermRow(strings.setupWriteTitle,   3, onGoToPage)
-            if (storageMissing) MissingPermRow(strings.setupStorageTitle, 4, onGoToPage)
+            if (rootMissing)    MissingPermRow(strings.setupRootTitle,    2, onGoToPage)
+            if (notifMissing)   MissingPermRow(strings.setupNotifTitle,   3, onGoToPage)
+            if (writeMissing)   MissingPermRow(strings.setupWriteTitle,   4, onGoToPage)
+            if (storageMissing) MissingPermRow(strings.setupStorageTitle, 5, onGoToPage)
         }
     }
 }

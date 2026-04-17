@@ -11,12 +11,12 @@ enum class AppLanguage(
     val code: String,
     val displayName: String,
     val nativeName: String,
-    val flag: String,
+    val langIcon: String,   // 2-letter ISO abbrev shown in UI (no flag emoji)
 ) {
-    INDONESIAN("id", "Indonesian", "Bahasa Indonesia", "🇮🇩"),
-    ENGLISH("en", "English", "English", "🇬🇧"),
-    RUSSIAN("ru", "Russian", "Русский", "🇷🇺"),
-    CHINESE("zh", "Chinese", "中文", "🇨🇳");
+    INDONESIAN("id", "Indonesian", "Bahasa Indonesia", "ID"),
+    ENGLISH("en", "English", "English", "EN"),
+    RUSSIAN("ru", "Russian", "Русский", "RU"),
+    CHINESE("zh", "Chinese", "中文", "ZH");
 
     companion object {
         fun fromCode(code: String): AppLanguage =
