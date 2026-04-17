@@ -92,24 +92,29 @@ object RootManager {
      * REQUEST root secara eksplisit — HANYA dipanggil dari SetupActivity
      * saat user klik tombol "Grant Root Access".
      *
-     * Layer 1: stdin-pipe (KSU, APatch, Magisk)
-     * Layer 2: su -c flag (fallback klasik)
-     * TIDAK ada Layer 3 native — dihapus.
+     * Magisk: dialog muncul via `su -c` dengan timeout panjang (30s).
+     * KernelSU/APatch: stdin-pipe langsung granted tanpa dialog.
+     *
+     * Urutan:
+     * 1) su -c (trigger Magisk dialog + compatible dgn KSU/APatch)
+     * 2) stdin fallback
      */
     suspend fun requestRoot(): Boolean = withContext(Dispatchers.IO) {
-        Log.d(TAG, "requestRoot() dipanggil — menunggu user grant di SU manager...")
+        Log.d(TAG, "requestRoot() — rootType=${detectRootType()} su=$suBinary")
         _cachedRoot = null
 
-        val r1 = tryGrantStdin()
+        // Layer 1: su -c — paling reliable untuk trigger Magisk dialog
+        val r1 = tryGrantArgC(timeoutMs = 30_000L)
         if (r1) {
-            Log.d(TAG, "requestRoot: granted via stdin")
+            Log.d(TAG, "requestRoot: granted via -c")
             _cachedRoot = true
             return@withContext true
         }
 
-        val r2 = tryGrantArgC()
+        // Layer 2: stdin fallback
+        val r2 = tryGrantStdin()
         if (r2) {
-            Log.d(TAG, "requestRoot: granted via -c")
+            Log.d(TAG, "requestRoot: granted via stdin")
             _cachedRoot = true
             return@withContext true
         }
@@ -133,14 +138,18 @@ object RootManager {
             val rt = Thread { out = proc.inputStream.bufferedReader().readText() }
             rt.start()
             wt.join(5_000)
-            rt.join(15_000) // tunggu user tap dialog
+            rt.join(15_000)
             val code = try { proc.waitFor() } catch (_: Exception) { -1 }
             proc.destroy()
             out.contains("aether_root_ok") && code == 0
         } catch (e: Exception) { false }
     }
 
-    private fun tryGrantArgC(): Boolean {
+    /**
+     * @param timeoutMs waktu tunggu output — perlu panjang (>=30s) untuk Magisk
+     *                  karena user harus sempat tap "Grant" di dialog.
+     */
+    private fun tryGrantArgC(timeoutMs: Long = 10_000L): Boolean {
         return try {
             val proc = ProcessBuilder(suBinary, "-c", "echo aether_root_ok")
                 .redirectErrorStream(true)
@@ -148,7 +157,7 @@ object RootManager {
             var out = ""
             val rt = Thread { out = proc.inputStream.bufferedReader().readText() }
             rt.start()
-            rt.join(10_000)
+            rt.join(timeoutMs)
             val code = try { proc.waitFor() } catch (_: Exception) { -1 }
             proc.destroy()
             out.contains("aether_root_ok") && code == 0
