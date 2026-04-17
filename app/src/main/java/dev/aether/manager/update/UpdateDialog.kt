@@ -44,8 +44,9 @@ fun UpdateDialogHost(viewModel: UpdateViewModel) {
     if (dismissed) return
 
     UpdateDialog(
-        info      = updateInfo,
-        onDismiss = { viewModel.dismiss() },
+        info           = updateInfo,
+        currentVersion = viewModel.currentVersionName,
+        onDismiss      = { viewModel.dismiss() },
     )
 }
 
@@ -54,8 +55,12 @@ fun UpdateDialogHost(viewModel: UpdateViewModel) {
 // ─────────────────────────────────────────────────────────────
 
 private sealed class DownloadState {
-    object Idle                           : DownloadState()
-    data class Progress(val percent: Int) : DownloadState()
+    object Idle : DownloadState()
+    data class Progress(
+        val percent        : Int,
+        val downloadedBytes: Long = 0L,
+        val totalBytes     : Long = 0L,
+    ) : DownloadState()
     data class Done(val apkFile: File)    : DownloadState()
     data class Failed(val reason: String) : DownloadState()
 }
@@ -66,8 +71,9 @@ private sealed class DownloadState {
 
 @Composable
 fun UpdateDialog(
-    info      : ReleaseInfo,
-    onDismiss : () -> Unit,
+    info           : ReleaseInfo,
+    currentVersion : String,
+    onDismiss      : () -> Unit,
 ) {
     val context  = LocalContext.current
     val scope    = rememberCoroutineScope()
@@ -140,7 +146,7 @@ fun UpdateDialog(
                 }
 
                 // ── Version chip: "versi saat ini → versi baru" ──
-                VersionArrowChip(newVersion = info.latestVersion)
+                VersionArrowChip(currentVersion = currentVersion, newVersion = info.latestVersion)
 
                 // ── Tab: Deskripsi / Changelog ────────────────────
                 val tabs = listOf("Deskripsi", "Changelog")
@@ -202,7 +208,9 @@ fun UpdateDialog(
                                         downloadAndInstall(
                                             context    = context,
                                             url        = info.downloadUrl,
-                                            onProgress = { dlState = DownloadState.Progress(it) },
+                                            onProgress = { pct, dl, total ->
+                                                dlState = DownloadState.Progress(pct, dl, total)
+                                            },
                                             onDone     = { dlState = DownloadState.Done(it) },
                                             onFailed   = { dlState = DownloadState.Failed(it) },
                                         )
@@ -234,12 +242,16 @@ fun UpdateDialog(
                     }
 
                     is DownloadState.Progress -> {
-                        DownloadProgressBar(percent = dl.percent)
+                        DownloadProgressBar(
+                                percent         = dl.percent,
+                                downloadedBytes = dl.downloadedBytes,
+                                totalBytes      = dl.totalBytes,
+                            )
                     }
 
                     is DownloadState.Done -> {
                         LaunchedEffect(dl.apkFile) { installApk(context, dl.apkFile) }
-                        DownloadProgressBar(percent = 100)
+                        DownloadProgressBar(percent = 100, downloadedBytes = -1L, totalBytes = -1L)
                         Text(
                             "Membuka installer…",
                             style = MaterialTheme.typography.bodySmall,
@@ -287,25 +299,31 @@ fun UpdateDialog(
 // Sub-composables
 // ─────────────────────────────────────────────────────────────
 
-/** Chip: "→ v1.6" — menunjukkan versi tujuan update */
+/** Chip: "v1.2 → v1.5" — menunjukkan versi asal dan tujuan update */
 @Composable
-private fun VersionArrowChip(newVersion: String) {
+private fun VersionArrowChip(currentVersion: String, newVersion: String) {
     Surface(
         shape = RoundedCornerShape(50),
         color = MaterialTheme.colorScheme.secondaryContainer
     ) {
         Row(
-            modifier            = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
-            verticalAlignment   = Alignment.CenterVertically,
+            modifier              = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
+            verticalAlignment     = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(6.dp),
         ) {
+            Text(
+                text       = currentVersion,
+                style      = MaterialTheme.typography.labelLarge,
+                color      = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.65f),
+                fontWeight = FontWeight.Medium,
+            )
             Icon(
                 Icons.Outlined.ArrowForward, null,
                 tint     = MaterialTheme.colorScheme.onSecondaryContainer,
                 modifier = Modifier.size(14.dp)
             )
             Text(
-                text       = newVersion,   // sudah include 'v' prefix dari parseTag
+                text       = newVersion,
                 style      = MaterialTheme.typography.labelLarge,
                 color      = MaterialTheme.colorScheme.onSecondaryContainer,
                 fontWeight = FontWeight.SemiBold,
@@ -397,30 +415,123 @@ private fun ChangelogBox(notes: String, loading: Boolean) {
 }
 
 @Composable
-private fun DownloadProgressBar(percent: Int) {
+private fun DownloadProgressBar(
+    percent        : Int,
+    downloadedBytes: Long,
+    totalBytes     : Long,
+) {
     val progress by animateFloatAsState(
-        targetValue  = percent / 100f,
+        targetValue   = percent / 100f,
         animationSpec = tween(300),
-        label        = "dl_progress"
+        label         = "dl_progress"
     )
-    Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Text(
-                "Mengunduh APK…",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Text(
-                "$percent%",
-                style      = MaterialTheme.typography.bodySmall,
-                fontWeight = FontWeight.SemiBold,
-                color      = MaterialTheme.colorScheme.primary
-            )
+
+    // Format bytes → "X.X MB"
+    fun Long.toMb(): String = "%.1f MB".format(this / 1_048_576.0)
+
+    val hasSizeInfo = totalBytes > 0L && downloadedBytes >= 0L
+    val isComplete  = percent >= 100
+
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape    = RoundedCornerShape(16.dp),
+        color    = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+    ) {
+        Column(
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            // ── Row atas: label kiri, size kanan ──────────────────
+            Row(
+                modifier              = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment     = Alignment.CenterVertically,
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment     = Alignment.CenterVertically,
+                ) {
+                    if (isComplete) {
+                        Icon(
+                            Icons.Outlined.CheckCircle, null,
+                            tint     = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Text(
+                            "Selesai diunduh",
+                            style  = MaterialTheme.typography.labelSmall,
+                            color  = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                    } else {
+                        CircularProgressIndicator(
+                            modifier    = Modifier.size(12.dp),
+                            strokeWidth = 1.5.dp,
+                            color       = MaterialTheme.colorScheme.primary,
+                        )
+                        Text(
+                            "Mengunduh APK…",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+
+                // Size info: "1.5 / 45.5 MB"
+                if (hasSizeInfo) {
+                    Surface(
+                        shape = RoundedCornerShape(50),
+                        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f),
+                    ) {
+                        Row(
+                            modifier              = Modifier.padding(horizontal = 10.dp, vertical = 3.dp),
+                            horizontalArrangement = Arrangement.spacedBy(2.dp),
+                            verticalAlignment     = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                text       = downloadedBytes.toMb(),
+                                style      = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.SemiBold,
+                                color      = MaterialTheme.colorScheme.primary,
+                            )
+                            Text(
+                                text  = "/",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                            Text(
+                                text  = totalBytes.toMb(),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
+                }
+            }
+
+            // ── Progress bar + persen ─────────────────────────────
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                LinearProgressIndicator(
+                    progress = { progress },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(6.dp)
+                        .clip(RoundedCornerShape(3.dp)),
+                    trackColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                )
+                Row(
+                    modifier              = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End,
+                ) {
+                    Text(
+                        text       = "$percent%",
+                        style      = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        color      = MaterialTheme.colorScheme.primary,
+                    )
+                }
+            }
         }
-        LinearProgressIndicator(
-            progress = { progress },
-            modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp)),
-        )
     }
 }
 
@@ -460,7 +571,7 @@ private suspend fun fetchChangelogFromGitHub(releasePageUrl: String): String? =
 private suspend fun downloadAndInstall(
     context   : Context,
     url       : String,
-    onProgress: (Int) -> Unit,
+    onProgress: (percent: Int, downloaded: Long, total: Long) -> Unit,
     onDone    : (File) -> Unit,
     onFailed  : (String) -> Unit,
 ) = withContext(Dispatchers.IO) {
@@ -490,7 +601,7 @@ private suspend fun downloadAndInstall(
                     downloaded += read
                     if (totalBytes > 0) {
                         val pct = (downloaded * 100 / totalBytes).toInt()
-                        withContext(Dispatchers.Main) { onProgress(pct) }
+                        withContext(Dispatchers.Main) { onProgress(pct, downloaded, totalBytes) }
                     }
                 }
             }

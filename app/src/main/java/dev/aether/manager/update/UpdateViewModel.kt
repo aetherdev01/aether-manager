@@ -25,6 +25,15 @@ class UpdateViewModel(app: Application) : AndroidViewModel(app) {
     private val _dismissed = MutableStateFlow(false)
     val dismissed: StateFlow<Boolean> = _dismissed.asStateFlow()
 
+    /** Versi app yang sedang berjalan, e.g. "v1.2" */
+    val currentVersionName: String by lazy {
+        try {
+            val ctx = getApplication<Application>()
+            @Suppress("DEPRECATION")
+            ctx.packageManager.getPackageInfo(ctx.packageName, 0).versionName ?: "v?"
+        } catch (_: PackageManager.NameNotFoundException) { "v?" }
+    }
+
     init { checkForUpdate() }
 
     fun checkForUpdate() {
