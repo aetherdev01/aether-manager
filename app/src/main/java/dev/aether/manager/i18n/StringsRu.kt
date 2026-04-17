@@ -55,7 +55,7 @@ val StringsRu = AppStrings(
     navAbout = "О приложении",
 
     // Home
-    homeSystemStatus = "СОСТОЯНИЕ СИСТЕМЫ",
+    homeSystemStatus = "Устройство",
     homeMonitor = "Монитор",
     homeRefresh = "Обновить",
     homeRetry = "Повторить",

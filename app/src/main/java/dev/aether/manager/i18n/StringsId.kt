@@ -61,16 +61,16 @@ val StringsId = AppStrings(
     navAbout = "Tentang",
 
     // Home
-    homeSystemStatus = "SYSTEM STATUS",
-    homeMonitor = "Real-time Monitor",
+    homeSystemStatus = "Perangkat",
+    homeMonitor = "Monitor",
     homeRefresh = "Refresh",
     homeRetry = "Coba Lagi",
     homeLabelCpu = "CPU",
     homeLabelGpu = "GPU",
     homeLabelRam = "RAM",
     homeLabelTemp = "SUHU",
-    homeLabelStorage = "STORAGE",
-    homeLabelUptime = "UPTIME",
+    homeLabelStorage = "PENYIMPANAN",
+    homeLabelUptime = "Waktu Aktif",
     homeRamUsed = "%s digunakan",
     homeUptimeSince = "sejak boot terakhir",
     homeStorageOf = "dari %.1f GB",
@@ -155,7 +155,7 @@ val StringsId = AppStrings(
     // About
     aboutSectionDev = "Developer",
     aboutSectionAppInfo = "Informasi Aplikasi",
-    aboutSectionLinks = "Komunitas & Tautan",
+    aboutSectionLinks = "Komunitas",
     aboutDevDesc = "Android & Root Module Developer",
     aboutApp = "Aplikasi",
     aboutVersion = "Versi",
@@ -217,6 +217,6 @@ val StringsId = AppStrings(
     logRebootRecovery = "Reboot Recovery",
     logRebootRecoveryDesc = "Masuk ke mode recovery",
     logReloadUi = "Reload UI",
-    logReloadUiDesc = "Muat ulang tanpa reboot",
+    logReloadUiDesc = "Muat ulang",
     logBtnCancel = "Batal",
 )

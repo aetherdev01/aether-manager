@@ -128,62 +128,59 @@ private fun ReadyContent(state: AppsUiState.Ready, vm: AppProfileViewModel) {
 
     val totalCount = state.apps.size
 
-    Column(Modifier.fillMaxSize()) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 16.dp)
+            .padding(top = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
         // ── Section header ────────────────────────────────────────────
-        Box(
-            Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp)
-                .padding(top = 8.dp)
-        ) {
         TabSectionTitle(
             icon  = Icons.Outlined.Apps,
             title = "App Profiles",
             trailing = {
-                    val monitorBg by animateColorAsState(
-                        if (state.monitorRunning) MaterialTheme.colorScheme.primaryContainer
-                        else MaterialTheme.colorScheme.surfaceVariant,
-                        label = "monitor_bg"
-                    )
-                    val monitorFg by animateColorAsState(
-                        if (state.monitorRunning) MaterialTheme.colorScheme.primary
-                        else MaterialTheme.colorScheme.onSurfaceVariant,
-                        label = "monitor_fg"
-                    )
-                    Surface(
-                        onClick = { vm.toggleMonitor(!state.monitorRunning) },
-                        shape = RoundedCornerShape(50),
-                        color = monitorBg,
-                        border = if (!state.monitorRunning)
-                            BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
-                        else null,
+                val monitorBg by animateColorAsState(
+                    if (state.monitorRunning) MaterialTheme.colorScheme.primaryContainer
+                    else MaterialTheme.colorScheme.surfaceVariant,
+                    label = "monitor_bg"
+                )
+                val monitorFg by animateColorAsState(
+                    if (state.monitorRunning) MaterialTheme.colorScheme.primary
+                    else MaterialTheme.colorScheme.onSurfaceVariant,
+                    label = "monitor_fg"
+                )
+                Surface(
+                    onClick = { vm.toggleMonitor(!state.monitorRunning) },
+                    shape = RoundedCornerShape(50),
+                    color = monitorBg,
+                    border = if (!state.monitorRunning)
+                        BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
+                    else null,
+                ) {
+                    Row(
+                        Modifier.padding(start = 8.dp, end = 10.dp, top = 4.dp, bottom = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(5.dp),
                     ) {
-                        Row(
-                            Modifier.padding(start = 8.dp, end = 10.dp, top = 4.dp, bottom = 4.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(5.dp),
-                        ) {
-                            Box(
-                                Modifier.size(6.dp).clip(CircleShape).background(monitorFg)
-                            )
-                            Text(
-                                if (state.monitorRunning) "Monitor ON" else "Monitor OFF",
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.SemiBold,
-                                color = monitorFg,
-                            )
-                        }
+                        Box(
+                            Modifier.size(6.dp).clip(CircleShape).background(monitorFg)
+                        )
+                        Text(
+                            if (state.monitorRunning) "Monitor ON" else "Monitor OFF",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.SemiBold,
+                            color = monitorFg,
+                        )
                     }
                 }
-            )
-        } // end Box TabSectionTitle
+            }
+        )
 
         // Stats row
         Row(
             Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp)
-                .padding(top = 8.dp),
+                .fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             AppStatChip(

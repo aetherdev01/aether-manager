@@ -430,87 +430,31 @@ private fun LanguageSelectorCard(strings: AppStrings) {
         color          = MaterialTheme.colorScheme.surfaceContainerLow,
         tonalElevation = 0.dp,
     ) {
-        Column(
-            modifier            = Modifier
+        Row(
+            modifier              = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 20.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+                .padding(horizontal = 16.dp, vertical = 14.dp),
+            verticalAlignment     = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
         ) {
-            // Header row
             Row(
                 verticalAlignment     = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                Surface(
-                    shape = RoundedCornerShape(10.dp),
-                    color = MaterialTheme.colorScheme.secondaryContainer,
-                    modifier = Modifier.size(36.dp),
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(
-                            Icons.Outlined.Language, null,
-                            tint     = MaterialTheme.colorScheme.onSecondaryContainer,
-                            modifier = Modifier.size(18.dp),
-                        )
-                    }
-                }
-                Column {
-                    Text(
-                        text       = strings.setupLangTitle,
-                        style      = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.SemiBold,
-                        color      = MaterialTheme.colorScheme.onSurface,
-                    )
-                    Text(
-                        text  = strings.setupLangDesc,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1,
-                    )
-                }
+                Icon(
+                    Icons.Outlined.Translate, null,
+                    tint     = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(20.dp),
+                )
+                Text(
+                    text       = "Bahasa",
+                    style      = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Medium,
+                    color      = MaterialTheme.colorScheme.onSurface,
+                )
             }
 
-            HorizontalDivider(
-                color     = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
-                thickness = 1.dp,
-            )
-
-            // Dropdown row dengan label di kiri
-            Row(
-                modifier          = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
-            ) {
-                Row(
-                    verticalAlignment     = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    Icon(
-                        Icons.Outlined.Translate, null,
-                        tint     = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(20.dp),
-                    )
-                    Text(
-                        text       = "Bahasa",
-                        style      = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Medium,
-                        color      = MaterialTheme.colorScheme.onSurface,
-                    )
-                }
-
-                // Dropdown pill
-                Surface(
-                    shape = RoundedCornerShape(12.dp),
-                    color = MaterialTheme.colorScheme.surface,
-                    border = BorderStroke(
-                        1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f)
-                    ),
-                ) {
-                    Box(modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)) {
-                        LanguageDropdown(modifier = Modifier.widthIn(min = 160.dp))
-                    }
-                }
-            }
+            LanguageDropdown(modifier = Modifier.widthIn(min = 160.dp))
         }
     }
 }

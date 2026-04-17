@@ -55,7 +55,7 @@ val StringsEn = AppStrings(
     navAbout = "About",
 
     // Home
-    homeSystemStatus = "SYSTEM STATUS",
+    homeSystemStatus = "Device",
     homeMonitor = "Monitor",
     homeRefresh = "Refresh",
     homeRetry = "Retry",
@@ -64,7 +64,7 @@ val StringsEn = AppStrings(
     homeLabelRam = "RAM",
     homeLabelTemp = "TEMP",
     homeLabelStorage = "STORAGE",
-    homeLabelUptime = "UPTIME",
+    homeLabelUptime = "UP Time",
     homeRamUsed = "%s used",
     homeUptimeSince = "since last boot",
     homeStorageOf = "of %.1f GB",
@@ -131,7 +131,7 @@ val StringsEn = AppStrings(
     // About
     aboutSectionDev = "Developer",
     aboutSectionAppInfo = "App Information",
-    aboutSectionLinks = "Community & Links",
+    aboutSectionLinks = "Community",
     aboutDevDesc = "Android & Root Module Developer",
     aboutApp = "App",
     aboutVersion = "Version",
