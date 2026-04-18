@@ -224,7 +224,6 @@ private fun ReadyContent(state: AppsUiState.Ready, vm: AppProfileViewModel) {
                             Modifier
                                 .size(6.dp)
                                 .alpha(dotAlpha)
-                                .scale(dotAnim)
                                 .clip(CircleShape)
                                 .background(monitorFg)
                         )
