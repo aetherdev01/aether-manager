@@ -135,7 +135,7 @@ private fun ReadyContent(state: AppsUiState.Ready, vm: AppProfileViewModel) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(horizontal = 16.dp)
+            .padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         // ── Section header ────────────────────────────────────────────
