@@ -32,9 +32,9 @@ import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
 import kotlinx.coroutines.delay
 
-// ── iOS-style Circle Toast ────────────────────────────────────────────────────
+// ── iOS Pill Notification (drops from status bar) ────────────────────────────
 
-enum class IosToastType { SUCCESS, ERROR, INFO }
+enum class IosToastType { LOADING, SUCCESS, ERROR, INFO }
 
 data class IosToastData(
     val message: String,
@@ -47,113 +47,126 @@ fun rememberIosToastState(): IosToastState = remember { IosToastState() }
 class IosToastState {
     var current by mutableStateOf<IosToastData?>(null)
         private set
+    // true = pill visible, false = animate out
+    var visible by mutableStateOf(false)
+        private set
 
-    fun show(message: String, type: IosToastType = IosToastType.SUCCESS) {
+    fun showLoading(message: String) {
+        current = IosToastData(message, IosToastType.LOADING)
+        visible = true
+    }
+
+    fun resolve(message: String, type: IosToastType = IosToastType.SUCCESS) {
         current = IosToastData(message, type)
     }
 
-    fun dismiss() { current = null }
+    fun show(message: String, type: IosToastType = IosToastType.SUCCESS) {
+        current = IosToastData(message, type)
+        visible = true
+    }
+
+    fun dismiss() {
+        visible = false
+    }
+
+    fun reset() {
+        visible = false
+        current = null
+    }
 }
 
 @Composable
 fun IosToastHost(state: IosToastState) {
-    val data = state.current
-    var visible by remember { mutableStateOf(false) }
+    val data    = state.current
+    val visible = state.visible
 
+    // Auto-dismiss after result shown (non-LOADING)
     LaunchedEffect(data) {
-        if (data != null) {
-            visible = true
-            delay(2200)
-            visible = false
-            delay(350)
+        if (data != null && data.type != IosToastType.LOADING) {
+            delay(2400)
             state.dismiss()
+            delay(400)
+            state.reset()
         }
     }
 
     AnimatedVisibility(
         visible = visible && data != null,
-        enter = fadeIn(tween(260)) + scaleIn(tween(300, easing = FastOutSlowInEasing), initialScale = 0.72f),
-        exit  = fadeOut(tween(280)) + scaleOut(tween(260, easing = FastOutSlowInEasing), targetScale = 0.72f),
+        enter = fadeIn(tween(300)) +
+                slideInVertically(tween(380, easing = FastOutSlowInEasing)) { -it - 80 },
+        exit  = fadeOut(tween(280)) +
+                slideOutVertically(tween(320, easing = FastOutSlowInEasing)) { -it - 80 },
     ) {
         if (data != null) {
             Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 12.dp),
+                contentAlignment = Alignment.TopCenter
             ) {
-                IosToastCard(data)
+                IosPillCard(data)
             }
         }
     }
 }
 
 @Composable
-private fun IosToastCard(data: IosToastData) {
-    val (icon, tint) = when (data.type) {
-        IosToastType.SUCCESS -> Icons.Filled.CheckCircle to Color(0xFF34C759)
-        IosToastType.ERROR   -> Icons.Filled.Error       to Color(0xFFFF3B30)
-        IosToastType.INFO    -> Icons.Filled.Info        to Color(0xFF007AFF)
+private fun IosPillCard(data: IosToastData) {
+    val isLoading = data.type == IosToastType.LOADING
+
+    val accentColor = when (data.type) {
+        IosToastType.SUCCESS -> Color(0xFF34C759)
+        IosToastType.ERROR   -> Color(0xFFFF3B30)
+        IosToastType.INFO    -> Color(0xFF007AFF)
+        IosToastType.LOADING -> MaterialTheme.colorScheme.primary
+    }
+    val icon = when (data.type) {
+        IosToastType.SUCCESS -> Icons.Filled.CheckCircle
+        IosToastType.ERROR   -> Icons.Filled.Error
+        IosToastType.INFO    -> Icons.Filled.Info
+        IosToastType.LOADING -> null
     }
 
-    val pulse = rememberInfiniteTransition(label = "toast_pulse")
-    val ringAlpha by pulse.animateFloat(
-        initialValue = 0.25f, targetValue = 0f,
-        animationSpec = infiniteRepeatable(tween(1100, easing = FastOutSlowInEasing), RepeatMode.Restart),
-        label = "ring_alpha"
-    )
-    val ringScale by pulse.animateFloat(
-        initialValue = 1f, targetValue = 1.55f,
-        animationSpec = infiniteRepeatable(tween(1100, easing = FastOutSlowInEasing), RepeatMode.Restart),
-        label = "ring_scale"
-    )
-
     Surface(
-        shape = RoundedCornerShape(24.dp),
+        shape = RoundedCornerShape(50.dp),
         color = MaterialTheme.colorScheme.inverseSurface,
-        shadowElevation = 20.dp,
+        shadowElevation = 16.dp,
         tonalElevation = 0.dp,
         modifier = Modifier
-            .widthIn(min = 140.dp, max = 260.dp)
-            .shadow(24.dp, RoundedCornerShape(24.dp)),
+            .shadow(20.dp, RoundedCornerShape(50.dp))
+            .widthIn(min = 160.dp, max = 300.dp),
     ) {
-        Column(
-            modifier = Modifier.padding(horizontal = 24.dp, vertical = 20.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(14.dp)
+        Row(
+            modifier = Modifier.padding(horizontal = 18.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            // Circle icon with pulse ring
-            Box(contentAlignment = Alignment.Center, modifier = Modifier.size(72.dp)) {
-                // Pulse ring
-                Box(
-                    modifier = Modifier
-                        .size(72.dp)
-                        .scale(ringScale)
-                        .clip(CircleShape)
-                        .background(tint.copy(alpha = ringAlpha))
-                )
-                // Icon container
-                Box(
-                    modifier = Modifier
-                        .size(60.dp)
-                        .clip(CircleShape)
-                        .background(tint.copy(alpha = 0.15f)),
-                    contentAlignment = Alignment.Center
-                ) {
+            // Leading indicator — spinner or icon
+            Box(modifier = Modifier.size(22.dp), contentAlignment = Alignment.Center) {
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(18.dp),
+                        strokeWidth = 2.dp,
+                        color = accentColor,
+                        trackColor = accentColor.copy(alpha = 0.2f),
+                    )
+                } else if (icon != null) {
                     Icon(
                         imageVector = icon,
                         contentDescription = null,
-                        tint = tint,
-                        modifier = Modifier.size(34.dp)
+                        tint = accentColor,
+                        modifier = Modifier.size(20.dp)
                     )
                 }
             }
             // Message
             Text(
                 text = data.message,
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.bodySmall,
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.inverseOnSurface,
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                lineHeight = 19.sp,
+                maxLines = 2,
+                lineHeight = 17.sp,
             )
         }
     }

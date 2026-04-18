@@ -38,12 +38,21 @@ fun AppProfileScreen(vm: AppProfileViewModel) {
     val state by vm.state.collectAsState()
     val editing by vm.editingProfile.collectAsState()
     val snack by vm.snack.collectAsState()
+    val savingPkg by vm.savingPkg.collectAsState()
     val iosToast = dev.aether.manager.ui.components.rememberIosToastState()
 
+    // Loading pill saat save/delete sedang proses
+    LaunchedEffect(savingPkg) {
+        if (savingPkg != null) {
+            iosToast.showLoading("Menyimpan profile…")
+        }
+    }
+
+    // Result pill setelah operasi selesai
     LaunchedEffect(snack) {
         if (snack != null) {
             val isError = snack!!.startsWith("Gagal") || snack!!.startsWith("Error")
-            iosToast.show(
+            iosToast.resolve(
                 message = snack!!,
                 type = if (isError) dev.aether.manager.ui.components.IosToastType.ERROR
                        else dev.aether.manager.ui.components.IosToastType.SUCCESS

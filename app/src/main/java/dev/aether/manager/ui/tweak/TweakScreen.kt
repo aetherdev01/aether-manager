@@ -45,10 +45,6 @@ fun TweakScreen(vm: MainViewModel) {
                 .padding(top = 8.dp, bottom = 100.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            AnimatedVisibility(visible = applying,
-                enter = fadeIn() + expandVertically(), exit = fadeOut() + shrinkVertically()) {
-                LinearProgressIndicator(Modifier.fillMaxWidth(), color = MaterialTheme.colorScheme.primary)
-            }
 
             // ── Performance Profile ───────────────────────────
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {

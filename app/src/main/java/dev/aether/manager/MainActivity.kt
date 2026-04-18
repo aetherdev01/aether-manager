@@ -36,6 +36,11 @@ import dev.aether.manager.ui.settings.SettingsScreen
 import dev.aether.manager.ui.tweak.TweakScreen
 import androidx.compose.ui.platform.LocalContext
 import dev.aether.manager.ads.InterstitialAdManager
+import dev.aether.manager.ads.AdScheduler
+import androidx.compose.runtime.DisposableEffect
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import dev.aether.manager.update.UpdateDialogHost
 import dev.aether.manager.update.UpdateViewModel
 import dev.aether.manager.util.RootUtils
@@ -69,16 +74,50 @@ fun AetherApp(vm: MainViewModel, apVm: AppProfileViewModel, updateVm: UpdateView
     var showReboot     by remember { mutableStateOf(false) }
     var showSettings   by remember { mutableStateOf(false) }
 
-    // Interstitial ad: tampil saat user buka tab APPS
+    // ── Interstitial Ads ──────────────────────────────────────────────────
     val activity = context as android.app.Activity
+
+    // 1. Tampil otomatis setiap kali ganti tab (semua tab)
     LaunchedEffect(currentScreen) {
-        if (currentScreen == Screen.APPS) {
-            InterstitialAdManager.showIfReady(activity)
+        InterstitialAdManager.showIfReady(activity)
+    }
+
+    // 2. Tampil otomatis berdasarkan timer (setiap 5 menit)
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_RESUME -> AdScheduler.start { activity.takeUnless { it.isFinishing || it.isDestroyed } }
+                Lifecycle.Event.ON_PAUSE  -> AdScheduler.stop()
+                else -> {}
+            }
         }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
     val snack by vm.snackMessage.collectAsState()
+    val applying by vm.applyingTweak.collectAsState()
     val iosToast = rememberIosToastState()
+
+    // Loading pill — muncul saat apply sedang berjalan
+    LaunchedEffect(applying) {
+        if (applying) {
+            iosToast.showLoading("Menerapkan tweaks…")
+        }
+    }
+
+    // Result pill — update setelah apply selesai
+    LaunchedEffect(snack) {
+        if (snack != null) {
+            val isError = snack!!.startsWith("Gagal") || snack!!.startsWith("Error")
+            iosToast.resolve(
+                message = snack!!,
+                type = if (isError) IosToastType.ERROR else IosToastType.SUCCESS
+            )
+            vm.clearSnack()
+        }
+    }
 
     data class NavItem(
         val screen: Screen,
@@ -93,17 +132,6 @@ fun AetherApp(vm: MainViewModel, apVm: AppProfileViewModel, updateVm: UpdateView
         NavItem(Screen.APPS,  s.navApps,  Icons.Filled.Apps,  Icons.Outlined.Apps),
         NavItem(Screen.ABOUT, s.navAbout, Icons.Filled.Info,  Icons.Outlined.Info),
     )
-
-    LaunchedEffect(snack) {
-        if (snack != null) {
-            val isError = snack!!.startsWith("Gagal") || snack!!.startsWith("Error")
-            iosToast.show(
-                message = snack!!,
-                type = if (isError) IosToastType.ERROR else IosToastType.SUCCESS
-            )
-            vm.clearSnack()
-        }
-    }
 
     // ── SettingsScreen overlay (full-screen, di atas Scaffold) ────────────
     if (showSettings) {

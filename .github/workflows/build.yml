@@ -46,25 +46,29 @@ jobs:
           KEY_PASSWORD:   ${{ secrets.KEY_PASSWORD }}
         run: ./gradlew assembleRelease --no-daemon
 
-      - name: Get APK name
+      - name: Get APK path
         run: |
-          RELEASE_APK=$(find app/build/outputs/apk/release -name "*.apk" | head -1)
-          echo "RELEASE_APK=$RELEASE_APK" >> $GITHUB_ENV
-          echo "RELEASE_NAME=$(basename $RELEASE_APK)" >> $GITHUB_ENV
+          APK_PATH=$(find app/build/outputs/apk/release -name "*.apk" | head -1)
+          APK_FILE=$(basename "$APK_PATH")
+          APK_NAME="${APK_FILE%.apk}"
+          echo "APK_PATH=$APK_PATH"   >> $GITHUB_ENV
+          echo "APK_FILE=$APK_FILE"   >> $GITHUB_ENV
+          echo "APK_NAME=$APK_NAME"   >> $GITHUB_ENV
           ls -lh app/build/outputs/apk/release/
 
       - name: Upload Release APK
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.RELEASE_NAME }}
-          path: ${{ env.RELEASE_APK }}
+          name: ${{ env.APK_NAME }}
+          path: ${{ env.APK_PATH }}
+          compression-level: 0
           retention-days: 30
 
       - name: Create GitHub Release
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
-          files: ${{ env.RELEASE_APK }}
+          files: ${{ env.APK_PATH }}
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
