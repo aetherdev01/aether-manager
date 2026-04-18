@@ -53,12 +53,18 @@ object RootUtils {
             soc_model=$(getprop ro.soc.model 2>/dev/null)
             kernel=$(uname -r 2>/dev/null | head -c 50)
             selinux=$(getenforce 2>/dev/null)
-            if [ -d /data/adb/ksu ]; then root=KernelSU
-            elif [ -d /data/adb/ap ]; then root=APatch
-            else root=Magisk; fi
-            profile=$(cat $PROFILE_FILE 2>/dev/null || echo balance)
-            safe=$([ -f $SAFE_MODE_FILE ] && echo 1 || echo 0)
-            boot=$(cat $BOOT_COUNT_FILE 2>/dev/null || echo 0)
+            if [ -d /data/adb/ksu ]; then
+              root=KernelSU
+            elif [ -d /data/adb/ap ]; then
+              root=APatch
+            elif [ -d /data/adb/magisk ]; then
+              root=Magisk
+            else
+              root=Unknown
+            fi
+            profile=$(cat ${PROFILE_FILE} 2>/dev/null || echo balance)
+            safe=$([ -f ${SAFE_MODE_FILE} ] && echo 1 || echo 0)
+            boot=$(cat ${BOOT_COUNT_FILE} 2>/dev/null || echo 0)
             echo model=${'$'}model
             echo android=${'$'}android
             echo platform=${'$'}platform
@@ -75,12 +81,22 @@ object RootUtils {
         val result = sh(script)
         val map = parseKv(result.stdout)
         val platform = "${map["platform"]} ${map["hardware"]} ${map["soc_model"]}".lowercase()
+
+        // Ambil root dari shell result (akurat karena jalan sebagai root)
+        // Kalau shell bilang Unknown (jarang, misal path tidak ada),
+        // fallback ke detectRootType() yang pakai berbagai heuristic
+        val shellRootType = map["root"]
+        val rootType = when {
+            shellRootType != null && shellRootType != "Unknown" -> shellRootType
+            else -> RootManager.detectRootType()
+        }
+
         return DeviceInfo(
             model     = map["model"]    ?: "Unknown Device",
             android   = map["android"]  ?: "?",
             kernel    = map["kernel"]   ?: "?",
             selinux   = map["selinux"]  ?: "?",
-            rootType  = map["root"]     ?: RootManager.detectRootType(),
+            rootType  = rootType,
             soc       = detectSoc(platform),
             socRaw    = map["platform"] ?: "",
             pid       = "",

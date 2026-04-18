@@ -223,5 +223,5 @@ val StringsEn = AppStrings(
     settingsSourceCode = "Source Code",
     settingsSourceCodeDesc = "View on GitHub",
     settingsLicense = "License",
-    settingsLicenseDesc = "GPL-3.0",
+    settingsLicenseDesc = "APACHE-2.0",
 )

@@ -78,17 +78,13 @@ fun AetherApp(vm: MainViewModel, apVm: AppProfileViewModel, updateVm: UpdateView
     var showReboot    by remember { mutableStateOf(false) }
     var showSettings  by remember { mutableStateOf(false) }
 
-    // ── Ad Scheduler: otomatis mulai/stop ikut lifecycle ──────────────────
-    // Iklan pertama muncul setelah 60 detik, lalu setiap 2 menit.
-    // Tidak dipanggil manual saat ganti tab — biarkan scheduler yang handle.
+    // ── Ad Scheduler lifecycle ────────────────────────────────────────────
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
                 Lifecycle.Event.ON_RESUME -> {
-                    // Preload ulang jika belum ada (misal setelah app background lama)
                     InterstitialAdManager.preload(activity)
-                    // Start scheduler otomatis
                     AdScheduler.start {
                         activity.takeUnless { it.isFinishing || it.isDestroyed }
                     }
@@ -99,6 +95,16 @@ fun AetherApp(vm: MainViewModel, apVm: AppProfileViewModel, updateVm: UpdateView
         }
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
+    // ── Trigger iklan saat ganti tab ──────────────────────────────────────
+    LaunchedEffect(currentScreen) {
+        AdScheduler.tryShow()
+    }
+
+    // ── Trigger iklan saat buka/tutup Settings ────────────────────────────
+    LaunchedEffect(showSettings) {
+        AdScheduler.tryShow()
     }
 
     // ── Toast ─────────────────────────────────────────────────────────────
@@ -149,7 +155,10 @@ fun AetherApp(vm: MainViewModel, apVm: AppProfileViewModel, updateVm: UpdateView
             TopAppBar(
                 title = { Text("Aether Manager", fontWeight = FontWeight.Medium, fontSize = 20.sp) },
                 actions = {
-                    IconButton(onClick = { showSettings = true }) {
+                    IconButton(onClick = {
+                        showSettings = true
+                        AdScheduler.tryShow()   // trigger saat buka settings
+                    }) {
                         Icon(Icons.Outlined.Settings, null)
                     }
                     IconButton(onClick = { showReboot = true }) {
@@ -172,7 +181,10 @@ fun AetherApp(vm: MainViewModel, apVm: AppProfileViewModel, updateVm: UpdateView
                     )
                     NavigationBarItem(
                         selected = selected,
-                        onClick  = { currentScreen = item.screen },
+                        onClick  = {
+                            currentScreen = item.screen
+                            AdScheduler.tryShow()   // trigger saat ganti tab
+                        },
                         icon = {
                             Box(Modifier.scale(scale)) {
                                 Icon(if (selected) item.selectedIcon else item.unselectedIcon, null)

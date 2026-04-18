@@ -223,5 +223,5 @@ val StringsId = AppStrings(
     settingsSourceCode = "Kode Sumber",
     settingsSourceCodeDesc = "Lihat di GitHub",
     settingsLicense = "Lisensi",
-    settingsLicenseDesc = "GPL-3.0",
+    settingsLicenseDesc = "APACHE-2.0",
 )

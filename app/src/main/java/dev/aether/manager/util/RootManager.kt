@@ -12,9 +12,6 @@ import java.io.File
  * - Root TIDAK pernah di-request secara otomatis saat startup.
  * - Grant hanya dipicu oleh aksi user yang eksplisit (klik tombol).
  * - State root disimpan dan di-query tanpa side effect.
- *
- * PERUBAHAN: Hapus semua dependency ke NativeExec JNI.
- * requestRoot() sekarang murni Java ProcessBuilder (stdin-pipe + -c fallback).
  */
 object RootManager {
 
@@ -39,11 +36,58 @@ object RootManager {
         } ?: "su"
     }
 
-    fun detectRootType(): String = when {
-        File("/data/adb/ksu").exists()   -> "KernelSU"
-        File("/data/adb/ap").exists()    -> "APatch"
-        File("/data/adb/magisk").exists()-> "Magisk"
-        else                             -> "Unknown"
+    /**
+     * Deteksi root method via shell (berjalan sebagai root, bisa akses /data/adb).
+     *
+     * PENTING: Jangan pakai File("/data/adb/...").exists() dari Java/Kotlin —
+     * path itu butuh root permission, selalu return false dari proses biasa.
+     * Gunakan shell su untuk cek direktori ini.
+     *
+     * Dipanggil dari RootUtils.getDeviceInfo() via shell script langsung,
+     * atau dari sini sebagai fallback non-shell dengan magic file detection.
+     */
+    fun detectRootType(): String {
+        // Coba deteksi dari path yang readable tanpa root
+        return when {
+            // Magisk — app package / stub bisa dicek
+            File("/data/adb/magisk").canRead()          -> "Magisk"
+            File("/sbin/.magisk").exists()               -> "Magisk"
+            File("/dev/.magisk.unblock").exists()        -> "Magisk"
+            // KernelSU — /data/adb/ksu readable kalau KSU granted
+            File("/data/adb/ksu").canRead()             -> "KernelSU"
+            // APatch
+            File("/data/adb/ap").canRead()              -> "APatch"
+            // Fallback: coba baca via su shell (dipanggil setelah root granted)
+            _cachedRoot == true                          -> detectRootTypeViaShell()
+            else                                         -> "Unknown"
+        }
+    }
+
+    /**
+     * Deteksi root method via shell — akurat, karena shell jalan sebagai root.
+     * Hanya dipanggil kalau root sudah granted.
+     */
+    private fun detectRootTypeViaShell(): String {
+        return try {
+            val script = """
+                if [ -d /data/adb/ksu ]; then echo KernelSU
+                elif [ -d /data/adb/ap ]; then echo APatch
+                elif [ -d /data/adb/magisk ]; then echo Magisk
+                else echo Unknown
+                fi
+            """.trimIndent()
+            val proc = ProcessBuilder(suBinary, "-c", script)
+                .redirectErrorStream(true)
+                .start()
+            val out = proc.inputStream.bufferedReader().readText().trim()
+            proc.waitFor()
+            proc.destroy()
+            Log.d(TAG, "detectRootTypeViaShell: $out")
+            out.ifBlank { "Unknown" }
+        } catch (e: Exception) {
+            Log.w(TAG, "detectRootTypeViaShell failed: ${e.message}")
+            "Unknown"
+        }
     }
 
     suspend fun isRooted(): Boolean = withContext(Dispatchers.IO) {
@@ -91,16 +135,9 @@ object RootManager {
     /**
      * REQUEST root secara eksplisit — HANYA dipanggil dari SetupActivity
      * saat user klik tombol "Grant Root Access".
-     *
-     * Magisk: dialog muncul via `su -c` dengan timeout panjang (30s).
-     * KernelSU/APatch: stdin-pipe langsung granted tanpa dialog.
-     *
-     * Urutan:
-     * 1) su -c (trigger Magisk dialog + compatible dgn KSU/APatch)
-     * 2) stdin fallback
      */
     suspend fun requestRoot(): Boolean = withContext(Dispatchers.IO) {
-        Log.d(TAG, "requestRoot() — rootType=${detectRootType()} su=$suBinary")
+        Log.d(TAG, "requestRoot() — su=$suBinary")
         _cachedRoot = null
 
         // Layer 1: su -c — paling reliable untuk trigger Magisk dialog
@@ -145,10 +182,6 @@ object RootManager {
         } catch (e: Exception) { false }
     }
 
-    /**
-     * @param timeoutMs waktu tunggu output — perlu panjang (>=30s) untuk Magisk
-     *                  karena user harus sempat tap "Grant" di dialog.
-     */
     private fun tryGrantArgC(timeoutMs: Long = 10_000L): Boolean {
         return try {
             val proc = ProcessBuilder(suBinary, "-c", "echo aether_root_ok")
