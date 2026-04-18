@@ -1,683 +1,352 @@
-package dev.aether.manager.ui.appprofile
+package dev.aether.manager.ui.about
 
-import android.graphics.Bitmap
-import android.graphics.Canvas
-import android.graphics.drawable.BitmapDrawable
-import androidx.compose.animation.*
-import androidx.compose.animation.core.*
-import androidx.compose.foundation.*
+import android.content.Intent
+import android.net.Uri
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.*
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.draw.*
-import androidx.compose.ui.graphics.*
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.graphics.painter.BitmapPainter
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.*
-import dev.aether.manager.data.*
+import androidx.compose.ui.unit.DpOffset
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import dev.aether.manager.R
+import dev.aether.manager.data.MainViewModel
+import dev.aether.manager.i18n.AppLanguage
+import dev.aether.manager.i18n.LocalLanguage
+import dev.aether.manager.i18n.LocalSetLanguage
+import dev.aether.manager.i18n.LocalStrings
 import dev.aether.manager.ui.home.TabSectionTitle
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-
-// ─── Screen root ─────────────────────────────────────────────────────────────
 
 @Composable
-fun AppProfileScreen(vm: AppProfileViewModel) {
-    val state by vm.state.collectAsState()
-    val editing by vm.editingProfile.collectAsState()
-    val snack by vm.snack.collectAsState()
-    val snackState = remember { SnackbarHostState() }
-
-    LaunchedEffect(snack) {
-        if (snack != null) {
-            snackState.showSnackbar(snack!!, duration = SnackbarDuration.Short)
-            vm.clearSnack()
-        }
-    }
-
-    Scaffold(
-        snackbarHost = { SnackbarHost(snackState) },
-        containerColor = MaterialTheme.colorScheme.background,
-    ) { pad ->
-        Box(Modifier.padding(bottom = pad.calculateBottomPadding()).fillMaxSize()) {
-            AnimatedContent(
-                targetState = state,
-                transitionSpec = { fadeIn(tween(280)) togetherWith fadeOut(tween(180)) },
-                label = "apps_state"
-            ) { s ->
-                when (s) {
-                    is AppsUiState.Loading -> LoadingContent()
-                    is AppsUiState.Error   -> ErrorContent(s.msg) { vm.load() }
-                    is AppsUiState.Ready   -> ReadyContent(s, vm)
-                }
-            }
-        }
-    }
-
-    val editTarget = editing
-    if (editTarget != null) {
-        val apps = (state as? AppsUiState.Ready)?.apps ?: emptyList()
-        val appInfo = apps.find { it.packageName == editTarget.packageName }
-        AppProfileEditor(
-            profile   = editTarget,
-            appLabel  = appInfo?.label ?: editTarget.packageName,
-            appIcon   = appInfo?.icon,
-            saving    = vm.savingPkg.collectAsState().value == editTarget.packageName,
-            onDismiss = { vm.closeEditor() },
-            onSave    = { vm.saveProfile(it) },
-        )
-    }
-}
-
-// ─── State screens ────────────────────────────────────────────────────────────
-
-@Composable
-private fun LoadingContent() {
-    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            CircularProgressIndicator(
-                modifier = Modifier.size(36.dp),
-                strokeWidth = 3.dp,
-                color = MaterialTheme.colorScheme.primary,
-            )
-            Text("Memuat aplikasi…", style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant)
-        }
-    }
-}
-
-@Composable
-private fun ErrorContent(msg: String, onRetry: () -> Unit) {
-    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp),
-            modifier = Modifier.padding(32.dp)) {
-            Icon(Icons.Outlined.ErrorOutline, null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(48.dp))
-            Text(msg, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            FilledTonalButton(onClick = onRetry) { Text("Coba Lagi") }
-        }
-    }
-}
-
-// ─── Main content ─────────────────────────────────────────────────────────────
-
-@Composable
-private fun ReadyContent(state: AppsUiState.Ready, vm: AppProfileViewModel) {
-    var searchQuery by remember { mutableStateOf("") }
-
-    val filtered = remember(state.apps, state.profiles, searchQuery) {
-        state.apps.filter { app ->
-            app.label.contains(searchQuery, ignoreCase = true) ||
-            app.packageName.contains(searchQuery, ignoreCase = true)
-        }
-    }
-
-    val activeCount = remember(state.profiles) {
-        state.profiles.values.count { it.enabled }
-    }
-
-    val totalCount = state.apps.size
+fun AboutScreen(
+    vm          : MainViewModel,
+) {
+    val s           = LocalStrings.current
+    val ctx         = LocalContext.current
+    val scrollState = rememberScrollState()
 
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .verticalScroll(scrollState)
             .padding(horizontal = 16.dp)
-            // ✅ Top padding dikurangi, konsisten dengan AboutScreen (top = 8.dp)
-            .padding(top = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+            .padding(top = 8.dp, bottom = 100.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        // ── Section header — sama persis style-nya dengan AboutScreen ──────
-        TabSectionTitle(
-            icon  = Icons.Outlined.Apps,
-            title = "App Profiles",
-            trailing = {
-                MonitorTogglePill(
-                    running = state.monitorRunning,
-                    onToggle = { vm.toggleMonitor(!state.monitorRunning) }
-                )
-            }
-        )
 
-        // ── Stats row ──────────────────────────────────────────────────────
-        Row(
-            Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
-        ) {
-            AppStatChip(
-                icon  = Icons.Outlined.PhoneAndroid,
-                label = "$totalCount Aplikasi",
-                modifier = Modifier.weight(1f),
+        // ── Section: Developer ────────────────────────────────────────────
+        TabSectionTitle(
+            icon  = Icons.Outlined.Person,
+            title = s.aboutSectionDev
+        )
+        DevProfileCard()
+
+        // ── Section: Komunitas & Tautan ───────────────────────────────────
+        TabSectionTitle(
+            icon  = Icons.Outlined.Language,
+            title = s.aboutSectionLinks
+        )
+        AboutSection {
+            LinkRow(
+                icon     = Icons.Outlined.Code,
+                label    = s.aboutGithub,
+                subtitle = "github.com/aetherdev01",
+                onClick  = {
+                    ctx.startActivity(
+                        Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/aetherdev01"))
+                    )
+                }
             )
-            AppStatChip(
-                icon   = Icons.Outlined.Tune,
-                label  = "$activeCount Profile Aktif",
-                active = activeCount > 0,
-                modifier = Modifier.weight(1f),
+            AboutDivider()
+            LinkRow(
+                icon     = Icons.Outlined.Send,
+                label    = s.aboutTelegram,
+                subtitle = "@get01projects",
+                onClick  = {
+                    ctx.startActivity(
+                        Intent(Intent.ACTION_VIEW, Uri.parse("https://t.me/get01projects"))
+                    )
+                }
+            )
+            AboutDivider()
+            LinkRow(
+                icon     = Icons.Outlined.Favorite,
+                label    = s.aboutSaweriaLabel,
+                subtitle = s.aboutSaweria,
+                onClick  = {
+                    ctx.startActivity(
+                        Intent(Intent.ACTION_VIEW, Uri.parse("https://saweria.co/AetherDev"))
+                    )
+                }
             )
         }
+    }
+}
 
-        // ── Search bar — tanpa extra horizontal padding (Column sudah 16dp) ──
-        SearchFilterBar(
-            query         = searchQuery,
-            onQueryChange = { searchQuery = it },
-        )
+// ─────────────────────────────────────────────────────────────────────────────
+// LANGUAGE DROPDOWN — no flag, text only
+// ─────────────────────────────────────────────────────────────────────────────
 
-        // ── App list / empty hint ──────────────────────────────────────────
-        if (filtered.isEmpty()) {
-            EmptyListHint(searchQuery.isNotEmpty())
-        } else {
-            LazyColumn(
-                contentPadding = PaddingValues(bottom = 100.dp),
-                verticalArrangement = Arrangement.spacedBy(6.dp),
-                modifier = Modifier.fillMaxSize()
+@Composable
+private fun AboutLanguageDropdown(modifier: Modifier = Modifier) {
+    val currentLanguage = LocalLanguage.current
+    val setLanguage     = LocalSetLanguage.current
+    var expanded        by remember { mutableStateOf(false) }
+    val arrowRotation   by animateFloatAsState(
+        targetValue   = if (expanded) 180f else 0f,
+        animationSpec = tween(200),
+        label         = "lang_arrow"
+    )
+
+    Box(modifier = modifier) {
+        // Trigger chip
+        Surface(
+            shape         = RoundedCornerShape(12.dp),
+            tonalElevation = 2.dp,
+            onClick       = { expanded = true }
+        ) {
+            Row(
+                verticalAlignment     = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                modifier              = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
             ) {
-                items(filtered, key = { it.packageName }) { app ->
-                    val profile = state.profiles[app.packageName]
-                    AppListItem(
-                        app      = app,
-                        profile  = profile,
-                        onClick  = { vm.openEditor(app) },
-                        onDelete = if (profile != null) {{ vm.deleteProfile(app.packageName) }} else null,
+                Icon(
+                    Icons.Outlined.Language,
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp),
+                    tint     = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text      = currentLanguage.nativeName,
+                    style     = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.SemiBold,
+                    color     = MaterialTheme.colorScheme.onSurface,
+                )
+                Icon(
+                    Icons.Default.KeyboardArrowDown,
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp).rotate(arrowRotation),
+                    tint     = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+
+        // Dropdown
+        DropdownMenu(
+            expanded          = expanded,
+            onDismissRequest  = { expanded = false },
+            offset            = DpOffset(0.dp, 4.dp),
+        ) {
+            AppLanguage.entries.forEach { lang ->
+                val isSelected = lang == currentLanguage
+                DropdownMenuItem(
+                    text = {
+                        Column {
+                            Text(
+                                text       = lang.nativeName,
+                                style      = MaterialTheme.typography.bodyMedium,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                color      = if (isSelected)
+                                    MaterialTheme.colorScheme.primary
+                                else
+                                    MaterialTheme.colorScheme.onSurface,
+                            )
+                            Text(
+                                text  = lang.displayName,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    },
+                    trailingIcon = if (isSelected) ({
+                        Icon(
+                            Icons.Filled.Check, null,
+                            tint     = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }) else null,
+                    onClick = {
+                        setLanguage(lang)
+                        expanded = false
+                    },
+                    modifier = Modifier.background(
+                        if (isSelected)
+                            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+                        else
+                            Color.Transparent
+                    )
+                )
+            }
+        }
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DEV PROFILE CARD
+// ─────────────────────────────────────────────────────────────────────────────
+
+@Composable
+private fun DevProfileCard() {
+    val s       = LocalStrings.current
+    val primary = MaterialTheme.colorScheme.primary
+
+    Surface(
+        shape    = RoundedCornerShape(20.dp),
+        color    = MaterialTheme.colorScheme.primaryContainer,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier              = Modifier.fillMaxWidth().padding(16.dp),
+            verticalAlignment     = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            // Avatar
+            Box(contentAlignment = Alignment.Center) {
+                Box(
+                    modifier = Modifier.size(64.dp).clip(CircleShape)
+                        .background(primary.copy(alpha = 0.15f))
+                )
+                Box(
+                    modifier         = Modifier.size(56.dp).clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.surfaceContainerHighest),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Image(
+                        painter            = painterResource(id = R.drawable.profile_avatar),
+                        contentDescription = "AetherDev",
+                        modifier           = Modifier.fillMaxSize(),
+                        contentScale       = ContentScale.Crop
                     )
                 }
             }
-        }
-    }
-}
 
-// ─── Monitor toggle pill ──────────────────────────────────────────────────────
-// Dipisah jadi composable sendiri agar ReadyContent lebih bersih
-
-@Composable
-private fun MonitorTogglePill(running: Boolean, onToggle: () -> Unit) {
-    val bg by animateColorAsState(
-        if (running) MaterialTheme.colorScheme.primaryContainer
-        else MaterialTheme.colorScheme.surfaceVariant,
-        label = "monitor_bg"
-    )
-    val fg by animateColorAsState(
-        if (running) MaterialTheme.colorScheme.primary
-        else MaterialTheme.colorScheme.onSurfaceVariant,
-        label = "monitor_fg"
-    )
-    Surface(
-        onClick = onToggle,
-        shape   = RoundedCornerShape(50),
-        color   = bg,
-        border  = if (!running)
-            BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
-        else null,
-    ) {
-        Row(
-            Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
-            verticalAlignment     = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(5.dp),
-        ) {
-            Box(Modifier.size(6.dp).clip(CircleShape).background(fg))
-            Text(
-                if (running) "Monitor ON" else "Monitor OFF",
-                style      = MaterialTheme.typography.labelSmall,
-                fontWeight = FontWeight.SemiBold,
-                color      = fg,
-            )
-        }
-    }
-}
-
-// ─── Stat chip ────────────────────────────────────────────────────────────────
-
-@Composable
-private fun AppStatChip(
-    icon: ImageVector,
-    label: String,
-    active: Boolean = false,
-    modifier: Modifier = Modifier,
-) {
-    Surface(
-        modifier = modifier,
-        shape    = RoundedCornerShape(12.dp),
-        color    = if (active) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
-                   else MaterialTheme.colorScheme.surfaceContainer,
-        border   = if (active) BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.25f))
-                   else BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.12f)),
-    ) {
-        Row(
-            Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
-            verticalAlignment     = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(7.dp),
-        ) {
-            Icon(
-                icon, null,
-                modifier = Modifier.size(15.dp),
-                tint = if (active) MaterialTheme.colorScheme.primary
-                       else MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Text(
-                label,
-                style      = MaterialTheme.typography.labelMedium,
-                fontWeight = FontWeight.Medium,
-                color      = if (active) MaterialTheme.colorScheme.primary
-                             else MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-    }
-}
-
-// ─── Search bar ───────────────────────────────────────────────────────────────
-// ✅ Hapus Row wrapper + padding horizontal/vertical yang dobel-dobel.
-//    Column parent sudah padding 16dp, jadi SearchFilterBar langsung fillMaxWidth.
-
-@Composable
-private fun SearchFilterBar(
-    query: String,
-    onQueryChange: (String) -> Unit,
-) {
-    OutlinedTextField(
-        value         = query,
-        onValueChange = onQueryChange,
-        placeholder   = { Text("Cari aplikasi…", style = MaterialTheme.typography.bodySmall) },
-        leadingIcon   = { Icon(Icons.Outlined.Search, null, modifier = Modifier.size(18.dp)) },
-        trailingIcon  = if (query.isNotEmpty()) {{
-            IconButton(onClick = { onQueryChange("") }, modifier = Modifier.size(36.dp)) {
-                Icon(Icons.Filled.Clear, null, modifier = Modifier.size(16.dp))
-            }
-        }} else null,
-        singleLine    = true,
-        modifier      = Modifier.fillMaxWidth(),
-        shape         = RoundedCornerShape(14.dp),
-        textStyle     = MaterialTheme.typography.bodySmall,
-        colors        = OutlinedTextFieldDefaults.colors(
-            unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
-            focusedBorderColor   = MaterialTheme.colorScheme.primary,
-            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-            focusedContainerColor   = MaterialTheme.colorScheme.surfaceContainerLow,
-        ),
-    )
-}
-
-@Composable
-private fun EmptyListHint(isSearch: Boolean) {
-    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Icon(
-                if (isSearch) Icons.Outlined.SearchOff else Icons.Outlined.AppsOutage,
-                null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(40.dp)
-            )
-            Text(
-                if (isSearch) "Tidak ada hasil" else "Belum ada app profile",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-    }
-}
-
-// ─── App List Item ────────────────────────────────────────────────────────────
-
-@Composable
-private fun AppListItem(
-    app: AppInfo,
-    profile: AppProfile?,
-    onClick: () -> Unit,
-    onDelete: (() -> Unit)?,
-) {
-    val hasProfile = profile != null
-    val isEnabled  = profile?.enabled == true
-    var showDeleteDialog by remember { mutableStateOf(false) }
-
-    val iconBitmap by produceState<Bitmap?>(initialValue = null, key1 = app.packageName) {
-        value = withContext(Dispatchers.IO) {
-            runCatching { app.icon?.let { drawableToBitmap(it) } }.getOrNull()
-        }
-    }
-
-    Surface(
-        onClick  = onClick,
-        shape    = RoundedCornerShape(14.dp),
-        color    = if (isEnabled)
-            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
-        else MaterialTheme.colorScheme.surfaceContainer,
-        border   = if (isEnabled) BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)) else null,
-        modifier = Modifier.fillMaxWidth(),
-    ) {
-        Row(
-            Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
-            verticalAlignment     = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            AppIconView(bitmap = iconBitmap, label = app.label, isEnabled = isEnabled, size = 44.dp, cornerSize = 12.dp)
-
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(app.label, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium,
-                    maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Text(app.packageName, style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                if (hasProfile && isEnabled) {
-                    val gov = profile!!.cpuGovernor
-                    val rr  = profile.refreshRate
-                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                        if (gov != "default") ProfileBadge(gov.replaceFirstChar { it.uppercase() }, Icons.Filled.Memory)
-                        if (rr  != "default") ProfileBadge("$rr Hz", Icons.Filled.DisplaySettings)
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Row(
+                    verticalAlignment     = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(5.dp)
+                ) {
+                    Text(
+                        "AetherDev",
+                        style      = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color      = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                    Surface(shape = CircleShape, color = primary) {
+                        Box(Modifier.padding(3.dp), contentAlignment = Alignment.Center) {
+                            Icon(
+                                Icons.Filled.Check, null,
+                                tint     = MaterialTheme.colorScheme.onPrimary,
+                                modifier = Modifier.size(9.dp)
+                            )
+                        }
                     }
                 }
-            }
-
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(2.dp)) {
-                if (isEnabled) {
-                    Icon(Icons.Filled.CheckCircle, null,
-                        tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
-                }
-                if (onDelete != null) {
-                    IconButton(onClick = { showDeleteDialog = true }, modifier = Modifier.size(30.dp)) {
-                        Icon(Icons.Outlined.DeleteOutline, null, modifier = Modifier.size(18.dp),
-                            tint = MaterialTheme.colorScheme.error.copy(alpha = 0.6f))
-                    }
-                }
-                Icon(Icons.Filled.ChevronRight, null, modifier = Modifier.size(20.dp),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
+                Text(
+                    "@AetherDev22",
+                    style      = MaterialTheme.typography.bodySmall,
+                    color      = primary,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Text(
+                    s.aboutDevDesc,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.65f)
+                )
             }
         }
     }
+}
 
-    if (showDeleteDialog) {
-        AlertDialog(
-            onDismissRequest = { showDeleteDialog = false },
-            icon  = { Icon(Icons.Outlined.DeleteOutline, null, tint = MaterialTheme.colorScheme.error) },
-            title = { Text("Hapus Profile?") },
-            text  = { Text("Profile \"${app.label}\" akan dihapus permanen.") },
-            confirmButton = {
-                TextButton(onClick = { showDeleteDialog = false; onDelete?.invoke() }) {
-                    Text("Hapus", color = MaterialTheme.colorScheme.error)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDeleteDialog = false }) { Text("Batal") }
-            }
+// ─────────────────────────────────────────────────────────────────────────────
+// SECTION WRAPPER
+// ─────────────────────────────────────────────────────────────────────────────
+
+@Composable
+private fun AboutSection(content: @Composable ColumnScope.() -> Unit) {
+    Surface(
+        shape  = RoundedCornerShape(20.dp),
+        color  = MaterialTheme.colorScheme.surfaceContainerLow,
+        border = androidx.compose.foundation.BorderStroke(
+            1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
         )
-    }
-}
-
-// ─── Shared icon view ─────────────────────────────────────────────────────────
-
-@Composable
-private fun AppIconView(bitmap: Bitmap?, label: String, isEnabled: Boolean, size: Dp, cornerSize: Dp) {
-    Box(Modifier.size(size).clip(RoundedCornerShape(cornerSize)), contentAlignment = Alignment.Center) {
-        if (bitmap != null) {
-            Image(painter = BitmapPainter(bitmap.asImageBitmap()), contentDescription = label,
-                modifier = Modifier.fillMaxSize())
-        } else {
-            Box(Modifier.fillMaxSize().background(
-                if (isEnabled) MaterialTheme.colorScheme.primary
-                else MaterialTheme.colorScheme.secondaryContainer
-            ), contentAlignment = Alignment.Center) {
-                Text(label.take(1).uppercase(), style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = if (isEnabled) MaterialTheme.colorScheme.onPrimary
-                            else MaterialTheme.colorScheme.onSecondaryContainer)
-            }
-        }
-    }
-}
-
-// ─── Profile badge ────────────────────────────────────────────────────────────
-
-@Composable
-private fun ProfileBadge(text: String, icon: ImageVector) {
-    Surface(shape = RoundedCornerShape(6.dp), color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)) {
-        Row(Modifier.padding(horizontal = 5.dp, vertical = 2.dp),
-            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(3.dp)) {
-            Icon(icon, null, modifier = Modifier.size(10.dp), tint = MaterialTheme.colorScheme.primary)
-            Text(text, style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.primary, fontSize = 10.sp)
-        }
-    }
-}
-
-// ─── Bottom Sheet Editor ──────────────────────────────────────────────────────
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun AppProfileEditor(
-    profile: AppProfile,
-    appLabel: String,
-    appIcon: android.graphics.drawable.Drawable?,
-    saving: Boolean,
-    onDismiss: () -> Unit,
-    onSave: (AppProfile) -> Unit,
-) {
-    var draft by remember(profile) { mutableStateOf(profile) }
-    val iconBitmap by produceState<Bitmap?>(initialValue = null, key1 = profile.packageName) {
-        value = withContext(Dispatchers.IO) {
-            runCatching { appIcon?.let { drawableToBitmap(it) } }.getOrNull()
-        }
-    }
-
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState    = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        dragHandle    = { BottomSheetDefaults.DragHandle() },
-        shape         = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
-        containerColor = MaterialTheme.colorScheme.surface,
     ) {
-        Column(
-            Modifier.fillMaxWidth().verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp).padding(bottom = 32.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+        Column(content = content)
+    }
+}
+
+@Composable
+private fun AboutDivider() = HorizontalDivider(
+    modifier  = Modifier.padding(start = 56.dp, end = 16.dp),
+    color     = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f),
+    thickness = 0.5.dp
+)
+
+// ─────────────────────────────────────────────────────────────────────────────
+// LINK ROW
+// ─────────────────────────────────────────────────────────────────────────────
+
+@Composable
+private fun LinkRow(
+    icon    : ImageVector,
+    label   : String,
+    subtitle: String,
+    onClick : () -> Unit,
+) {
+    Surface(onClick = onClick, color = Color.Transparent) {
+        Row(
+            modifier              = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 13.dp),
+            verticalAlignment     = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-                AppIconView(bitmap = iconBitmap, label = appLabel, isEnabled = draft.enabled, size = 52.dp, cornerSize = 14.dp)
-                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    Text(appLabel, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold,
-                        maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    Text(draft.packageName, style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                }
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Switch(checked = draft.enabled, onCheckedChange = { draft = draft.copy(enabled = it) },
-                        colors = SwitchDefaults.colors(
-                            checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
-                            checkedTrackColor = MaterialTheme.colorScheme.primary))
-                    Text(if (draft.enabled) "Aktif" else "Nonaktif", style = MaterialTheme.typography.labelSmall,
-                        color = if (draft.enabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
-                }
+            Box(
+                modifier         = Modifier.size(40.dp).clip(RoundedCornerShape(12.dp))
+                    .background(MaterialTheme.colorScheme.secondaryContainer),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    icon, null,
+                    tint     = MaterialTheme.colorScheme.onSecondaryContainer,
+                    modifier = Modifier.size(20.dp)
+                )
             }
-            HorizontalDivider()
-            EditorSectionHeader(Icons.Filled.Memory, "CPU Governor")
-            GovernorSelector(selected = draft.cpuGovernor, onSelect = { draft = draft.copy(cpuGovernor = it) }, enabled = draft.enabled)
-            EditorSectionHeader(Icons.Filled.DisplaySettings, "Refresh Rate")
-            RefreshRateSelector(selected = draft.refreshRate, onSelect = { draft = draft.copy(refreshRate = it) }, enabled = draft.enabled)
-            EditorSectionHeader(Icons.Filled.Tune, "Tweaks Tambahan")
-            ExtraTweaksPanel(tweaks = draft.extraTweaks, enabled = draft.enabled, onChange = { draft = draft.copy(extraTweaks = it) })
-            Spacer(Modifier.height(4.dp))
-            Button(onClick = { onSave(draft) }, enabled = !saving,
-                modifier = Modifier.fillMaxWidth().height(50.dp), shape = RoundedCornerShape(14.dp)) {
-                if (saving) {
-                    CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp, color = MaterialTheme.colorScheme.onPrimary)
-                } else {
-                    Icon(Icons.Filled.Save, null, modifier = Modifier.size(18.dp))
-                    Spacer(Modifier.width(8.dp))
-                    Text("Simpan Profile", style = MaterialTheme.typography.labelLarge)
-                }
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                Text(
+                    label,
+                    style      = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color      = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
+            Icon(
+                Icons.Outlined.OpenInNew, null,
+                tint     = MaterialTheme.colorScheme.outline,
+                modifier = Modifier.size(15.dp)
+            )
         }
     }
-}
-
-@Composable
-private fun EditorSectionHeader(icon: ImageVector, title: String) {
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        Icon(icon, null, modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.primary)
-        Text(title, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold,
-            color = MaterialTheme.colorScheme.primary)
-    }
-}
-
-// ─── Governor Selector ────────────────────────────────────────────────────────
-
-@Composable
-private fun GovernorSelector(selected: String, onSelect: (String) -> Unit, enabled: Boolean) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            listOf("default", "performance", "powersave").forEach { gov ->
-                GovernorChip(label = CpuGovernors.labels[gov] ?: gov, icon = govIcon(gov),
-                    selected = selected == gov, enabled = enabled, modifier = Modifier.weight(1f), onClick = { onSelect(gov) })
-            }
-        }
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            listOf("ondemand", "conservative").forEach { gov ->
-                GovernorChip(label = CpuGovernors.labels[gov] ?: gov, icon = govIcon(gov),
-                    selected = selected == gov, enabled = enabled, modifier = Modifier.weight(1f), onClick = { onSelect(gov) })
-            }
-        }
-        AnimatedContent(selected, label = "gov_desc") { gov ->
-            val desc = govDescription(gov)
-            if (desc.isNotEmpty()) {
-                Surface(color = MaterialTheme.colorScheme.surfaceVariant, shape = RoundedCornerShape(10.dp)) {
-                    Row(Modifier.padding(10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.Top) {
-                        Icon(Icons.Outlined.Info, null, modifier = Modifier.size(13.dp).padding(top = 1.dp),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Text(desc, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun GovernorChip(label: String, icon: ImageVector, selected: Boolean, enabled: Boolean,
-    modifier: Modifier = Modifier, onClick: () -> Unit) {
-    val bg by animateColorAsState(
-        if (selected) MaterialTheme.colorScheme.primary
-        else if (!enabled) MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-        else MaterialTheme.colorScheme.surfaceVariant, label = "gov_chip_bg")
-    val fg by animateColorAsState(
-        if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant, label = "gov_chip_fg")
-    Surface(onClick = { if (enabled) onClick() }, modifier = modifier, shape = RoundedCornerShape(12.dp), color = bg,
-        border = if (!selected) BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.25f)) else null, enabled = enabled) {
-        Column(Modifier.padding(horizontal = 8.dp, vertical = 10.dp),
-            horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Icon(icon, null, modifier = Modifier.size(18.dp), tint = fg)
-            Text(label, style = MaterialTheme.typography.labelSmall,
-                fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
-                color = fg, maxLines = 1, overflow = TextOverflow.Ellipsis)
-        }
-    }
-}
-
-@Composable
-private fun RefreshRateSelector(selected: String, onSelect: (String) -> Unit, enabled: Boolean) {
-    Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        RefreshRates.all.forEach { rate ->
-            val isSelected = selected == rate
-            val bg by animateColorAsState(
-                if (isSelected) MaterialTheme.colorScheme.secondary
-                else if (!enabled) MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-                else MaterialTheme.colorScheme.surfaceVariant, label = "rr_chip_$rate")
-            val fg by animateColorAsState(
-                if (isSelected) MaterialTheme.colorScheme.onSecondary else MaterialTheme.colorScheme.onSurfaceVariant, label = "rr_fg_$rate")
-            Surface(onClick = { if (enabled) onSelect(rate) }, shape = RoundedCornerShape(12.dp), color = bg, enabled = enabled,
-                border = if (!isSelected) BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.25f)) else null) {
-                Column(Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    Icon(Icons.Filled.Refresh, null, modifier = Modifier.size(18.dp), tint = fg)
-                    Text(RefreshRates.labels[rate] ?: rate, style = MaterialTheme.typography.labelSmall,
-                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal, color = fg)
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun ExtraTweaksPanel(tweaks: AppExtraTweaks, enabled: Boolean, onChange: (AppExtraTweaks) -> Unit) {
-    Surface(shape = RoundedCornerShape(14.dp), color = MaterialTheme.colorScheme.surfaceContainer,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.15f))) {
-        Column(Modifier.fillMaxWidth()) {
-            TweakToggleRow(Icons.Outlined.BatterySaver, "Disable Doze", "Cegah Doze mode saat app aktif",
-                tweaks.disableDoze, enabled) { onChange(tweaks.copy(disableDoze = it)) }
-            HorizontalDivider(Modifier.padding(horizontal = 14.dp), thickness = 0.5.dp)
-            TweakToggleRow(Icons.Outlined.Speed, "Lock CPU Min Freq", "Kunci frekuensi minimum CPU agar tidak drop",
-                tweaks.lockCpuMin, enabled) { onChange(tweaks.copy(lockCpuMin = it)) }
-            HorizontalDivider(Modifier.padding(horizontal = 14.dp), thickness = 0.5.dp)
-            TweakToggleRow(Icons.Outlined.CleaningServices, "Kill Background Apps", "Matikan semua background app saat dibuka",
-                tweaks.killBackground, enabled) { onChange(tweaks.copy(killBackground = it)) }
-            HorizontalDivider(Modifier.padding(horizontal = 14.dp), thickness = 0.5.dp)
-            TweakToggleRow(Icons.Outlined.Videocam, "GPU Boost", "Set GPU governor ke performance",
-                tweaks.gpuBoost, enabled) { onChange(tweaks.copy(gpuBoost = it)) }
-            HorizontalDivider(Modifier.padding(horizontal = 14.dp), thickness = 0.5.dp)
-            TweakToggleRow(Icons.Outlined.Storage, "I/O Latency Opt", "Kurangi read-ahead I/O untuk latency lebih rendah",
-                tweaks.ioLatency, enabled, isLast = true) { onChange(tweaks.copy(ioLatency = it)) }
-        }
-    }
-}
-
-@Composable
-private fun TweakToggleRow(icon: ImageVector, title: String, subtitle: String, checked: Boolean,
-    enabled: Boolean, isLast: Boolean = false, onChange: (Boolean) -> Unit) {
-    Row(Modifier.fillMaxWidth().clickable(enabled = enabled) { onChange(!checked) }
-        .padding(horizontal = 14.dp, vertical = 11.dp),
-        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        Box(Modifier.size(34.dp).clip(RoundedCornerShape(10.dp)).background(
-            if (checked && enabled) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant),
-            contentAlignment = Alignment.Center) {
-            Icon(icon, null, modifier = Modifier.size(17.dp),
-                tint = if (checked && enabled) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant)
-        }
-        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(1.dp)) {
-            Text(title, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Medium)
-            Text(subtitle, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        }
-        Switch(checked = checked, onCheckedChange = { if (enabled) onChange(it) }, enabled = enabled,
-            modifier = Modifier.scale(0.75f),
-            colors = SwitchDefaults.colors(checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
-                checkedTrackColor = MaterialTheme.colorScheme.primary))
-    }
-}
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-private fun drawableToBitmap(drawable: android.graphics.drawable.Drawable): Bitmap {
-    if (drawable is BitmapDrawable && drawable.bitmap != null) return drawable.bitmap
-    val w = drawable.intrinsicWidth.coerceIn(1, 512)
-    val h = drawable.intrinsicHeight.coerceIn(1, 512)
-    val bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
-    val canvas = Canvas(bitmap)
-    drawable.setBounds(0, 0, canvas.width, canvas.height)
-    drawable.draw(canvas)
-    return bitmap
-}
-
-private fun govIcon(gov: String): ImageVector = when (gov) {
-    "performance"  -> Icons.Filled.FlashOn
-    "powersave"    -> Icons.Filled.BatterySaver
-    "ondemand"     -> Icons.Filled.AutoMode
-    "conservative" -> Icons.Filled.TrendingDown
-    "schedutil"    -> Icons.Filled.Schedule
-    "interactive"  -> Icons.Filled.TouchApp
-    else           -> Icons.Filled.Tune
-}
-
-private fun govDescription(gov: String): String = when (gov) {
-    "default"      -> "Gunakan governor default sistem. Tidak ada perubahan yang diterapkan."
-    "performance"  -> "CPU berjalan di frekuensi maksimum terus-menerus. Performa tertinggi, konsumsi baterai besar."
-    "powersave"    -> "CPU berjalan di frekuensi minimum. Hemat baterai, performa rendah."
-    "ondemand"     -> "CPU naik cepat saat load tinggi, turun saat idle. Balance antara performa dan baterai."
-    "conservative" -> "CPU naik/turun perlahan mengikuti load. Lebih hemat dari ondemand, lebih lambat merespons."
-    "schedutil"    -> "Berdasarkan scheduler kernel, responsif dan efisien. Direkomendasikan untuk kernel modern."
-    "interactive"  -> "Dioptimasi untuk interaksi user, cepat naik saat ada input layar."
-    else           -> ""
 }
