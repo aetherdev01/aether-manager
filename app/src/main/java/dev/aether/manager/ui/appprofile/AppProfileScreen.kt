@@ -273,17 +273,15 @@ private fun ReadyContent(state: AppsUiState.Ready, vm: AppProfileViewModel) {
             EmptyListHint(searchQuery.isNotEmpty())
         } else {
             LazyColumn(
-                contentPadding    = PaddingValues(horizontal = 14.dp, vertical = 10.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp),
-                modifier          = Modifier.fillMaxSize()
+                contentPadding      = PaddingValues(horizontal = 14.dp, vertical = 10.dp),
+                verticalArrangement = Arrangement.spacedBy(0.dp),
+                modifier            = Modifier.fillMaxSize()
             ) {
-                items(filtered, key = { it.packageName }) { app ->
-                    val profile = state.profiles[app.packageName]
-                    AppListItem(
-                        app      = app,
-                        profile  = profile,
-                        onClick  = { vm.openEditor(app) },
-                        onDelete = if (profile != null) {{ vm.deleteProfile(app.packageName) }} else null,
+                item(key = "group_all") {
+                    AppListGrouped(
+                        items        = filtered.map { it to state.profiles[it.packageName] },
+                        onItemClick  = { vm.openEditor(it) },
+                        onItemDelete = { vm.deleteProfile(it) },
                     )
                 }
                 item { Spacer(Modifier.height(80.dp)) }
@@ -339,7 +337,6 @@ private fun AppStatChip(
 
 // ─── Search / Filter bar ──────────────────────────────────────────────────────
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SearchFilterBar(
     query: String,
@@ -351,42 +348,43 @@ private fun SearchFilterBar(
 
     val borderColor by animateColorAsState(
         if (isFocused) MaterialTheme.colorScheme.primary
-        else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+        else MaterialTheme.colorScheme.outline.copy(alpha = 0.35f),
         label = "search_border"
     )
     val iconTint by animateColorAsState(
         if (isFocused || query.isNotEmpty()) MaterialTheme.colorScheme.primary
-        else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+        else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
         label = "search_icon"
     )
 
     BasicTextField(
-        value              = query,
-        onValueChange      = onQueryChange,
-        singleLine         = true,
-        interactionSource  = interactionSource,
-        textStyle          = MaterialTheme.typography.bodyMedium.copy(
+        value             = query,
+        onValueChange     = onQueryChange,
+        singleLine        = true,
+        interactionSource = interactionSource,
+        textStyle         = MaterialTheme.typography.bodyMedium.copy(
             color = MaterialTheme.colorScheme.onSurface,
         ),
-        cursorBrush        = SolidColor(MaterialTheme.colorScheme.primary),
-        modifier           = Modifier.fillMaxWidth(),
-        decorationBox      = { inner ->
+        cursorBrush       = SolidColor(MaterialTheme.colorScheme.primary),
+        modifier          = Modifier.fillMaxWidth(),
+        decorationBox     = { inner ->
             Surface(
-                shape  = RoundedCornerShape(16.dp),
-                color  = MaterialTheme.colorScheme.surfaceContainerHigh,
+                shape  = RoundedCornerShape(14.dp),
+                color  = MaterialTheme.colorScheme.surface,
                 border = BorderStroke(1.5.dp, borderColor),
+                tonalElevation = 1.dp,
             ) {
                 Row(
                     Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 14.dp, vertical = 13.dp),
+                        .padding(horizontal = 15.dp, vertical = 14.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
                     Icon(
                         Icons.Outlined.Search,
                         null,
-                        modifier = Modifier.size(19.dp),
+                        modifier = Modifier.size(20.dp),
                         tint     = iconTint,
                     )
                     Box(Modifier.weight(1f)) {
@@ -394,28 +392,28 @@ private fun SearchFilterBar(
                             Text(
                                 s.appProfileSearchHint,
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.45f),
                             )
                         }
                         inner()
                     }
                     AnimatedVisibility(
                         visible = query.isNotEmpty(),
-                        enter   = fadeIn() + scaleIn(initialScale = 0.8f),
-                        exit    = fadeOut() + scaleOut(targetScale = 0.8f),
+                        enter   = fadeIn() + scaleIn(initialScale = 0.75f),
+                        exit    = fadeOut() + scaleOut(targetScale = 0.75f),
                     ) {
                         Surface(
-                            onClick = { onQueryChange("") },
-                            shape   = CircleShape,
-                            color   = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.12f),
-                            modifier = Modifier.size(22.dp),
+                            onClick  = { onQueryChange("") },
+                            shape    = CircleShape,
+                            color    = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f),
+                            modifier = Modifier.size(24.dp),
                         ) {
                             Icon(
                                 Icons.Filled.Clear,
                                 null,
                                 modifier = Modifier
                                     .fillMaxSize()
-                                    .padding(4.dp),
+                                    .padding(5.dp),
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         }
@@ -446,7 +444,40 @@ private fun EmptyListHint(isSearch: Boolean) {
     }
 }
 
-// ─── App List Item ────────────────────────────────────────────────────────────
+// ─── App List Item (grouped style) ───────────────────────────────────────────
+
+@Composable
+fun AppListGrouped(
+    items: List<Pair<AppInfo, AppProfile?>>,
+    onItemClick: (AppInfo) -> Unit,
+    onItemDelete: (String) -> Unit,
+) {
+    Surface(
+        shape     = RoundedCornerShape(18.dp),
+        color     = MaterialTheme.colorScheme.surfaceContainerHigh,
+        border    = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f)),
+        tonalElevation = 2.dp,
+        modifier  = Modifier.fillMaxWidth(),
+    ) {
+        Column {
+            items.forEachIndexed { index, (app, profile) ->
+                AppListItem(
+                    app      = app,
+                    profile  = profile,
+                    onClick  = { onItemClick(app) },
+                    onDelete = if (profile != null) {{ onItemDelete(app.packageName) }} else null,
+                )
+                if (index < items.lastIndex) {
+                    HorizontalDivider(
+                        modifier  = Modifier.padding(start = 72.dp, end = 0.dp),
+                        thickness = 0.5.dp,
+                        color     = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+                    )
+                }
+            }
+        }
+    }
+}
 
 @Composable
 private fun AppListItem(
@@ -465,23 +496,20 @@ private fun AppListItem(
         }
     }
 
-    val itemBg by animateColorAsState(
-        if (isEnabled) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.25f)
-        else MaterialTheme.colorScheme.surfaceContainer,
-        label = "item_bg"
+    val rowBg by animateColorAsState(
+        if (isEnabled) MaterialTheme.colorScheme.primary.copy(alpha = 0.08f)
+        else Color.Transparent,
+        label = "row_bg"
     )
 
-    Surface(
-        onClick  = onClick,
-        shape    = RoundedCornerShape(16.dp),
-        color    = itemBg,
-        border   = if (isEnabled)
-            BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
-        else null,
-        modifier = Modifier.fillMaxWidth(),
+    Box(
+        Modifier
+            .fillMaxWidth()
+            .background(rowBg)
+            .clickable(onClick = onClick)
     ) {
         Row(
-            Modifier.padding(horizontal = 13.dp, vertical = 11.dp),
+            Modifier.padding(horizontal = 14.dp, vertical = 11.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
@@ -492,15 +520,15 @@ private fun AppListItem(
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(1.dp)) {
                 Text(
                     app.label,
-                    style    = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
+                    style      = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Medium,
+                    maxLines   = 1,
+                    overflow   = TextOverflow.Ellipsis,
                 )
                 Text(
                     app.packageName,
                     style    = MaterialTheme.typography.labelSmall,
-                    color    = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                    color    = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.65f),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -517,17 +545,17 @@ private fun AppListItem(
                 }
             }
 
-            // Trailing actions
+            // Trailing
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(0.dp),
+                horizontalArrangement = Arrangement.spacedBy(2.dp),
             ) {
-                AnimatedVisibility(visible = isEnabled, enter = fadeIn() + scaleIn(initialScale = 0.7f), exit = fadeOut()) {
+                AnimatedVisibility(visible = isEnabled, enter = fadeIn() + scaleIn(initialScale = 0.7f), exit = fadeOut() + scaleOut(targetScale = 0.7f)) {
                     Icon(
                         Icons.Filled.CheckCircle,
                         null,
                         tint     = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(17.dp),
+                        modifier = Modifier.size(16.dp),
                     )
                 }
                 if (onDelete != null) {
@@ -536,15 +564,15 @@ private fun AppListItem(
                             Icons.Outlined.DeleteOutline,
                             null,
                             modifier = Modifier.size(17.dp),
-                            tint     = MaterialTheme.colorScheme.error.copy(alpha = 0.55f),
+                            tint     = MaterialTheme.colorScheme.error.copy(alpha = 0.5f),
                         )
                     }
                 }
                 Icon(
                     Icons.Filled.ChevronRight,
                     null,
-                    modifier = Modifier.size(18.dp),
-                    tint     = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+                    modifier = Modifier.size(17.dp),
+                    tint     = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.35f),
                 )
             }
         }
