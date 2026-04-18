@@ -19,11 +19,17 @@ import dev.aether.manager.i18n.LocalStrings
 import dev.aether.manager.util.BackupManager
 
 @Composable
-fun BackupScreen(vm: MainViewModel) {
+fun BackupScreen(
+    vm              : MainViewModel,
+    onResetProfiles : () -> Unit,
+    onResetMonitor  : () -> Unit,
+) {
     val s             = LocalStrings.current
     val backupList    by vm.backupList.collectAsState()
     val working       by vm.backupWorking.collectAsState()
     var showReset     by remember { mutableStateOf(false) }
+    var showResetProfiles by remember { mutableStateOf(false) }
+    var showResetMonitor  by remember { mutableStateOf(false) }
     var restoreTarget by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(Unit) { vm.loadBackups() }
@@ -74,6 +80,42 @@ fun BackupScreen(vm: MainViewModel) {
             Icon(Icons.Outlined.RestartAlt, null, Modifier.size(18.dp))
             Spacer(Modifier.width(8.dp))
             Text(s.settingsBtnResetAll, fontWeight = FontWeight.SemiBold)
+        }
+
+        // ── Reset App Profile ─────────────────────────────────────────────
+        OutlinedButton(
+            onClick  = { showResetProfiles = true },
+            enabled  = !working,
+            modifier = Modifier.fillMaxWidth().height(50.dp),
+            shape    = RoundedCornerShape(14.dp),
+            colors   = ButtonDefaults.outlinedButtonColors(
+                contentColor = MaterialTheme.colorScheme.error
+            ),
+            border   = androidx.compose.foundation.BorderStroke(
+                1.dp, MaterialTheme.colorScheme.error
+            )
+        ) {
+            Icon(Icons.Outlined.ManageAccounts, null, Modifier.size(18.dp))
+            Spacer(Modifier.width(8.dp))
+            Text(s.settingsBtnResetProfiles, fontWeight = FontWeight.Medium)
+        }
+
+        // ── Reset Monitor ─────────────────────────────────────────────────
+        OutlinedButton(
+            onClick  = { showResetMonitor = true },
+            enabled  = !working,
+            modifier = Modifier.fillMaxWidth().height(50.dp),
+            shape    = RoundedCornerShape(14.dp),
+            colors   = ButtonDefaults.outlinedButtonColors(
+                contentColor = MaterialTheme.colorScheme.tertiary
+            ),
+            border   = androidx.compose.foundation.BorderStroke(
+                1.dp, MaterialTheme.colorScheme.tertiary
+            )
+        ) {
+            Icon(Icons.Outlined.MonitorHeart, null, Modifier.size(18.dp))
+            Spacer(Modifier.width(8.dp))
+            Text(s.settingsBtnResetMonitor, fontWeight = FontWeight.Medium)
         }
 
         // ── Daftar backup ─────────────────────────────────────────────────
@@ -152,6 +194,46 @@ fun BackupScreen(vm: MainViewModel) {
             },
             dismissButton = {
                 TextButton(onClick = { restoreTarget = null }) { Text(s2.settingsBtnCancel) }
+            }
+        )
+    }
+
+    // ── Confirm reset app profiles ────────────────────────────────────────
+    if (showResetProfiles) {
+        val s2 = LocalStrings.current
+        AlertDialog(
+            onDismissRequest = { showResetProfiles = false },
+            icon  = { Icon(Icons.Outlined.Warning, null, tint = MaterialTheme.colorScheme.error) },
+            title = { Text(s2.settingsResetProfilesTitle) },
+            text  = { Text(s2.settingsResetProfilesDesc) },
+            confirmButton = {
+                TextButton(
+                    onClick = { showResetProfiles = false; onResetProfiles() },
+                    colors  = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                ) { Text(s2.settingsResetConfirm) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showResetProfiles = false }) { Text(s2.settingsBtnCancel) }
+            }
+        )
+    }
+
+    // ── Confirm reset monitor ─────────────────────────────────────────────
+    if (showResetMonitor) {
+        val s2 = LocalStrings.current
+        AlertDialog(
+            onDismissRequest = { showResetMonitor = false },
+            icon  = { Icon(Icons.Outlined.MonitorHeart, null, tint = MaterialTheme.colorScheme.tertiary) },
+            title = { Text(s2.settingsResetMonitorTitle) },
+            text  = { Text(s2.settingsResetMonitorDesc) },
+            confirmButton = {
+                TextButton(
+                    onClick = { showResetMonitor = false; onResetMonitor() },
+                    colors  = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.tertiary)
+                ) { Text(s2.settingsResetConfirm) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showResetMonitor = false }) { Text(s2.settingsBtnCancel) }
             }
         )
     }

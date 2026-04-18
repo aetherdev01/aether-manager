@@ -24,13 +24,17 @@ import dev.aether.manager.util.BackupManager
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
-    vm      : MainViewModel,
-    onBack  : () -> Unit,
+    vm              : MainViewModel,
+    onBack          : () -> Unit,
+    onResetProfiles : () -> Unit,
+    onResetMonitor  : () -> Unit,
 ) {
     val s             = LocalStrings.current
     val backupList    by vm.backupList.collectAsState()
     val working       by vm.backupWorking.collectAsState()
-    var showReset     by remember { mutableStateOf(false) }
+    var showReset         by remember { mutableStateOf(false) }
+    var showResetProfiles by remember { mutableStateOf(false) }
+    var showResetMonitor  by remember { mutableStateOf(false) }
     var restoreTarget by remember { mutableStateOf<String?>(null) }
     val scrollState   = rememberScrollState()
 
@@ -111,6 +115,45 @@ fun SettingsScreen(
                     Icon(Icons.Outlined.RestartAlt, null, Modifier.size(18.dp))
                     Spacer(Modifier.width(6.dp))
                     Text(s.settingsBtnResetDefault, fontWeight = FontWeight.SemiBold)
+                }
+            }
+
+            // Reset App Profiles & Monitor
+            Row(
+                modifier              = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                OutlinedButton(
+                    onClick  = { showResetProfiles = true },
+                    enabled  = !working,
+                    modifier = Modifier.weight(1f).height(50.dp),
+                    shape    = RoundedCornerShape(14.dp),
+                    colors   = ButtonDefaults.outlinedButtonColors(
+                        contentColor = MaterialTheme.colorScheme.error
+                    ),
+                    border   = androidx.compose.foundation.BorderStroke(
+                        1.dp, MaterialTheme.colorScheme.error
+                    )
+                ) {
+                    Icon(Icons.Outlined.ManageAccounts, null, Modifier.size(18.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text(s.settingsBtnResetProfiles, fontWeight = FontWeight.Medium, maxLines = 1)
+                }
+                OutlinedButton(
+                    onClick  = { showResetMonitor = true },
+                    enabled  = !working,
+                    modifier = Modifier.weight(1f).height(50.dp),
+                    shape    = RoundedCornerShape(14.dp),
+                    colors   = ButtonDefaults.outlinedButtonColors(
+                        contentColor = MaterialTheme.colorScheme.tertiary
+                    ),
+                    border   = androidx.compose.foundation.BorderStroke(
+                        1.dp, MaterialTheme.colorScheme.tertiary
+                    )
+                ) {
+                    Icon(Icons.Outlined.MonitorHeart, null, Modifier.size(18.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text(s.settingsBtnResetMonitor, fontWeight = FontWeight.Medium, maxLines = 1)
                 }
             }
 
@@ -204,6 +247,44 @@ fun SettingsScreen(
             },
             dismissButton = {
                 TextButton(onClick = { restoreTarget = null }) { Text(s.settingsBtnCancel) }
+            }
+        )
+    }
+
+    // ── Dialog: Confirm reset app profiles ────────────────────────────────
+    if (showResetProfiles) {
+        AlertDialog(
+            onDismissRequest = { showResetProfiles = false },
+            icon  = { Icon(Icons.Outlined.Warning, null, tint = MaterialTheme.colorScheme.error) },
+            title = { Text(s.settingsResetProfilesTitle) },
+            text  = { Text(s.settingsResetProfilesDesc) },
+            confirmButton = {
+                TextButton(
+                    onClick = { showResetProfiles = false; onResetProfiles() },
+                    colors  = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                ) { Text(s.settingsResetConfirm) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showResetProfiles = false }) { Text(s.settingsBtnCancel) }
+            }
+        )
+    }
+
+    // ── Dialog: Confirm reset monitor ─────────────────────────────────────
+    if (showResetMonitor) {
+        AlertDialog(
+            onDismissRequest = { showResetMonitor = false },
+            icon  = { Icon(Icons.Outlined.MonitorHeart, null, tint = MaterialTheme.colorScheme.tertiary) },
+            title = { Text(s.settingsResetMonitorTitle) },
+            text  = { Text(s.settingsResetMonitorDesc) },
+            confirmButton = {
+                TextButton(
+                    onClick = { showResetMonitor = false; onResetMonitor() },
+                    colors  = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.tertiary)
+                ) { Text(s.settingsResetConfirm) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showResetMonitor = false }) { Text(s.settingsBtnCancel) }
             }
         )
     }

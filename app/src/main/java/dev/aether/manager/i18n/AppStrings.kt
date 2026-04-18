@@ -230,6 +230,14 @@ data class AppStrings(
     val appProfileGpuBoostDesc: String,
     val appProfileIoLatency: String,
     val appProfileIoLatencyDesc: String,
+
+    // ── Backup screen — reset app profile & monitor ──────────
+    val settingsBtnResetProfiles: String,
+    val settingsResetProfilesTitle: String,
+    val settingsResetProfilesDesc: String,
+    val settingsBtnResetMonitor: String,
+    val settingsResetMonitorTitle: String,
+    val settingsResetMonitorDesc: String,
 )
 
 val LocalStrings = staticCompositionLocalOf<AppStrings> {

@@ -224,4 +224,11 @@ val StringsEn = AppStrings(
     appProfileGpuBoostDesc = "Set GPU governor to performance",
     appProfileIoLatency = "I/O Latency Opt",
     appProfileIoLatencyDesc = "Reduce read-ahead I/O for lower latency",
+
+    settingsBtnResetProfiles = "Reset App Profiles",
+    settingsResetProfilesTitle = "Reset All App Profiles?",
+    settingsResetProfilesDesc = "All app profiles will be permanently deleted and the monitor stopped. This cannot be undone.",
+    settingsBtnResetMonitor = "Reset Monitor",
+    settingsResetMonitorTitle = "Reset Monitor?",
+    settingsResetMonitorDesc = "The monitor process will be force-stopped. Saved profiles will not be deleted.",
 )

@@ -110,6 +110,24 @@ class AppProfileViewModel(application: Application) : AndroidViewModel(applicati
         snack("Profile dihapus")
     }
 
+    fun resetMonitor() = viewModelScope.launch(Dispatchers.IO) {
+        AppProfileRepository.resetMonitor()
+        val s = _state.value
+        if (s is AppsUiState.Ready) {
+            _state.value = s.copy(monitorRunning = false)
+        }
+        snack("Monitor di-reset ✓")
+    }
+
+    fun resetAllProfiles() = viewModelScope.launch(Dispatchers.IO) {
+        AppProfileRepository.resetAllProfiles()
+        val s = _state.value
+        if (s is AppsUiState.Ready) {
+            _state.value = s.copy(profiles = emptyMap(), monitorRunning = false)
+        }
+        snack("Semua app profile dihapus ✓")
+    }
+
     fun snack(msg: String) { _snack.value = msg }
     fun clearSnack() { _snack.value = null }
 }

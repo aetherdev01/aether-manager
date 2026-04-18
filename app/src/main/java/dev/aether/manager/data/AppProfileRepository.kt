@@ -111,6 +111,19 @@ object AppProfileRepository {
         RootUtils.sh("pkill -f app_monitor.sh 2>/dev/null || true")
     }
 
+    suspend fun resetMonitor() = withContext(Dispatchers.IO) {
+        RootUtils.sh("pkill -f app_monitor.sh 2>/dev/null || true")
+    }
+
+    suspend fun resetAllProfiles() = withContext(Dispatchers.IO) {
+        // Stop monitor dulu sebelum hapus profile
+        RootUtils.sh("pkill -f app_monitor.sh 2>/dev/null || true")
+        // Hapus semua profile JSON
+        RootUtils.sh("rm -f $PROFILE_DIR/*.json 2>/dev/null || true")
+        // Hapus script monitor agar di-regenerate saat profile baru dibuat
+        RootUtils.sh("rm -f $MONITOR_SCRIPT $SERVICE_SCRIPT 2>/dev/null || true")
+    }
+
     suspend fun isMonitorRunning(): Boolean {
         val out = RootUtils.sh("pgrep -f app_monitor.sh").stdout.trim()
         return out.isNotEmpty()

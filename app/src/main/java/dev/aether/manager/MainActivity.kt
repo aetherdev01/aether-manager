@@ -101,8 +101,10 @@ fun AetherApp(vm: MainViewModel, apVm: AppProfileViewModel, updateVm: UpdateView
     // ── SettingsScreen overlay (full-screen, di atas Scaffold) ────────────
     if (showSettings) {
         SettingsScreen(
-            vm     = vm,
-            onBack = { showSettings = false }
+            vm              = vm,
+            onBack          = { showSettings = false },
+            onResetProfiles = { apVm.resetAllProfiles() },
+            onResetMonitor  = { apVm.resetMonitor() }
         )
         return
     }
