@@ -1,9 +1,7 @@
 package dev.aether.manager.data
 
-import android.app.Activity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import dev.aether.manager.ads.InterstitialAdManager
 import dev.aether.manager.util.BackupManager
 import dev.aether.manager.util.DeviceInfo
 import dev.aether.manager.util.RootManager
@@ -248,17 +246,13 @@ class MainViewModel : ViewModel() {
         _applyingTweak.value = false
     }
 
-    fun applyAll(activity: Activity? = null) = viewModelScope.launch {
+    fun applyAll() = viewModelScope.launch {
         _applyingTweak.value = true
         val map = RootUtils.readTweaksConf()
         RootUtils.applyTweaksDirect(map)
         delay(400)
         _applyingTweak.value = false
         snack("Tweaks applied ✓")
-        // Show interstitial after apply — respects cooldown, skippable
-        if (activity != null) {
-            InterstitialAdManager.showIfReady(activity)
-        }
     }
 
     fun toggleSafeMode(enable: Boolean) = viewModelScope.launch {

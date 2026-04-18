@@ -16,8 +16,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.activity.compose.LocalActivity
-import dev.aether.manager.ads.InterstitialAdManager
 import dev.aether.manager.data.MainViewModel
 import dev.aether.manager.i18n.LocalStrings
 import dev.aether.manager.ui.home.TabSectionTitle
@@ -32,7 +30,6 @@ fun SettingsScreen(
     onResetMonitor  : () -> Unit,
 ) {
     val s             = LocalStrings.current
-    val activity      = LocalActivity.current
     val backupList    by vm.backupList.collectAsState()
     val working       by vm.backupWorking.collectAsState()
     var showReset         by remember { mutableStateOf(false) }
@@ -97,7 +94,6 @@ fun SettingsScreen(
             ) {
                 OutlinedButton(
                     onClick  = {
-                        if (activity != null) InterstitialAdManager.showIfReady(activity)
                         vm.createBackup()
                     },
                     enabled  = !working,
@@ -229,7 +225,7 @@ fun SettingsScreen(
             text  = { Text(s.settingsResetDesc) },
             confirmButton = {
                 TextButton(
-                    onClick = { showReset = false; if (activity != null) InterstitialAdManager.showIfReady(activity); vm.resetToDefaults() },
+                    onClick = { showReset = false; vm.resetToDefaults() },
                     colors  = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
                 ) { Text(s.settingsResetConfirm) }
             },
@@ -247,7 +243,7 @@ fun SettingsScreen(
             title = { Text(s.settingsRestoreTitle) },
             text  = { Text(s.settingsRestoreDesc) },
             confirmButton = {
-                TextButton(onClick = { restoreTarget = null; if (activity != null) InterstitialAdManager.showIfReady(activity); vm.restoreBackup(fname) }) {
+                TextButton(onClick = { restoreTarget = null; vm.restoreBackup(fname) }) {
                     Text(s.settingsRestoreConfirm)
                 }
             },
@@ -266,7 +262,7 @@ fun SettingsScreen(
             text  = { Text(s.settingsResetProfilesDesc) },
             confirmButton = {
                 TextButton(
-                    onClick = { showResetProfiles = false; if (activity != null) InterstitialAdManager.showIfReady(activity); onResetProfiles() },
+                    onClick = { showResetProfiles = false; onResetProfiles() },
                     colors  = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
                 ) { Text(s.settingsResetConfirm) }
             },
@@ -285,7 +281,7 @@ fun SettingsScreen(
             text  = { Text(s.settingsResetMonitorDesc) },
             confirmButton = {
                 TextButton(
-                    onClick = { showResetMonitor = false; if (activity != null) InterstitialAdManager.showIfReady(activity); onResetMonitor() },
+                    onClick = { showResetMonitor = false; onResetMonitor() },
                     colors  = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.tertiary)
                 ) { Text(s.settingsResetConfirm) }
             },

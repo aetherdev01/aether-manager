@@ -1,14 +1,9 @@
 package dev.aether.manager.i18n
 
 val StringsId = AppStrings(
-    // Splash
-    splashSubtitle = "System Optimizer",
-
     // Setup
     setupWelcomeTitle = "Selamat Datang!",
     setupWelcomeDesc = "Aether Manager adalah tool optimasi sistem Android yang dirancang untuk meningkatkan performa, mengelola penggunaan memori, dan menerapkan berbagai tweak sistem. Dengan kontrol yang mudah, kamu bisa membuat perangkat lebih cepat, stabil, dan responsif.",
-    setupLangTitle = "Pilih Bahasa",
-    setupLangDesc = "Pilih bahasa yang ingin kamu gunakan. Bisa diganti kapan saja melalui Pengaturan.",
     setupRootTitle = "Root Access",
     setupRootDesc = "Aplikasi ini membutuhkan akses root (Magisk / KernelSU / APatch). Pastikan izin superuser telah diberikan untuk Aether Manager.",
     setupRootCta = "Cek Root Sekarang",
@@ -39,7 +34,6 @@ val StringsId = AppStrings(
     setupBtnNext = "Lanjut",
     setupBtnStart = "Mulai",
     setupBtnBack = "Kembali",
-    setupBtnSkip = "Lewati",
     setupBtnRetry = "Coba Lagi",
     setupRootRequired = "Izin ini wajib diberikan untuk melanjutkan",
     setupAllPermsGranted = "Semua izin terpenuhi",
@@ -47,43 +41,24 @@ val StringsId = AppStrings(
     // Nav
     navHome = "Beranda",
     navTweak = "Tweak",
-    navLog = "Log",
     navAbout = "Tentang",
     navApps = "Aplikasi",
 
     // Home
     homeSystemStatus = "Perangkat",
     homeMonitor = "Monitor",
-    homeRefresh = "Refresh",
     homeRetry = "Coba Lagi",
-    homeLabelCpu = "CPU",
-    homeLabelGpu = "GPU",
-    homeLabelRam = "RAM",
-    homeLabelTemp = "SUHU",
-    homeLabelStorage = "PENYIMPANAN",
-    homeLabelUptime = "Waktu Aktif",
-    homeRamUsed = "%s digunakan",
-    homeUptimeSince = "sejak boot terakhir",
-    homeStorageOf = "dari %.1f GB",
-    homeTempCpu = "CPU",
-    homeTempBat = "Baterai",
-    homeTempOverheat = "⚠ CPU overheat!",
-    homeSelinux = "SELinux",
-    homeProfile = "Profile",
-    homeBootloopTitle = "Bootloop Guard Aktif",
-    homeBootloopSub = "Boot count: %d",
     homeLabelOs = "OS",
     homeLabelKernel = "Kernel",
     homeLabelSoc = "SoC",
-    homeLabelBattery = "Baterai",
-    homeLabelSwap = "Swap",
     homeLabelGovernor = "Governor",
-    homeLabelNetwork = "Jaringan",
-    homeQuickInfo = "Info Perangkat",
+    homeLabelUptime = "Waktu Aktif",
+    homeTempCpu = "CPU",
+    homeTempBat = "Baterai",
+    homeSelinux = "SELinux",
 
     // Tweak
     tweakPerformanceProfile = "Performance Profile",
-    tweakApplyAll = "Terapkan Semua Tweak",
     tweakSectionCpu = "CPU & Kernel",
     tweakSectionMemory = "Memori",
     tweakSectionIo = "I/O Scheduler",
@@ -127,25 +102,12 @@ val StringsId = AppStrings(
 
     // About
     aboutSectionDev = "Developer",
-    aboutSectionAppInfo = "Informasi Aplikasi",
     aboutSectionLinks = "Komunitas",
     aboutDevDesc = "Android & Root Module Developer",
-    aboutApp = "Aplikasi",
-    aboutVersion = "Versi",
-    aboutMode = "Mode",
-    aboutModeValue = "Standalone",
-    aboutSupport = "Dukungan",
-    aboutRoot = "Root",
-    aboutSelinux = "SELinux",
-    aboutSoc = "SoC",
     aboutGithub = "GitHub",
     aboutTelegram = "Channel",
     aboutSaweria = "saweria.co/AetherDev",
     aboutSaweriaLabel = "Saweria",
-    aboutLicense = "Aether Manager adalah software gratis dan open source yang didistribusikan di bawah Lisensi MIT.",
-    aboutTagModuleDev = "Module Dev",
-    aboutTagOpenSource = "Open Source",
-    aboutTagAndroid = "Android",
 
     // Log / Reboot
     logRebootOptions = "Opsi Reboot",

@@ -17,7 +17,7 @@ object AdScheduler {
     private const val TAG = "AdScheduler"
 
     /** Interval antar iklan (default: 5 menit) */
-    var intervalMs: Long = 1 * 60 * 1_000L
+    var intervalMs: Long = 2 * 60 * 1_000L
 
     /** Delay pertama setelah app dibuka sebelum iklan pertama tampil */
     var startDelayMs: Long = 60 * 1_000L  // 1 menit

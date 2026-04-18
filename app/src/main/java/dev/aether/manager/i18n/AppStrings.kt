@@ -7,14 +7,9 @@ import androidx.compose.runtime.staticCompositionLocalOf
  * Add new strings here, then provide values in StringsId and StringsEn.
  */
 data class AppStrings(
-    // ── Splash ───────────────────────────────────────────────
-    val splashSubtitle: String,
-
     // ── Setup ────────────────────────────────────────────────
     val setupWelcomeTitle: String,
     val setupWelcomeDesc: String,
-    val setupLangTitle: String,
-    val setupLangDesc: String,
     val setupRootTitle: String,
     val setupRootDesc: String,
     val setupRootCta: String,
@@ -45,7 +40,6 @@ data class AppStrings(
     val setupBtnNext: String,
     val setupBtnStart: String,
     val setupBtnBack: String,
-    val setupBtnSkip: String,
     val setupBtnRetry: String,
     val setupRootRequired: String,
     val setupAllPermsGranted: String,
@@ -53,43 +47,24 @@ data class AppStrings(
     // ── Nav ──────────────────────────────────────────────────
     val navHome: String,
     val navTweak: String,
-    val navLog: String,
     val navAbout: String,
     val navApps: String,
 
     // ── Home ─────────────────────────────────────────────────
     val homeSystemStatus: String,
     val homeMonitor: String,
-    val homeRefresh: String,
     val homeRetry: String,
-    val homeLabelCpu: String,
-    val homeLabelGpu: String,
-    val homeLabelRam: String,
-    val homeLabelTemp: String,
-    val homeLabelStorage: String,
-    val homeLabelUptime: String,
-    val homeRamUsed: String,       // "%s used"
-    val homeUptimeSince: String,
-    val homeStorageOf: String,     // "of %.1f GB"
-    val homeTempCpu: String,
-    val homeTempBat: String,
-    val homeTempOverheat: String,
-    val homeSelinux: String,
-    val homeProfile: String,
-    val homeBootloopTitle: String,
-    val homeBootloopSub: String,   // "Boot count: %d"
     val homeLabelOs: String,
     val homeLabelKernel: String,
     val homeLabelSoc: String,
-    val homeLabelBattery: String,
-    val homeLabelSwap: String,
     val homeLabelGovernor: String,
-    val homeLabelNetwork: String,
-    val homeQuickInfo: String,
+    val homeLabelUptime: String,
+    val homeTempCpu: String,
+    val homeTempBat: String,
+    val homeSelinux: String,
 
     // ── Tweak ────────────────────────────────────────────────
     val tweakPerformanceProfile: String,
-    val tweakApplyAll: String,
     val tweakSectionCpu: String,
     val tweakSectionMemory: String,
     val tweakSectionIo: String,
@@ -133,25 +108,12 @@ data class AppStrings(
 
     // ── About ────────────────────────────────────────────────
     val aboutSectionDev: String,
-    val aboutSectionAppInfo: String,
     val aboutSectionLinks: String,
     val aboutDevDesc: String,
-    val aboutApp: String,
-    val aboutVersion: String,
-    val aboutMode: String,
-    val aboutModeValue: String,
-    val aboutSupport: String,
-    val aboutRoot: String,
-    val aboutSelinux: String,
-    val aboutSoc: String,
     val aboutGithub: String,
     val aboutTelegram: String,
     val aboutSaweria: String,
     val aboutSaweriaLabel: String,
-    val aboutLicense: String,
-    val aboutTagModuleDev: String,
-    val aboutTagOpenSource: String,
-    val aboutTagAndroid: String,
 
     // ── Log / Reboot sheet ───────────────────────────────────
     val logRebootOptions: String,

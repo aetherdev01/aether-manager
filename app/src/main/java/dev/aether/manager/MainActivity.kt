@@ -13,7 +13,6 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -28,7 +27,6 @@ import dev.aether.manager.ads.AdScheduler
 import dev.aether.manager.ads.InterstitialAdManager
 import dev.aether.manager.data.AppProfileViewModel
 import dev.aether.manager.data.MainViewModel
-import dev.aether.manager.gamebooster.GameBoosterManager
 import dev.aether.manager.i18n.LanguageDropdownCompact
 import dev.aether.manager.i18n.LocalStrings
 import dev.aether.manager.i18n.ProvideStrings
@@ -62,11 +60,6 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-
-    override fun onResume() {
-        super.onResume()
-        // Sync toggle state setelah kembali dari Settings.ACTION_MANAGE_OVERLAY_PERMISSION
-    }
 }
 
 private enum class Screen { HOME, TWEAK, APPS, ABOUT }
@@ -79,35 +72,6 @@ fun AetherApp(vm: MainViewModel, apVm: AppProfileViewModel, updateVm: UpdateView
     var currentScreen by remember { mutableStateOf(Screen.HOME) }
     var showReboot    by remember { mutableStateOf(false) }
     var showSettings  by remember { mutableStateOf(false) }
-
-    // ── Game Booster state ────────────────────────────────────────────────
-    var boosterActive         by remember { mutableStateOf(GameBoosterManager.isRunning()) }
-    var showBoosterPermDialog by remember { mutableStateOf(false) }
-    // Sync saat Activity resume (dari overlay permission screen)
-    val lifecycleOwner2 = LocalLifecycleOwner.current
-    DisposableEffect(lifecycleOwner2) {
-        val obs = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME) {
-                boosterActive = GameBoosterManager.isRunning()
-            }
-        }
-        lifecycleOwner2.lifecycle.addObserver(obs)
-        onDispose { lifecycleOwner2.lifecycle.removeObserver(obs) }
-    }
-
-    fun toggleBooster() {
-        if (boosterActive) {
-            GameBoosterManager.stopBooster(context)
-            boosterActive = false
-        } else {
-            if (!GameBoosterManager.isOverlayPermissionGranted(context)) {
-                showBoosterPermDialog = true
-            } else {
-                GameBoosterManager.startBooster(context)
-                boosterActive = true
-            }
-        }
-    }
 
     // ── Interstitial Ads ──────────────────────────────────────────────────
     val activity = context as android.app.Activity
@@ -158,50 +122,6 @@ fun AetherApp(vm: MainViewModel, apVm: AppProfileViewModel, updateVm: UpdateView
         NavItem(Screen.ABOUT, s.navAbout, Icons.Filled.Info,  Icons.Outlined.Info),
     )
 
-    // ── Game Booster Permission Dialog ────────────────────────────────────
-    if (showBoosterPermDialog) {
-        AlertDialog(
-            onDismissRequest = { showBoosterPermDialog = false },
-            icon = {
-                Icon(Icons.Filled.Gamepad, null, tint = MaterialTheme.colorScheme.primary)
-            },
-            title = { Text("Izin Diperlukan") },
-            text  = {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(
-                        "Game Booster membutuhkan izin untuk tampil di atas aplikasi lain " +
-                                "(SYSTEM_ALERT_WINDOW) agar dapat menampilkan sidebar overlay saat game berjalan.",
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                    Surface(
-                        shape = MaterialTheme.shapes.medium,
-                        color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                            PermRow(icon = Icons.Outlined.Layers,           label = "Tampil di atas layar (Overlay)")
-                            PermRow(icon = Icons.Outlined.QueryStats,       label = "Akses statistik penggunaan")
-                            PermRow(icon = Icons.Outlined.NotificationsOff, label = "Kelola DND / notifikasi")
-                        }
-                    }
-                }
-            },
-            confirmButton = {
-                Button(onClick = {
-                    showBoosterPermDialog = false
-                    GameBoosterManager.requestOverlayPermission(activity)
-                }) {
-                    Text("Buka Pengaturan")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showBoosterPermDialog = false }) {
-                    Text("Batal")
-                }
-            }
-        )
-    }
-
     // ── SettingsScreen overlay ────────────────────────────────────────────
     if (showSettings) {
         SettingsScreen(
@@ -220,21 +140,6 @@ fun AetherApp(vm: MainViewModel, apVm: AppProfileViewModel, updateVm: UpdateView
                 title = { Text("Aether Manager", fontWeight = FontWeight.Medium, fontSize = 20.sp) },
                 actions = {
                     LanguageDropdownCompact()
-
-                    // ── Game Booster toggle ──────────────────────────────
-                    val boosterTint = if (boosterActive)
-                        MaterialTheme.colorScheme.primary
-                    else
-                        MaterialTheme.colorScheme.onSurfaceVariant
-
-                    IconButton(onClick = { toggleBooster() }) {
-                        Icon(
-                            imageVector = if (boosterActive) Icons.Filled.Gamepad else Icons.Outlined.Gamepad,
-                            contentDescription = if (boosterActive) "Matikan Game Booster" else "Aktifkan Game Booster",
-                            tint = boosterTint
-                        )
-                    }
-
                     IconButton(onClick = { showSettings = true }) {
                         Icon(Icons.Outlined.Settings, null)
                     }
@@ -309,15 +214,4 @@ fun AetherApp(vm: MainViewModel, apVm: AppProfileViewModel, updateVm: UpdateView
     }
 
     UpdateDialogHost(viewModel = updateVm)
-}
-
-@Composable
-private fun PermRow(icon: ImageVector, label: String) {
-    Row(
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalAlignment     = Alignment.CenterVertically
-    ) {
-        Icon(icon, null, modifier = Modifier.size(14.dp), tint = MaterialTheme.colorScheme.primary)
-        Text(label, style = MaterialTheme.typography.bodySmall)
-    }
 }
