@@ -216,6 +216,19 @@ object AppProfileRepository {
 LAST=""
 PROFILE_DIR=$PROFILE_DIR
 
+# ── Snapshot default refresh rate sebelum monitor mulai ──────────────────────
+# Dibaca sekali dari settings system; kalau kosong fallback ke sysfs atau 60.
+_DEF_PEAK=${'$'}(settings get system peak_refresh_rate 2>/dev/null | grep -v null || echo "")
+_DEF_MIN=${'$'}(settings get system min_refresh_rate 2>/dev/null | grep -v null || echo "")
+# Fallback: baca dari sysfs kalau settings kosong
+if [ -z "${'$'}_DEF_PEAK" ]; then
+  _DEF_PEAK=${'$'}(cat /sys/class/display/panel0/default_refresh_rate \
+                      /sys/class/display/panel0/max_refresh_rate \
+                      2>/dev/null | head -1 | tr -d '[:space:]')
+fi
+[ -z "${'$'}_DEF_PEAK" ] && _DEF_PEAK="60"
+[ -z "${'$'}_DEF_MIN"  ] && _DEF_MIN="${'$'}_DEF_PEAK"
+
 # ── Universal governor helper ─────────────────────────────────────────────────
 # Supports: per-cpu paths (legacy), per-policy paths (GKI/modern), MTK, Exynos
 # Falls back gracefully when requested governor is unavailable on this chipset.
@@ -301,8 +314,38 @@ _restore_default() {
     [ -f "${'$'}_mtk" ] && echo "${'$'}_DEF" > "${'$'}_mtk" 2>/dev/null || true
   done
 
+  # ── Restore refresh rate ─────────────────────────────────────────────
+  # Hapus override settings, lalu re-apply nilai default yang disimpan di awal
   settings delete system peak_refresh_rate 2>/dev/null || true
   settings delete system min_refresh_rate  2>/dev/null || true
+  [ -n "${'$'}_DEF_PEAK" ] && settings put system peak_refresh_rate "${'$'}_DEF_PEAK" 2>/dev/null || true
+  [ -n "${'$'}_DEF_MIN"  ] && settings put system min_refresh_rate  "${'$'}_DEF_MIN"  2>/dev/null || true
+
+  # SurfaceFlinger — wajib di-reset, settings delete saja tidak cukup
+  service call SurfaceFlinger 1035 i32 "${'$'}_DEF_PEAK" 2>/dev/null || true
+
+  # sysfs panel nodes (Qualcomm/Samsung)
+  [ -f /sys/class/display/panel0/max_refresh_rate ] && \
+    echo "${'$'}_DEF_PEAK" > /sys/class/display/panel0/max_refresh_rate 2>/dev/null || true
+  [ -f /sys/class/display/panel0/min_refresh_rate ] && \
+    echo "${'$'}_DEF_MIN"  > /sys/class/display/panel0/min_refresh_rate 2>/dev/null || true
+
+  # DRM connector nodes
+  for _DRM in /sys/class/drm/card*-DSI-*/; do
+    [ -f "${'$'}{_DRM}panel_refresh_rate" ] && \
+      echo "${'$'}_DEF_PEAK" > "${'$'}{_DRM}panel_refresh_rate" 2>/dev/null || true
+    [ -f "${'$'}{_DRM}modes" ] && \
+      echo "${'$'}_DEF_PEAK" > "${'$'}{_DRM}modes" 2>/dev/null || true
+  done
+
+  # DSI display nodes (Qualcomm inline display)
+  for _DSI in /sys/devices/platform/soc/soc:qcom,dsi-display* \
+              /sys/devices/platform/soc/*.dsi*; do
+    [ -f "${'$'}_DSI/refresh_rate" ] && \
+      echo "${'$'}_DEF_PEAK" > "${'$'}_DSI/refresh_rate" 2>/dev/null || true
+    [ -f "${'$'}_DSI/dynamic_fps" ] && \
+      echo "${'$'}_DEF_PEAK" > "${'$'}_DSI/dynamic_fps" 2>/dev/null || true
+  done
 
   for _gf in /sys/class/kgsl/kgsl-3d0/devfreq \
              /sys/class/devfreq/*.gpu \

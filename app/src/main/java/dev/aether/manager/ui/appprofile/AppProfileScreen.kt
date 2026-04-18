@@ -540,7 +540,7 @@ private fun GovernorSelector(selected: String, onSelect: (String) -> Unit, enabl
             }
         }
         AnimatedContent(selected, label = "gov_desc") { gov ->
-            val desc = govDescription(gov)
+            val desc = govDescription(gov, s)
             if (desc.isNotEmpty()) {
                 Surface(color = MaterialTheme.colorScheme.surfaceVariant, shape = RoundedCornerShape(10.dp)) {
                     Row(Modifier.padding(10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.Top) {
@@ -669,13 +669,13 @@ private fun govIcon(gov: String): ImageVector = when (gov) {
     else           -> Icons.Filled.Tune
 }
 
-private fun govDescription(gov: String): String = when (gov) {
-    "default"      -> "Gunakan governor default sistem. Tidak ada perubahan yang diterapkan."
-    "performance"  -> "CPU berjalan di frekuensi maksimum terus-menerus. Performa tertinggi, konsumsi baterai besar."
-    "powersave"    -> "CPU berjalan di frekuensi minimum. Hemat baterai, performa rendah."
-    "ondemand"     -> "CPU naik cepat saat load tinggi, turun saat idle. Balance antara performa dan baterai."
-    "conservative" -> "CPU naik/turun perlahan mengikuti load. Lebih hemat dari ondemand, lebih lambat merespons."
-    "schedutil"    -> "Berdasarkan scheduler kernel, responsif dan efisien. Direkomendasikan untuk kernel modern."
-    "interactive"  -> "Dioptimasi untuk interaksi user, cepat naik saat ada input layar."
+private fun govDescription(gov: String, s: dev.aether.manager.i18n.AppStrings): String = when (gov) {
+    "default"      -> s.govDescDefault
+    "performance"  -> s.govDescPerformance
+    "powersave"    -> s.govDescPowersave
+    "ondemand"     -> s.govDescOndemand
+    "conservative" -> s.govDescConservative
+    "schedutil"    -> s.govDescSchedutil
+    "interactive"  -> s.govDescInteractive
     else           -> ""
 }

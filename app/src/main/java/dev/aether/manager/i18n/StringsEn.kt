@@ -225,6 +225,14 @@ val StringsEn = AppStrings(
     appProfileIoLatency = "I/O Latency Opt",
     appProfileIoLatencyDesc = "Reduce read-ahead I/O for lower latency",
 
+    govDescDefault = "Use the system default governor. No changes applied.",
+    govDescPerformance = "CPU runs at maximum frequency continuously. Highest performance, high battery drain.",
+    govDescPowersave = "CPU runs at minimum frequency. Saves battery, low performance.",
+    govDescOndemand = "CPU scales up quickly on high load, drops on idle. Balance between performance and battery.",
+    govDescConservative = "CPU scales up/down slowly following load. More battery-friendly than ondemand, slower to respond.",
+    govDescSchedutil = "Based on kernel scheduler utilization, responsive and efficient. Recommended for modern kernels.",
+    govDescInteractive = "Optimized for user interaction, scales up quickly on screen input.",
+
     settingsBtnResetProfiles = "Reset App Profiles",
     settingsResetProfilesTitle = "Reset All App Profiles?",
     settingsResetProfilesDesc = "All app profiles will be permanently deleted and the monitor stopped. This cannot be undone.",

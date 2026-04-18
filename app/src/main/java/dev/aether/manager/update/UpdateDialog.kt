@@ -17,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.activity.compose.LocalActivity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -24,6 +25,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.net.toUri
+import dev.aether.manager.ads.InterstitialAdManager
 import dev.aether.manager.i18n.AppStrings
 import dev.aether.manager.i18n.LocalStrings
 import kotlinx.coroutines.Dispatchers
@@ -78,6 +80,7 @@ fun UpdateDialog(
     onDismiss      : () -> Unit,
 ) {
     val context  = LocalContext.current
+    val activity = LocalActivity.current
     val s        = LocalStrings.current
     val scope    = rememberCoroutineScope()
     var dlState  by remember { mutableStateOf<DownloadState>(DownloadState.Idle) }
@@ -207,6 +210,10 @@ fun UpdateDialog(
                         ) {
                             Button(
                                 onClick  = {
+                                    // Tampilkan interstitial saat klik Download
+                                    if (activity != null) {
+                                        InterstitialAdManager.showIfReady(activity)
+                                    }
                                     scope.launch {
                                         downloadAndInstall(
                                             context    = context,
@@ -253,7 +260,13 @@ fun UpdateDialog(
                     }
 
                     is DownloadState.Done -> {
-                        LaunchedEffect(dl.apkFile) { installApk(context, dl.apkFile) }
+                        LaunchedEffect(dl.apkFile) {
+                            // Tampilkan interstitial sebelum install
+                            if (activity != null) {
+                                InterstitialAdManager.showIfReady(activity)
+                            }
+                            installApk(context, dl.apkFile)
+                        }
                         DownloadProgressBar(percent = 100, downloadedBytes = -1L, totalBytes = -1L)
                         Text(
                             s.updateInstalling,

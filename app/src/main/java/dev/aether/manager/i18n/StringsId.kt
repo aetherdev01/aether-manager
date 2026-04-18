@@ -225,6 +225,14 @@ val StringsId = AppStrings(
     appProfileIoLatency = "I/O Latency Opt",
     appProfileIoLatencyDesc = "Kurangi read-ahead I/O untuk latency lebih rendah",
 
+    govDescDefault = "Gunakan governor default sistem. Tidak ada perubahan yang diterapkan.",
+    govDescPerformance = "CPU berjalan di frekuensi maksimum terus-menerus. Performa tertinggi, konsumsi baterai besar.",
+    govDescPowersave = "CPU berjalan di frekuensi minimum. Hemat baterai, performa rendah.",
+    govDescOndemand = "CPU naik cepat saat load tinggi, turun saat idle. Balance antara performa dan baterai.",
+    govDescConservative = "CPU naik/turun perlahan mengikuti load. Lebih hemat dari ondemand, lebih lambat merespons.",
+    govDescSchedutil = "Berdasarkan scheduler kernel, responsif dan efisien. Direkomendasikan untuk kernel modern.",
+    govDescInteractive = "Dioptimasi untuk interaksi user, cepat naik saat ada input layar.",
+
     settingsBtnResetProfiles = "Reset App Profile",
     settingsResetProfilesTitle = "Reset Semua App Profile?",
     settingsResetProfilesDesc = "Semua app profile akan dihapus permanen dan monitor dimatikan. Tindakan ini tidak dapat di-undo.",

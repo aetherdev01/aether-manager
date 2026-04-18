@@ -5,7 +5,7 @@ import android.util.Log
 import com.unity3d.ads.IUnityAdsInitializationListener
 import com.unity3d.ads.UnityAds
 import dev.aether.manager.ads.AdManager
-import dev.aether.manager.ads.RewardedAdManager
+import dev.aether.manager.ads.InterstitialAdManager
 
 class AetherApplication : Application() {
 
@@ -19,7 +19,7 @@ class AetherApplication : Application() {
             object : IUnityAdsInitializationListener {
                 override fun onInitializationComplete() {
                     Log.d("UnityAds", "SDK initialized ✓ testMode=${AdManager.isTestMode}")
-                    RewardedAdManager.preload(this@AetherApplication)
+                    InterstitialAdManager.preload(this@AetherApplication)
                 }
                 override fun onInitializationFailed(
                     error: UnityAds.UnityAdsInitializationError,

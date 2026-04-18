@@ -32,7 +32,7 @@ import dev.aether.manager.ui.home.HomeScreen
 import dev.aether.manager.ui.settings.SettingsScreen
 import dev.aether.manager.ui.tweak.TweakScreen
 import androidx.compose.ui.platform.LocalContext
-import dev.aether.manager.ads.RewardedAdManager
+import dev.aether.manager.ads.InterstitialAdManager
 import dev.aether.manager.update.UpdateDialogHost
 import dev.aether.manager.update.UpdateViewModel
 import dev.aether.manager.util.RootUtils
@@ -66,11 +66,11 @@ fun AetherApp(vm: MainViewModel, apVm: AppProfileViewModel, updateVm: UpdateView
     var showReboot     by remember { mutableStateOf(false) }
     var showSettings   by remember { mutableStateOf(false) }
 
-    // Rewarded ad: tampil saat user buka tab APPS (tidak mengganggu, hanya sekali per kunjungan)
+    // Interstitial ad: tampil saat user buka tab APPS
     val activity = context as android.app.Activity
     LaunchedEffect(currentScreen) {
         if (currentScreen == Screen.APPS) {
-            RewardedAdManager.showIfReady(activity)
+            InterstitialAdManager.showIfReady(activity)
         }
     }
 

@@ -231,6 +231,15 @@ data class AppStrings(
     val appProfileIoLatency: String,
     val appProfileIoLatencyDesc: String,
 
+    // ── CPU Governor descriptions ─────────────────────────────
+    val govDescDefault: String,
+    val govDescPerformance: String,
+    val govDescPowersave: String,
+    val govDescOndemand: String,
+    val govDescConservative: String,
+    val govDescSchedutil: String,
+    val govDescInteractive: String,
+
     // ── Backup screen — reset app profile & monitor ──────────
     val settingsBtnResetProfiles: String,
     val settingsResetProfilesTitle: String,
