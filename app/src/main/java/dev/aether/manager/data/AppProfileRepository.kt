@@ -253,25 +253,25 @@ get_foreground_pkg() {
   local _pkg
 
   # Method 1: cmd window get-focused-app — paling ringan, Android 12+
-  _pkg=$(cmd window get-focused-app 2>/dev/null \
+  _pkg=${'$'}(cmd window get-focused-app 2>/dev/null \
     | grep -oE '[a-zA-Z][a-zA-Z0-9_.]+\.[a-zA-Z][a-zA-Z0-9_]+' \
     | head -1)
-  [ -n "$_pkg" ] && { echo "$_pkg"; return 0; }
+  [ -n "${'$'}_pkg" ] && { echo "${'$'}_pkg"; return 0; }
 
   # Method 2: mCurrentFocus — reliable di semua Android
-  _pkg=$(dumpsys window windows 2>/dev/null \
+  _pkg=${'$'}(dumpsys window windows 2>/dev/null \
     | grep -m1 'mCurrentFocus' \
     | sed 's/.*{ *[^ ]* [^ ]* //;s/[/ ].*//' \
     | grep -E '^[a-zA-Z][a-zA-Z0-9_.]+\.[a-zA-Z]')
-  [ -n "$_pkg" ] && { echo "$_pkg"; return 0; }
+  [ -n "${'$'}_pkg" ] && { echo "${'$'}_pkg"; return 0; }
 
   # Method 3: dumpsys activity top — fallback terakhir
-  _pkg=$(dumpsys activity top 2>/dev/null \
+  _pkg=${'$'}(dumpsys activity top 2>/dev/null \
     | grep -E '^ {2}ACTIVITY ' \
     | head -1 \
-    | awk '{print $2}' \
+    | awk '{print ${'$'}2}' \
     | cut -d'/' -f1)
-  [ -n "$_pkg" ] && { echo "$_pkg"; return 0; }
+  [ -n "${'$'}_pkg" ] && { echo "${'$'}_pkg"; return 0; }
 
   return 1
 }
