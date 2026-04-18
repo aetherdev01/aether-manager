@@ -385,7 +385,7 @@ fun SettingsScreen(
                         onClick  = {
                             ctx.startActivity(
                                 Intent(Intent.ACTION_VIEW,
-                                    Uri.parse("https://github.com/get01projects/aether-manager"))
+                                    Uri.parse("https://github.com/aetherdev01/aether-manager"))
                             )
                         }
                     )

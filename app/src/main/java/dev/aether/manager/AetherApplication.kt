@@ -2,6 +2,7 @@ package dev.aether.manager
 
 import android.app.Application
 import android.util.Log
+import com.topjohnwu.superuser.Shell
 import com.unity3d.ads.IUnityAdsInitializationListener
 import com.unity3d.ads.UnityAds
 import dev.aether.manager.ads.AdManager
@@ -11,7 +12,19 @@ class AetherApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        initLibsu()
         initUnityAds()
+    }
+
+    private fun initLibsu() {
+        // Konfigurasi libsu — harus dipanggil sebelum Shell.getShell() pertama kali
+        Shell.enableVerboseLogging = false
+        Shell.setDefaultBuilder(
+            Shell.Builder.create()
+                .setFlags(Shell.FLAG_REDIRECT_STDERR)  // stderr masuk ke out juga
+                .setTimeout(10)                         // timeout 10 detik per command
+        )
+        Log.d("AetherApp", "libsu Shell builder configured")
     }
 
     private fun initUnityAds() {
@@ -29,7 +42,6 @@ class AetherApplication : Application() {
             object : IUnityAdsInitializationListener {
                 override fun onInitializationComplete() {
                     Log.d("AetherApp", "Unity Ads initialized ✓")
-                    // Preload interstitial segera setelah init selesai
                     InterstitialAdManager.preload(this@AetherApplication)
                 }
 

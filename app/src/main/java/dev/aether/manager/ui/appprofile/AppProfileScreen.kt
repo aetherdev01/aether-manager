@@ -6,10 +6,13 @@ import android.graphics.drawable.BitmapDrawable
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
@@ -28,7 +31,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.*
 import dev.aether.manager.data.*
 import dev.aether.manager.i18n.LocalStrings
-import dev.aether.manager.ui.home.TabSectionTitle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -148,84 +150,133 @@ private fun ReadyContent(state: AppsUiState.Ready, vm: AppProfileViewModel) {
     val totalCount = state.apps.size
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.spacedBy(0.dp),
     ) {
-        // ── Section header ────────────────────────────────────────────
-        TabSectionTitle(
-            icon  = Icons.Outlined.Apps,
-            title = s.appProfileTitle,
-            trailing = {
-                    val monitorBg by animateColorAsState(
-                        if (state.monitorRunning) MaterialTheme.colorScheme.primaryContainer
-                        else MaterialTheme.colorScheme.surfaceVariant,
-                        label = "monitor_bg"
-                    )
-                    val monitorFg by animateColorAsState(
-                        if (state.monitorRunning) MaterialTheme.colorScheme.primary
-                        else MaterialTheme.colorScheme.onSurfaceVariant,
-                        label = "monitor_fg"
-                    )
-                    Surface(
-                        onClick = { vm.toggleMonitor(!state.monitorRunning) },
-                        shape = RoundedCornerShape(50),
-                        color = monitorBg,
-                        border = if (!state.monitorRunning)
-                            BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
-                        else null,
+        // ── Header area ───────────────────────────────────────────────
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+                .padding(top = 4.dp, bottom = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            // Title row + monitor badge
+            Row(
+                Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    Box(
+                        Modifier
+                            .size(32.dp)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(MaterialTheme.colorScheme.primaryContainer),
+                        contentAlignment = Alignment.Center,
                     ) {
-                        Row(
-                            Modifier.padding(start = 8.dp, end = 10.dp, top = 4.dp, bottom = 4.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(5.dp),
-                        ) {
-                            Box(
-                                Modifier.size(6.dp).clip(CircleShape).background(monitorFg)
-                            )
-                            Text(
-                                if (state.monitorRunning) s.appProfileMonitorOn else s.appProfileMonitorOff,
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.SemiBold,
-                                color = monitorFg,
-                            )
-                        }
+                        Icon(
+                            Icons.Outlined.Apps,
+                            null,
+                            modifier = Modifier.size(17.dp),
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                        )
+                    }
+                    Text(
+                        s.appProfileTitle,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                }
+
+                // Monitor pill
+                val monitorBg by animateColorAsState(
+                    if (state.monitorRunning) MaterialTheme.colorScheme.primaryContainer
+                    else MaterialTheme.colorScheme.surfaceVariant,
+                    label = "monitor_bg"
+                )
+                val monitorFg by animateColorAsState(
+                    if (state.monitorRunning) MaterialTheme.colorScheme.primary
+                    else MaterialTheme.colorScheme.onSurfaceVariant,
+                    label = "monitor_fg"
+                )
+                Surface(
+                    onClick = { vm.toggleMonitor(!state.monitorRunning) },
+                    shape = RoundedCornerShape(50),
+                    color = monitorBg,
+                    border = if (!state.monitorRunning)
+                        BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.25f))
+                    else null,
+                ) {
+                    Row(
+                        Modifier.padding(start = 8.dp, end = 10.dp, top = 5.dp, bottom = 5.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(5.dp),
+                    ) {
+                        val dotAlpha by animateFloatAsState(
+                            if (state.monitorRunning) 1f else 0.4f, label = "dot"
+                        )
+                        Box(
+                            Modifier
+                                .size(6.dp)
+                                .alpha(dotAlpha)
+                                .scale(dotAnim)
+                                .clip(CircleShape)
+                                .background(monitorFg)
+                        )
+                        Text(
+                            if (state.monitorRunning) s.appProfileMonitorOn else s.appProfileMonitorOff,
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.SemiBold,
+                            color = monitorFg,
+                        )
                     }
                 }
-            )
+            }
 
-        // Stats row
-        Row(
-            Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            AppStatChip(
-                icon  = Icons.Outlined.PhoneAndroid,
-                label = s.appProfileAppsCount.format(totalCount),
-                modifier = Modifier.weight(1f),
-            )
-            AppStatChip(
-                icon   = Icons.Outlined.Tune,
-                label  = s.appProfileActiveCount.format(activeCount),
-                active = activeCount > 0,
-                modifier = Modifier.weight(1f),
+            // Stats row — lebih compact, info lebih jelas
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                AppStatChip(
+                    icon    = Icons.Outlined.PhoneAndroid,
+                    label   = s.appProfileAppsCount.format(totalCount),
+                    modifier = Modifier.weight(1f),
+                )
+                AppStatChip(
+                    icon    = Icons.Outlined.Tune,
+                    label   = s.appProfileActiveCount.format(activeCount),
+                    active  = activeCount > 0,
+                    modifier = Modifier.weight(1f),
+                )
+            }
+
+            // ── Search bar ────────────────────────────────────────────
+            SearchFilterBar(
+                query         = searchQuery,
+                onQueryChange = { searchQuery = it },
             )
         }
 
-        // ── Search / Filter bar ──────────────────────────────────────
-        SearchFilterBar(
-            query          = searchQuery,
-            onQueryChange  = { searchQuery = it },
+        // ── Divider tipis pemisah header vs list ──────────────────────
+        HorizontalDivider(
+            modifier  = Modifier.fillMaxWidth(),
+            thickness = 0.5.dp,
+            color     = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
         )
 
         if (filtered.isEmpty()) {
             EmptyListHint(searchQuery.isNotEmpty())
         } else {
             LazyColumn(
-                contentPadding = PaddingValues(horizontal = 0.dp, vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(6.dp),
-                modifier = Modifier.fillMaxSize()
+                contentPadding    = PaddingValues(horizontal = 14.dp, vertical = 10.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+                modifier          = Modifier.fillMaxSize()
             ) {
                 items(filtered, key = { it.packageName }) { app ->
                     val profile = state.profiles[app.packageName]
@@ -251,31 +302,37 @@ private fun AppStatChip(
     active: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
+    val bg by animateColorAsState(
+        if (active) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f)
+        else MaterialTheme.colorScheme.surfaceContainerHigh,
+        label = "stat_bg"
+    )
+    val fg by animateColorAsState(
+        if (active) MaterialTheme.colorScheme.primary
+        else MaterialTheme.colorScheme.onSurfaceVariant,
+        label = "stat_fg"
+    )
     Surface(
         modifier = modifier,
-        shape    = RoundedCornerShape(12.dp),
-        color    = if (active) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
-                   else MaterialTheme.colorScheme.surfaceContainer,
-        border   = if (active) BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.25f))
-                   else BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.12f)),
+        shape    = RoundedCornerShape(14.dp),
+        color    = bg,
+        border   = BorderStroke(
+            1.dp,
+            if (active) MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
+            else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+        ),
     ) {
         Row(
-            Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+            Modifier.padding(horizontal = 14.dp, vertical = 11.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(7.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            Icon(
-                icon, null,
-                modifier = Modifier.size(15.dp),
-                tint = if (active) MaterialTheme.colorScheme.primary
-                       else MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            Icon(icon, null, modifier = Modifier.size(16.dp), tint = fg)
             Text(
                 label,
                 style = MaterialTheme.typography.labelMedium,
-                fontWeight = FontWeight.Medium,
-                color = if (active) MaterialTheme.colorScheme.primary
-                        else MaterialTheme.colorScheme.onSurfaceVariant,
+                fontWeight = if (active) FontWeight.Bold else FontWeight.Medium,
+                color = fg,
             )
         }
     }
@@ -283,35 +340,91 @@ private fun AppStatChip(
 
 // ─── Search / Filter bar ──────────────────────────────────────────────────────
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SearchFilterBar(
     query: String,
     onQueryChange: (String) -> Unit,
 ) {
     val s = LocalStrings.current
-    Row(
-        Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 12.dp, vertical = 8.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        OutlinedTextField(
-            value = query,
-            onValueChange = onQueryChange,
-            placeholder  = { Text(s.appProfileSearchHint, style = MaterialTheme.typography.bodySmall) },
-            leadingIcon  = { Icon(Icons.Outlined.Search, null, modifier = Modifier.size(18.dp)) },
-            trailingIcon = if (query.isNotEmpty()) {{
-                IconButton(onClick = { onQueryChange("") }, modifier = Modifier.size(30.dp)) {
-                    Icon(Icons.Filled.Clear, null, modifier = Modifier.size(16.dp))
+    val interactionSource = remember { MutableInteractionSource() }
+    val isFocused by interactionSource.collectIsFocusedAsState()
+
+    val borderColor by animateColorAsState(
+        if (isFocused) MaterialTheme.colorScheme.primary
+        else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+        label = "search_border"
+    )
+    val iconTint by animateColorAsState(
+        if (isFocused || query.isNotEmpty()) MaterialTheme.colorScheme.primary
+        else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+        label = "search_icon"
+    )
+
+    BasicTextField(
+        value              = query,
+        onValueChange      = onQueryChange,
+        singleLine         = true,
+        interactionSource  = interactionSource,
+        textStyle          = MaterialTheme.typography.bodyMedium.copy(
+            color = MaterialTheme.colorScheme.onSurface,
+        ),
+        cursorBrush        = SolidColor(MaterialTheme.colorScheme.primary),
+        modifier           = Modifier.fillMaxWidth(),
+        decorationBox      = { inner ->
+            Surface(
+                shape  = RoundedCornerShape(16.dp),
+                color  = MaterialTheme.colorScheme.surfaceContainerHigh,
+                border = BorderStroke(1.5.dp, borderColor),
+            ) {
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 14.dp, vertical = 13.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    Icon(
+                        Icons.Outlined.Search,
+                        null,
+                        modifier = Modifier.size(19.dp),
+                        tint     = iconTint,
+                    )
+                    Box(Modifier.weight(1f)) {
+                        if (query.isEmpty()) {
+                            Text(
+                                s.appProfileSearchHint,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f),
+                            )
+                        }
+                        inner()
+                    }
+                    AnimatedVisibility(
+                        visible = query.isNotEmpty(),
+                        enter   = fadeIn() + scaleIn(initialScale = 0.8f),
+                        exit    = fadeOut() + scaleOut(targetScale = 0.8f),
+                    ) {
+                        Surface(
+                            onClick = { onQueryChange("") },
+                            shape   = CircleShape,
+                            color   = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.12f),
+                            modifier = Modifier.size(22.dp),
+                        ) {
+                            Icon(
+                                Icons.Filled.Clear,
+                                null,
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(4.dp),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
                 }
-            }} else null,
-            singleLine   = true,
-            modifier     = Modifier.weight(1f),
-            shape        = RoundedCornerShape(14.dp),
-            textStyle    = MaterialTheme.typography.bodySmall,
-        )
-    }
+            }
+        }
+    )
 }
 
 @Composable
@@ -353,50 +466,87 @@ private fun AppListItem(
         }
     }
 
+    val itemBg by animateColorAsState(
+        if (isEnabled) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.25f)
+        else MaterialTheme.colorScheme.surfaceContainer,
+        label = "item_bg"
+    )
+
     Surface(
         onClick  = onClick,
-        shape    = RoundedCornerShape(14.dp),
-        color    = if (isEnabled)
-            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
-        else MaterialTheme.colorScheme.surfaceContainer,
-        border   = if (isEnabled) BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)) else null,
+        shape    = RoundedCornerShape(16.dp),
+        color    = itemBg,
+        border   = if (isEnabled)
+            BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
+        else null,
         modifier = Modifier.fillMaxWidth(),
     ) {
         Row(
-            Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+            Modifier.padding(horizontal = 13.dp, vertical = 11.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
+            // Icon
             AppIconView(bitmap = iconBitmap, label = app.label, isEnabled = isEnabled, size = 44.dp, cornerSize = 12.dp)
 
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(app.label, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium,
-                    maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Text(app.packageName, style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            // Labels
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(1.dp)) {
+                Text(
+                    app.label,
+                    style    = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Text(
+                    app.packageName,
+                    style    = MaterialTheme.typography.labelSmall,
+                    color    = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
                 if (hasProfile && isEnabled) {
                     val gov = profile!!.cpuGovernor
                     val rr  = profile.refreshRate
-                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                        if (gov != "default") ProfileBadge(gov.replaceFirstChar { it.uppercase() }, Icons.Filled.Memory)
-                        if (rr  != "default") ProfileBadge("$rr Hz", Icons.Filled.DisplaySettings)
+                    if (gov != "default" || rr != "default") {
+                        Spacer(Modifier.height(3.dp))
+                        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                            if (gov != "default") ProfileBadge(gov.replaceFirstChar { it.uppercase() }, Icons.Filled.Memory)
+                            if (rr  != "default") ProfileBadge("$rr Hz", Icons.Filled.DisplaySettings)
+                        }
                     }
                 }
             }
 
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(2.dp)) {
-                if (isEnabled) {
-                    Icon(Icons.Filled.CheckCircle, null,
-                        tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
+            // Trailing actions
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(0.dp),
+            ) {
+                AnimatedVisibility(visible = isEnabled, enter = fadeIn() + scaleIn(initialScale = 0.7f), exit = fadeOut()) {
+                    Icon(
+                        Icons.Filled.CheckCircle,
+                        null,
+                        tint     = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(17.dp),
+                    )
                 }
                 if (onDelete != null) {
-                    IconButton(onClick = { showDeleteDialog = true }, modifier = Modifier.size(30.dp)) {
-                        Icon(Icons.Outlined.DeleteOutline, null, modifier = Modifier.size(18.dp),
-                            tint = MaterialTheme.colorScheme.error.copy(alpha = 0.6f))
+                    IconButton(onClick = { showDeleteDialog = true }, modifier = Modifier.size(32.dp)) {
+                        Icon(
+                            Icons.Outlined.DeleteOutline,
+                            null,
+                            modifier = Modifier.size(17.dp),
+                            tint     = MaterialTheme.colorScheme.error.copy(alpha = 0.55f),
+                        )
                     }
                 }
-                Icon(Icons.Filled.ChevronRight, null, modifier = Modifier.size(20.dp),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
+                Icon(
+                    Icons.Filled.ChevronRight,
+                    null,
+                    modifier = Modifier.size(18.dp),
+                    tint     = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+                )
             }
         }
     }
