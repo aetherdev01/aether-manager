@@ -23,7 +23,7 @@ libsu = "5.3.0"
 mmkv = "2.0.1"
 relinker = "1.4.5"
 zstdJni = "1.5.5-11"
-sqliteAndroid = "3.43.3.0"
+sqliteBundled = "2.5.1"
 
 [libraries]
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version = "1.7.0" }
@@ -59,7 +59,7 @@ libsu-io = { group = "com.github.topjohnwu.libsu", name = "io", version.ref = "l
 mmkv = { group = "com.tencent", name = "mmkv", version.ref = "mmkv" }
 relinker = { group = "com.getkeepsafe.relinker", name = "relinker", version.ref = "relinker" }
 zstd-jni = { group = "com.github.luben", name = "zstd-jni", version.ref = "zstdJni" }
-sqlite-android = { group = "org.signal", name = "sqlite-android", version.ref = "sqliteAndroid" }
+sqlite-bundled = { group = "androidx.sqlite", name = "sqlite-bundled", version.ref = "sqliteBundled" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

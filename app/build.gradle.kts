@@ -172,8 +172,8 @@ dependencies {
     // Zstd-jni — kompresi native (libzstd-jni.so), untuk backup file
     implementation(libs.zstd.jni)
 
-    // sqlite-android — SQLite native terbaru (libsqliteX.so)
-    implementation(libs.sqlite.android)
+    // sqlite-bundled — AndroidX SQLite native bundled (libandroidx.sqlite.so)
+    implementation(libs.sqlite.bundled)
 
     // ── Debug ─────────────────────────────────────────────────────────────
     debugImplementation(libs.androidx.ui.tooling)
