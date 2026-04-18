@@ -1,5 +1,4 @@
 import com.android.build.gradle.internal.api.BaseVariantOutputImpl
-import java.io.ByteArrayOutputStream
 
 plugins {
     alias(libs.plugins.android.application)
@@ -10,12 +9,9 @@ plugins {
 // ── Git short hash ─────────────────────────────────────────────────────────
 val gitHash: String by lazy {
     try {
-        val out = ByteArrayOutputStream()
-        exec {
+        providers.exec {
             commandLine("git", "rev-parse", "--short=7", "HEAD")
-            standardOutput = out
-        }
-        out.toString().trim()
+        }.standardOutput.asText.get().trim()
     } catch (_: Exception) {
         "unknown"
     }

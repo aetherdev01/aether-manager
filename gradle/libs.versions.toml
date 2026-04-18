@@ -23,7 +23,7 @@ libsu = "5.3.0"
 mmkv = "2.0.1"
 relinker = "1.4.5"
 zstdJni = "1.5.5-11"
-sqliteAndroid = "3.46.0"
+sqliteAndroid = "3.43.3.0"
 
 [libraries]
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version = "1.7.0" }
