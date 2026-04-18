@@ -2,24 +2,31 @@ package dev.aether.manager
 
 import android.app.Application
 import android.util.Log
-import com.google.android.gms.ads.MobileAds
-import dev.aether.manager.ads.InterstitialAdManager
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import com.unity3d.ads.IUnityAdsInitializationListener
+import com.unity3d.ads.UnityAds
+import dev.aether.manager.ads.AdManager
 
 class AetherApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
 
-        // Initialize AdMob SDK on background thread, then preload interstitial.
-        CoroutineScope(Dispatchers.IO).launch {
-            MobileAds.initialize(this@AetherApplication) { initStatus ->
-                Log.d("AdMob", "SDK initialized ✓ status=$initStatus")
-                // Preload interstitial after SDK ready
-                InterstitialAdManager.preload(this@AetherApplication)
+        // Initialize Unity Ads SDK
+        UnityAds.initialize(
+            this,
+            AdManager.GAME_ID,
+            AdManager.isTestMode,
+            object : IUnityAdsInitializationListener {
+                override fun onInitializationComplete() {
+                    Log.d("UnityAds", "SDK initialized ✓ testMode=${AdManager.isTestMode}")
+                }
+                override fun onInitializationFailed(
+                    error: UnityAds.UnityAdsInitializationError,
+                    message: String
+                ) {
+                    Log.w("UnityAds", "Init failed: $error – $message")
+                }
             }
-        }
+        )
     }
 }

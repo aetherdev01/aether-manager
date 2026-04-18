@@ -26,7 +26,6 @@ data class TweaksState(
     val zramSize: String = "1073741824",
     val zramAlgo: String = "lz4",
     val vmDirtyOpt: Boolean = false,
-    val cpuGovernor: String = "",        // "" = ikut profile, diisi = override
     val ioScheduler: String = "",
     val ioLatencyOpt: Boolean = false,
     val tcpBbr: Boolean = false,
@@ -178,7 +177,6 @@ class MainViewModel : ViewModel() {
         zramSize       = map["zram_size"] ?: "1073741824",
         zramAlgo       = map["zram_algo"] ?: "lz4",
         vmDirtyOpt     = map["vm_dirty_opt"] == "1",
-        cpuGovernor    = map["cpu_governor"] ?: "",
         ioScheduler    = map["io_scheduler"] ?: "",
         ioLatencyOpt   = map["io_latency_opt"] == "1",
         tcpBbr         = map["tcp_bbr"] == "1",

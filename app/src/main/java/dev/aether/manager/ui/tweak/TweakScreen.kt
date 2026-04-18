@@ -60,8 +60,6 @@ fun TweakScreen(vm: MainViewModel) {
 
             // ── CPU & Kernel ──────────────────────────────────
             TweakSection(s.tweakSectionCpu) {
-                CpuGovernorRow(tweaks.cpuGovernor) { vm.setTweakStr("cpu_governor", it) }
-                ItemDivider()
                 TweakRow(Icons.Outlined.DateRange, s.tweakSchedBoost, s.tweakSchedBoostDesc, tweaks.schedboost) { vm.setTweak("schedboost", it) }
                 ItemDivider()
                 TweakRow(Icons.Outlined.TrendingUp, s.tweakCpuBoost, s.tweakCpuBoostDesc, tweaks.cpuBoost) { vm.setTweak("cpu_boost", it) }
@@ -297,33 +295,6 @@ private fun IoSchedulerRow(current: String, onSelect: (String) -> Unit) {
         title   = s.tweakIoScheduler,
         subtitle = "Algoritma I/O",
         value   = options.find { it.first == current }?.second ?: "Default",
-        expanded = expanded,
-        onExpand = { expanded = it }
-    ) {
-        options.forEach { (v, l) ->
-            DropdownMenuItem(text = { Text(l) }, onClick = { onSelect(v); expanded = false })
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun CpuGovernorRow(current: String, onSelect: (String) -> Unit) {
-    var expanded by remember { mutableStateOf(false) }
-    val options = listOf(
-        ""               to "Auto (Profile)",
-        "schedutil"      to "schedutil",
-        "ondemand"       to "ondemand",
-        "conservative"   to "conservative",
-        "interactive"    to "interactive",
-        "performance"    to "performance",
-        "powersave"      to "powersave",
-    )
-    DropdownRow(
-        icon     = Icons.Outlined.Speed,
-        title    = "CPU Governor",
-        subtitle = "Override governor (kosong = ikut profile)",
-        value    = options.find { it.first == current }?.second ?: "Auto (Profile)",
         expanded = expanded,
         onExpand = { expanded = it }
     ) {

@@ -34,7 +34,7 @@ import dev.aether.manager.ui.tweak.TweakScreen
 import androidx.compose.ui.platform.LocalContext
 import dev.aether.manager.ads.InterstitialAdManager
 import dev.aether.manager.ads.InterstitialAdTrigger
-import dev.aether.manager.ads.AdManager
+import dev.aether.manager.ui.components.AdBanner
 import dev.aether.manager.update.UpdateDialogHost
 import dev.aether.manager.update.UpdateViewModel
 import dev.aether.manager.util.RootUtils
@@ -132,30 +132,35 @@ fun AetherApp(vm: MainViewModel, apVm: AppProfileViewModel, updateVm: UpdateView
             )
         },
         bottomBar = {
-            NavigationBar(containerColor = MaterialTheme.colorScheme.surfaceContainer, tonalElevation = 0.dp) {
-                navItems.forEachIndexed { idx, item ->
-                    val selected = currentScreen == item.screen
-                    val scale by animateFloatAsState(
-                        if (selected) 1.1f else 1f,
-                        spring(Spring.DampingRatioMediumBouncy), label = "tab_scale_$idx"
-                    )
-                    NavigationBarItem(
-                        selected = selected,
-                        onClick  = { currentScreen = item.screen },
-                        icon = {
-                            Box(Modifier.scale(scale)) {
-                                Icon(if (selected) item.selectedIcon else item.unselectedIcon, null)
-                            }
-                        },
-                        label  = { Text(item.label, fontSize = 11.sp) },
-                        colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor   = MaterialTheme.colorScheme.onSecondaryContainer,
-                            selectedTextColor   = MaterialTheme.colorScheme.primary,
-                            indicatorColor      = MaterialTheme.colorScheme.secondaryContainer,
-                            unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                            unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            Column {
+                // ── Unity Ads Banner ──────────────────────────────────
+                AdBanner()
+
+                NavigationBar(containerColor = MaterialTheme.colorScheme.surfaceContainer, tonalElevation = 0.dp) {
+                    navItems.forEachIndexed { idx, item ->
+                        val selected = currentScreen == item.screen
+                        val scale by animateFloatAsState(
+                            if (selected) 1.1f else 1f,
+                            spring(Spring.DampingRatioMediumBouncy), label = "tab_scale_$idx"
                         )
-                    )
+                        NavigationBarItem(
+                            selected = selected,
+                            onClick  = { currentScreen = item.screen },
+                            icon = {
+                                Box(Modifier.scale(scale)) {
+                                    Icon(if (selected) item.selectedIcon else item.unselectedIcon, null)
+                                }
+                            },
+                            label  = { Text(item.label, fontSize = 11.sp) },
+                            colors = NavigationBarItemDefaults.colors(
+                                selectedIconColor   = MaterialTheme.colorScheme.onSecondaryContainer,
+                                selectedTextColor   = MaterialTheme.colorScheme.primary,
+                                indicatorColor      = MaterialTheme.colorScheme.secondaryContainer,
+                                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        )
+                    }
                 }
             }
         },

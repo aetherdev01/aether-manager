@@ -85,6 +85,6 @@ dependencies {
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.accompanist.systemuicontroller)
     implementation(libs.androidx.appcompat)
-    implementation(libs.play.services.ads)
+    implementation(libs.unity.ads)
     debugImplementation(libs.androidx.ui.tooling)
 }

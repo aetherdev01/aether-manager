@@ -216,31 +216,17 @@ object AppProfileRepository {
 LAST=""
 PROFILE_DIR=$PROFILE_DIR
 
-# Simpan global refresh rate yang sedang aktif sebelum monitor mulai override
-# Ini dipakai untuk restore saat app tanpa profil khusus menjadi foreground
-GLOBAL_RR=${'$'}(settings get system peak_refresh_rate 2>/dev/null | grep -oE '[0-9]+' | head -1)
-[ -z "${'$'}GLOBAL_RR" ] || [ "${'$'}GLOBAL_RR" = "null" ] && GLOBAL_RR=""
-
 apply_profile() {
   local pkg="${'$'}1"
   case "${'$'}pkg" in
 ${cases}
     *)
-      # Restore governor ke default kernel
       _DEF=${'$'}(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors 2>/dev/null | tr ' ' '\n' | grep -m1 -xE 'schedutil|ondemand|interactive' || echo "schedutil")
       for cpu in /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor; do
         echo "${'$'}_DEF" > "${'$'}cpu" 2>/dev/null || true
       done
-      # Restore refresh rate ke nilai global yang user set — JANGAN delete
-      # karena delete menyebabkan sistem kembali ke "auto/adaptive" Hz
-      if [ -n "${'$'}GLOBAL_RR" ] && [ "${'$'}GLOBAL_RR" -gt 0 ] 2>/dev/null; then
-        settings put system peak_refresh_rate "${'$'}GLOBAL_RR" 2>/dev/null || true
-        settings put system min_refresh_rate  "${'$'}GLOBAL_RR" 2>/dev/null || true
-        [ -f /sys/class/display/panel0/max_refresh_rate ] && echo "${'$'}GLOBAL_RR" > /sys/class/display/panel0/max_refresh_rate 2>/dev/null || true
-        [ -f /sys/class/display/panel0/min_refresh_rate ] && echo "${'$'}GLOBAL_RR" > /sys/class/display/panel0/min_refresh_rate 2>/dev/null || true
-        service call SurfaceFlinger 1035 i32 "${'$'}GLOBAL_RR" 2>/dev/null || true
-      fi
-      # Restore GPU governor
+      settings delete system peak_refresh_rate 2>/dev/null || true
+      settings delete system min_refresh_rate 2>/dev/null || true
       for gf in /sys/class/kgsl/kgsl-3d0/devfreq /sys/class/devfreq/*.gpu /sys/class/devfreq/gpufreq /sys/class/devfreq/mali /sys/devices/platform/mali; do
         [ -d "${'$'}gf" ] && echo msm-adreno-tz > "${'$'}gf/governor" 2>/dev/null || \
                              echo simple_ondemand > "${'$'}gf/governor" 2>/dev/null || true
@@ -250,27 +236,29 @@ ${cases}
 }
 
 get_foreground_pkg() {
-  local _pkg
+  local _line _pkg
 
-  # Method 1: cmd window get-focused-app — paling ringan, Android 12+
-  _pkg=${'$'}(cmd window get-focused-app 2>/dev/null \
-    | grep -oE '[a-zA-Z][a-zA-Z0-9_.]+\.[a-zA-Z][a-zA-Z0-9_]+' \
-    | head -1)
+  # Method 1: mCurrentFocus — format: Window{hex u0 pkg/Activity}
+  _line=${'$'}(dumpsys window windows 2>/dev/null | grep 'mCurrentFocus' | head -1)
+  _pkg=${'$'}(echo "${'$'}_line" | sed 's/.*{ *[^ ]* [^ ]* //;s/[/ ].*//' | grep -E '^[a-zA-Z][a-zA-Z0-9_.]+\.[a-zA-Z]')
   [ -n "${'$'}_pkg" ] && { echo "${'$'}_pkg"; return 0; }
 
-  # Method 2: mCurrentFocus — reliable di semua Android
-  _pkg=${'$'}(dumpsys window windows 2>/dev/null \
-    | grep -m1 'mCurrentFocus' \
-    | sed 's/.*{ *[^ ]* [^ ]* //;s/[/ ].*//' \
-    | grep -E '^[a-zA-Z][a-zA-Z0-9_.]+\.[a-zA-Z]')
+  # Method 2: ResumedActivity — format: ResumedActivity: ActivityRecord{hex u0 pkg/.Activity ...}
+  _line=${'$'}(dumpsys activity activities 2>/dev/null | grep 'ResumedActivity' | head -1)
+  _pkg=${'$'}(echo "${'$'}_line" | sed 's/.*{ *[^ ]* [^ ]* //;s/[/ ].*//' | grep -E '^[a-zA-Z][a-zA-Z0-9_.]+\.[a-zA-Z]')
   [ -n "${'$'}_pkg" ] && { echo "${'$'}_pkg"; return 0; }
 
-  # Method 3: dumpsys activity top — fallback terakhir
-  _pkg=${'$'}(dumpsys activity top 2>/dev/null \
-    | grep -E '^ {2}ACTIVITY ' \
-    | head -1 \
-    | awk '{print ${'$'}2}' \
-    | cut -d'/' -f1)
+  # Method 3: mFocusedApp
+  _line=${'$'}(dumpsys window windows 2>/dev/null | grep 'mFocusedApp' | head -1)
+  _pkg=${'$'}(echo "${'$'}_line" | sed 's/.*{ *[^ ]* [^ ]* //;s/[/ ].*//' | grep -E '^[a-zA-Z][a-zA-Z0-9_.]+\.[a-zA-Z]')
+  [ -n "${'$'}_pkg" ] && { echo "${'$'}_pkg"; return 0; }
+
+  # Method 4: dumpsys activity top — "  ACTIVITY pkg/.Activity ..."
+  _pkg=${'$'}(dumpsys activity top 2>/dev/null | grep -E '^ {2}ACTIVITY ' | head -1 | awk '{print ${'$'}2}' | cut -d'/' -f1)
+  [ -n "${'$'}_pkg" ] && { echo "${'$'}_pkg"; return 0; }
+
+  # Method 5: cmd window get-focused-app (Android 12+)
+  _pkg=${'$'}(cmd window get-focused-app 2>/dev/null | grep -oE '[a-zA-Z][a-zA-Z0-9_.]+\.[a-zA-Z][a-zA-Z0-9_]+' | head -1)
   [ -n "${'$'}_pkg" ] && { echo "${'$'}_pkg"; return 0; }
 
   return 1
