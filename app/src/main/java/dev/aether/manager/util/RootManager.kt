@@ -61,9 +61,21 @@ object RootManager {
 
     private fun silentCheck(): Boolean {
         return try {
-            // Shell.isAppGrantedRoot() — non-blocking, tidak trigger dialog
-            val granted = Shell.isAppGrantedRoot() == true
-            Log.d(TAG, "silentCheck: granted=$granted")
+            // Cek dulu lewat isAppGrantedRoot() (non-blocking, tidak trigger dialog)
+            val quickCheck = Shell.isAppGrantedRoot()
+            if (quickCheck == true) {
+                Log.d(TAG, "silentCheck: quickCheck granted")
+                return true
+            }
+
+            // quickCheck null = shell belum pernah di-init di session ini
+            // (terjadi setelah app restart). Coba init shell secara blocking
+            // tapi TANPA memunculkan dialog baru (su -c true saja, bukan getShell()).
+            // Kalau Magisk sudah grant sebelumnya, ini akan langsung return sukses.
+            Log.d(TAG, "silentCheck: quickCheck=$quickCheck, trying shell init")
+            val result = Shell.cmd("true").exec()
+            val granted = result.isSuccess
+            Log.d(TAG, "silentCheck: shell init result=$granted")
             granted
         } catch (e: Exception) {
             Log.w(TAG, "silentCheck failed: ${e.message}")

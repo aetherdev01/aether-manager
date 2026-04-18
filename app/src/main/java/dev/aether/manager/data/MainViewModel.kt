@@ -100,13 +100,11 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
      * atau prefs setup_done tidak akan pernah true.
      */
     private suspend fun initFromCachedRoot() {
-        // Pakai cached state dari RootManager (hasil SetupActivity)
-        val hasRoot = if (RootManager.isRootGranted) {
-            true
-        } else {
-            // Fallback: silent check tanpa dialog baru
-            RootUtils.hasRoot()
-        }
+        // Setelah app restart, RootManager._cachedRoot = null (proses baru).
+        // isRootGranted akan false meski Magisk sudah grant sebelumnya.
+        // Selalu lakukan silent check (Shell.cmd("true")) agar libsu
+        // menginit ulang shell tanpa memunculkan dialog baru.
+        val hasRoot = RootUtils.hasRoot()
 
         _rootGranted.value = hasRoot
         if (hasRoot) {
