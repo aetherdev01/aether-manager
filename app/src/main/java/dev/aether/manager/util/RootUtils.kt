@@ -125,12 +125,35 @@ object RootUtils {
     suspend fun applyTweaksDirect(tweaks: Map<String, String>): Boolean {
         val sb = StringBuilder()
         val profile = tweaks["profile"] ?: "balance"
-        val governor = when (profile) {
+        // "cpu_governor" key di tweaks.conf bisa override governor dari profile
+        val customGov = tweaks["cpu_governor"]?.takeIf { it.isNotBlank() && it != "default" }
+        val profileGov = when (profile) {
             "performance" -> "performance"
             "battery"     -> "powersave"
             else          -> "schedutil"
         }
-        sb.appendLine("for p in /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor; do [ -f \$p ] && echo $governor > \$p 2>/dev/null; done")
+        val governor = customGov ?: profileGov
+        // Apply governor dengan fallback jika governor tidak tersedia di kernel
+        sb.appendLine("""
+_GOV=$governor
+_AVAIL=$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors 2>/dev/null)
+if echo "${'$'}_AVAIL" | grep -qw "${'$'}_GOV"; then
+  for p in /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor; do [ -f "${'$'}p" ] && echo "${'$'}_GOV" > "${'$'}p" 2>/dev/null; done
+else
+  case "${'$'}_GOV" in
+    ondemand|conservative)
+      _FB=$(echo "${'$'}_AVAIL" | tr ' ' '\n' | grep -m1 -xE 'schedutil|interactive|ondemand|conservative' || echo "${'$'}_AVAIL" | awk '{print $1}')
+      ;;
+    performance|powersave)
+      _FB=${'$'}_GOV
+      ;;
+    *)
+      _FB=$(echo "${'$'}_AVAIL" | tr ' ' '\n' | grep -m1 -xE 'schedutil|ondemand|interactive' || echo "${'$'}_AVAIL" | awk '{print $1}')
+      ;;
+  esac
+  for p in /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor; do [ -f "${'$'}p" ] && echo "${'$'}_FB" > "${'$'}p" 2>/dev/null; done
+fi
+        """.trimIndent())
         if (profile == "gaming") {
             sb.appendLine("for p in /sys/devices/system/cpu/cpu*/cpufreq/scaling_min_freq; do [ -f \$p ] && cat \${p%min_freq}cpuinfo_max_freq > \$p 2>/dev/null; done")
         }
