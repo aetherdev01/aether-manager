@@ -329,14 +329,16 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     // ── Settings state ───────────────────────────────────────────────────
+    // Use getApplication() because constructor param 'app' is not accessible
+    // in property initializers (class body runs after super constructor).
 
-    private val _darkModeOverride  = MutableStateFlow(SettingsPrefs.isDarkModeOverride(app))
-    private val _darkMode          = MutableStateFlow(SettingsPrefs.getDarkMode(app))
-    private val _dynamicColor      = MutableStateFlow(SettingsPrefs.getDynamicColor(app))
-    private val _autoBackup        = MutableStateFlow(SettingsPrefs.getAutoBackup(app))
-    private val _applyOnBoot       = MutableStateFlow(SettingsPrefs.getApplyOnBoot(app))
-    private val _notifications     = MutableStateFlow(SettingsPrefs.getNotifications(app))
-    private val _debugLog          = MutableStateFlow(SettingsPrefs.getDebugLog(app))
+    private val _darkModeOverride  = MutableStateFlow(SettingsPrefs.isDarkModeOverride(getApplication()))
+    private val _darkMode          = MutableStateFlow(SettingsPrefs.getDarkMode(getApplication()))
+    private val _dynamicColor      = MutableStateFlow(SettingsPrefs.getDynamicColor(getApplication()))
+    private val _autoBackup        = MutableStateFlow(SettingsPrefs.getAutoBackup(getApplication()))
+    private val _applyOnBoot       = MutableStateFlow(SettingsPrefs.getApplyOnBoot(getApplication()))
+    private val _notifications     = MutableStateFlow(SettingsPrefs.getNotifications(getApplication()))
+    private val _debugLog          = MutableStateFlow(SettingsPrefs.getDebugLog(getApplication()))
 
     val darkModeOverride : StateFlow<Boolean> = _darkModeOverride.asStateFlow()
     val darkMode         : StateFlow<Boolean> = _darkMode.asStateFlow()
@@ -347,49 +349,49 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     val debugLog         : StateFlow<Boolean> = _debugLog.asStateFlow()
 
     fun setDarkMode(dark: Boolean) {
-        SettingsPrefs.setDarkMode(app, dark)
+        SettingsPrefs.setDarkMode(getApplication(), dark)
         _darkMode.value         = dark
         _darkModeOverride.value = true
     }
 
     fun clearDarkModeOverride() {
-        SettingsPrefs.clearDarkModeOverride(app)
+        SettingsPrefs.clearDarkModeOverride(getApplication())
         _darkModeOverride.value = false
     }
 
     fun setDynamicColor(enabled: Boolean) {
-        SettingsPrefs.setDynamicColor(app, enabled)
+        SettingsPrefs.setDynamicColor(getApplication(), enabled)
         _dynamicColor.value = enabled
     }
 
     fun setAutoBackup(enabled: Boolean) {
-        SettingsPrefs.setAutoBackup(app, enabled)
+        SettingsPrefs.setAutoBackup(getApplication(), enabled)
         _autoBackup.value = enabled
     }
 
     fun setApplyOnBoot(enabled: Boolean) {
-        SettingsPrefs.setApplyOnBoot(app, enabled)
+        SettingsPrefs.setApplyOnBoot(getApplication(), enabled)
         _applyOnBoot.value = enabled
     }
 
     fun setNotifications(enabled: Boolean) {
-        SettingsPrefs.setNotifications(app, enabled)
+        SettingsPrefs.setNotifications(getApplication(), enabled)
         _notifications.value = enabled
         if (!enabled) {
-            val nm = app.getSystemService(NotificationManager::class.java)
+            val nm = getApplication<Application>().getSystemService(NotificationManager::class.java)
             nm?.cancelAll()
         }
     }
 
     fun setDebugLog(enabled: Boolean) {
-        SettingsPrefs.setDebugLog(app, enabled)
+        SettingsPrefs.setDebugLog(getApplication(), enabled)
         _debugLog.value = enabled
     }
 
     fun clearAppCache() = viewModelScope.launch(Dispatchers.IO) {
         try {
-            app.cacheDir?.deleteRecursively()
-            app.externalCacheDir?.deleteRecursively()
+            getApplication<Application>().cacheDir?.deleteRecursively()
+            getApplication<Application>().externalCacheDir?.deleteRecursively()
             snack("Cache berhasil dihapus ✓")
         } catch (e: Exception) {
             snack("Gagal hapus cache: ${e.message}")
