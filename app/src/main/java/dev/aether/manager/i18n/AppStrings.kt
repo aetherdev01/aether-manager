@@ -47,7 +47,6 @@ data class AppStrings(
     // ── Nav ──────────────────────────────────────────────────
     val navHome: String,
     val navTweak: String,
-    val navAbout: String,
     val navApps: String,
 
     // ── Home ─────────────────────────────────────────────────
@@ -106,14 +105,6 @@ data class AppStrings(
     val tweakZramAlgo: String,
     val tweakIoScheduler: String,
 
-    // ── About ────────────────────────────────────────────────
-    val aboutSectionDev: String,
-    val aboutSectionLinks: String,
-    val aboutDevDesc: String,
-    val aboutGithub: String,
-    val aboutTelegram: String,
-    val aboutSaweria: String,
-    val aboutSaweriaLabel: String,
 
     // ── Log / Reboot sheet ───────────────────────────────────
     val logRebootOptions: String,

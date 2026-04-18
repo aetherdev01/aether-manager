@@ -41,7 +41,6 @@ val StringsEn = AppStrings(
     // Nav
     navHome = "Home",
     navTweak = "Tweak",
-    navAbout = "About",
     navApps = "Apps",
 
     // Home
@@ -101,13 +100,6 @@ val StringsEn = AppStrings(
     tweakIoScheduler = "I/O Scheduler",
 
     // About
-    aboutSectionDev = "Developer",
-    aboutSectionLinks = "Community",
-    aboutDevDesc = "Android & Root Module Developer",
-    aboutGithub = "GitHub",
-    aboutTelegram = "Telegram",
-    aboutSaweria = "saweria.co/AetherDev",
-    aboutSaweriaLabel = "Saweria",
 
     // Log / Reboot
     logRebootOptions = "Reboot Options",

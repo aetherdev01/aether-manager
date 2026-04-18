@@ -41,7 +41,6 @@ val StringsId = AppStrings(
     // Nav
     navHome = "Beranda",
     navTweak = "Tweak",
-    navAbout = "Tentang",
     navApps = "Aplikasi",
 
     // Home
@@ -101,13 +100,6 @@ val StringsId = AppStrings(
     tweakIoScheduler = "I/O Scheduler",
 
     // About
-    aboutSectionDev = "Developer",
-    aboutSectionLinks = "Komunitas",
-    aboutDevDesc = "Android & Root Module Developer",
-    aboutGithub = "GitHub",
-    aboutTelegram = "Channel",
-    aboutSaweria = "saweria.co/AetherDev",
-    aboutSaweriaLabel = "Saweria",
 
     // Log / Reboot
     logRebootOptions = "Opsi Reboot",

@@ -56,7 +56,7 @@ fun SettingsScreen(
     val scrollState       = rememberScrollState()
 
     // ── Collapsible section states ────────────────────────────────────────
-    var backupExpanded     by remember { mutableStateOf(true) }
+    var backupExpanded     by remember { mutableStateOf(false) }
     var appearanceExpanded by remember { mutableStateOf(false) }
     var generalExpanded    by remember { mutableStateOf(false) }
     var advancedExpanded   by remember { mutableStateOf(false) }

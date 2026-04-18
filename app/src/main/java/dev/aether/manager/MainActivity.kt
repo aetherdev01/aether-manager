@@ -27,12 +27,10 @@ import dev.aether.manager.ads.AdScheduler
 import dev.aether.manager.ads.InterstitialAdManager
 import dev.aether.manager.data.AppProfileViewModel
 import dev.aether.manager.data.MainViewModel
-import dev.aether.manager.i18n.LanguageDropdownCompact
 import dev.aether.manager.i18n.LocalStrings
 import dev.aether.manager.i18n.ProvideStrings
 import androidx.compose.foundation.isSystemInDarkTheme
 import dev.aether.manager.ui.AetherTheme
-import dev.aether.manager.ui.about.AboutScreen
 import dev.aether.manager.ui.appprofile.AppProfileScreen
 import dev.aether.manager.ui.components.IosToastHost
 import dev.aether.manager.ui.components.IosToastType
@@ -67,27 +65,35 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-private enum class Screen { HOME, TWEAK, APPS, ABOUT }
+private enum class Screen { HOME, TWEAK, APPS }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AetherApp(vm: MainViewModel, apVm: AppProfileViewModel, updateVm: UpdateViewModel) {
     val s = LocalStrings.current
     val context = LocalContext.current
+    val activity = context as android.app.Activity
+
     var currentScreen by remember { mutableStateOf(Screen.HOME) }
     var showReboot    by remember { mutableStateOf(false) }
     var showSettings  by remember { mutableStateOf(false) }
 
-    // ── Interstitial Ads ──────────────────────────────────────────────────
-    val activity = context as android.app.Activity
-    LaunchedEffect(currentScreen) { InterstitialAdManager.showIfReady(activity) }
-
+    // ── Ad Scheduler: otomatis mulai/stop ikut lifecycle ──────────────────
+    // Iklan pertama muncul setelah 60 detik, lalu setiap 2 menit.
+    // Tidak dipanggil manual saat ganti tab — biarkan scheduler yang handle.
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
-                Lifecycle.Event.ON_RESUME -> AdScheduler.start { activity.takeUnless { it.isFinishing || it.isDestroyed } }
-                Lifecycle.Event.ON_PAUSE  -> AdScheduler.stop()
+                Lifecycle.Event.ON_RESUME -> {
+                    // Preload ulang jika belum ada (misal setelah app background lama)
+                    InterstitialAdManager.preload(activity)
+                    // Start scheduler otomatis
+                    AdScheduler.start {
+                        activity.takeUnless { it.isFinishing || it.isDestroyed }
+                    }
+                }
+                Lifecycle.Event.ON_PAUSE -> AdScheduler.stop()
                 else -> {}
             }
         }
@@ -124,7 +130,6 @@ fun AetherApp(vm: MainViewModel, apVm: AppProfileViewModel, updateVm: UpdateView
         NavItem(Screen.HOME,  s.navHome,  Icons.Filled.Home,  Icons.Outlined.Home),
         NavItem(Screen.TWEAK, s.navTweak, Icons.Filled.Tune,  Icons.Outlined.Tune),
         NavItem(Screen.APPS,  s.navApps,  Icons.Filled.Apps,  Icons.Outlined.Apps),
-        NavItem(Screen.ABOUT, s.navAbout, Icons.Filled.Info,  Icons.Outlined.Info),
     )
 
     // ── SettingsScreen overlay ────────────────────────────────────────────
@@ -144,7 +149,6 @@ fun AetherApp(vm: MainViewModel, apVm: AppProfileViewModel, updateVm: UpdateView
             TopAppBar(
                 title = { Text("Aether Manager", fontWeight = FontWeight.Medium, fontSize = 20.sp) },
                 actions = {
-                    LanguageDropdownCompact()
                     IconButton(onClick = { showSettings = true }) {
                         Icon(Icons.Outlined.Settings, null)
                     }
@@ -202,7 +206,6 @@ fun AetherApp(vm: MainViewModel, apVm: AppProfileViewModel, updateVm: UpdateView
                     Screen.HOME  -> HomeScreen(vm)
                     Screen.TWEAK -> TweakScreen(vm)
                     Screen.APPS  -> AppProfileScreen(apVm)
-                    Screen.ABOUT -> AboutScreen(vm = vm)
                 }
             }
             IosToastHost(iosToast)

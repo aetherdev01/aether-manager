@@ -59,19 +59,19 @@ fun AboutScreen(
         // ── Section: Developer ────────────────────────────────────────────
         TabSectionTitle(
             icon  = Icons.Outlined.Person,
-            title = s.aboutSectionDev
+            title = "Developer"
         )
         DevProfileCard()
 
         // ── Section: Komunitas & Tautan ───────────────────────────────────
         TabSectionTitle(
             icon  = Icons.Outlined.Language,
-            title = s.aboutSectionLinks
+            title = "Community"
         )
         AboutSection {
             LinkRow(
                 icon     = Icons.Outlined.Code,
-                label    = s.aboutGithub,
+                label    = "GitHub",
                 subtitle = "github.com/aetherdev01",
                 onClick  = {
                     ctx.startActivity(
@@ -82,7 +82,7 @@ fun AboutScreen(
             AboutDivider()
             LinkRow(
                 icon     = Icons.AutoMirrored.Outlined.Send,
-                label    = s.aboutTelegram,
+                label    = "Telegram",
                 subtitle = "@get01projects",
                 onClick  = {
                     ctx.startActivity(
@@ -93,8 +93,8 @@ fun AboutScreen(
             AboutDivider()
             LinkRow(
                 icon     = Icons.Outlined.Favorite,
-                label    = s.aboutSaweriaLabel,
-                subtitle = s.aboutSaweria,
+                label    = "Saweria",
+                subtitle = "saweria.co/AetherDev",
                 onClick  = {
                     ctx.startActivity(
                         Intent(Intent.ACTION_VIEW, Uri.parse("https://saweria.co/AetherDev"))
@@ -270,7 +270,7 @@ private fun DevProfileCard() {
                     fontWeight = FontWeight.SemiBold
                 )
                 Text(
-                    s.aboutDevDesc,
+                    "Android & Root Module Developer",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.65f)
                 )
