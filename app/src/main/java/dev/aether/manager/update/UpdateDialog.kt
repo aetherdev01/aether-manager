@@ -11,6 +11,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.*
+import androidx.compose.material.icons.automirrored.outlined.ArrowForward
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -334,7 +335,7 @@ private fun VersionArrowChip(currentVersion: String, newVersion: String) {
                 fontWeight = FontWeight.Medium,
             )
             Icon(
-                Icons.Outlined.ArrowForward, null,
+                Icons.AutoMirrored.Outlined.ArrowForward, null,
                 tint     = MaterialTheme.colorScheme.onSecondaryContainer,
                 modifier = Modifier.size(14.dp)
             )

@@ -13,6 +13,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
+import androidx.compose.material.icons.automirrored.filled.TrendingDown
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
@@ -677,7 +678,7 @@ private fun govIcon(gov: String): ImageVector = when (gov) {
     "performance"  -> Icons.Filled.FlashOn
     "powersave"    -> Icons.Filled.BatterySaver
     "ondemand"     -> Icons.Filled.AutoMode
-    "conservative" -> Icons.Filled.TrendingDown
+    "conservative" -> Icons.AutoMirrored.Filled.TrendingDown
     "schedutil"    -> Icons.Filled.Schedule
     "interactive"  -> Icons.Filled.TouchApp
     else           -> Icons.Filled.Tune

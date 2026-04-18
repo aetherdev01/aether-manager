@@ -10,6 +10,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
+import androidx.compose.material.icons.automirrored.outlined.TrendingUp
+import androidx.compose.material.icons.automirrored.outlined.Article
+import androidx.compose.material.icons.automirrored.outlined.CompareArrows
+import androidx.compose.material.icons.automirrored.outlined.Sort
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -58,7 +62,7 @@ fun TweakScreen(vm: MainViewModel) {
             TweakSection(s.tweakSectionCpu) {
                 TweakRow(Icons.Outlined.DateRange, s.tweakSchedBoost, s.tweakSchedBoostDesc, tweaks.schedboost) { vm.setTweak("schedboost", it) }
                 ItemDivider()
-                TweakRow(Icons.Outlined.TrendingUp, s.tweakCpuBoost, s.tweakCpuBoostDesc, tweaks.cpuBoost) { vm.setTweak("cpu_boost", it) }
+                TweakRow(Icons.AutoMirrored.Outlined.TrendingUp, s.tweakCpuBoost, s.tweakCpuBoostDesc, tweaks.cpuBoost) { vm.setTweak("cpu_boost", it) }
                 ItemDivider()
                 TweakRow(Icons.Outlined.GridView, s.tweakGpuThrottle, s.tweakGpuThrottleDesc, tweaks.gpuThrottleOff) { vm.setTweak("gpu_throttle_off", it) }
                 ItemDivider()
@@ -69,7 +73,7 @@ fun TweakScreen(vm: MainViewModel) {
 
             // ── Memory ────────────────────────────────────────
             TweakSection(s.tweakSectionMemory) {
-                TweakRow(Icons.Outlined.Article, s.tweakLmk, s.tweakLmkDesc, tweaks.lmkAggressive) { vm.setTweak("lmk_aggressive", it) }
+                TweakRow(Icons.AutoMirrored.Outlined.Article, s.tweakLmk, s.tweakLmkDesc, tweaks.lmkAggressive) { vm.setTweak("lmk_aggressive", it) }
                 ItemDivider()
                 TweakRow(Icons.Outlined.Memory, s.tweakZram, s.tweakZramDesc, tweaks.zram) { vm.setTweak("zram", it) }
                 ItemDivider()
@@ -265,7 +269,7 @@ private fun ZramAlgoRow(current: String, onSelect: (String) -> Unit) {
     var expanded by remember { mutableStateOf(false) }
     val options = listOf("lz4", "lzo", "zstd", "lz4hc")
     DropdownRow(
-        icon    = Icons.Outlined.CompareArrows,
+        icon    = Icons.AutoMirrored.Outlined.CompareArrows,
         title   = s.tweakZramAlgo,
         subtitle = "Kompresi — LZ4 paling cepat",
         value   = current.ifBlank { "lz4" },
@@ -287,7 +291,7 @@ private fun IoSchedulerRow(current: String, onSelect: (String) -> Unit) {
         "cfq" to "cfq", "deadline" to "deadline", "mq-deadline" to "mq-deadline",
         "bfq" to "bfq", "kyber" to "kyber")
     DropdownRow(
-        icon    = Icons.Outlined.Sort,
+        icon    = Icons.AutoMirrored.Outlined.Sort,
         title   = s.tweakIoScheduler,
         subtitle = "Algoritma I/O",
         value   = options.find { it.first == current }?.second ?: "Default",
@@ -333,7 +337,7 @@ private fun DropdownRow(
                 value         = value,
                 onValueChange = {},
                 readOnly      = true,
-                modifier      = Modifier.menuAnchor().width(105.dp),
+                modifier      = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable).width(105.dp),
                 trailingIcon  = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
                 textStyle     = MaterialTheme.typography.bodySmall,
                 singleLine    = true

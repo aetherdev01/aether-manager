@@ -14,6 +14,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
+import androidx.compose.material.icons.automirrored.outlined.Send
+import androidx.compose.material.icons.automirrored.outlined.OpenInNew
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -79,7 +81,7 @@ fun AboutScreen(
             )
             AboutDivider()
             LinkRow(
-                icon     = Icons.Outlined.Send,
+                icon     = Icons.AutoMirrored.Outlined.Send,
                 label    = s.aboutTelegram,
                 subtitle = "@get01projects",
                 onClick  = {
@@ -343,7 +345,7 @@ private fun LinkRow(
                 )
             }
             Icon(
-                Icons.Outlined.OpenInNew, null,
+                Icons.AutoMirrored.Outlined.OpenInNew, null,
                 tint     = MaterialTheme.colorScheme.outline,
                 modifier = Modifier.size(15.dp)
             )

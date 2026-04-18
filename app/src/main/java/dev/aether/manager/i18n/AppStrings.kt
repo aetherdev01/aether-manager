@@ -209,6 +209,41 @@ data class AppStrings(
     val settingsBtnResetMonitor: String,
     val settingsResetMonitorTitle: String,
     val settingsResetMonitorDesc: String,
+
+    // ── Settings — Appearance ─────────────────────────────────
+    val settingsSectionAppearance: String,
+    val settingsLanguage: String,
+    val settingsLanguageDesc: String,
+    val settingsDarkMode: String,
+    val settingsDarkModeDesc: String,
+    val settingsDynamicColor: String,
+    val settingsDynamicColorDesc: String,
+
+    // ── Settings — General ────────────────────────────────────
+    val settingsSectionGeneral: String,
+    val settingsAutoBackup: String,
+    val settingsAutoBackupDesc: String,
+    val settingsApplyOnBoot: String,
+    val settingsApplyOnBootDesc: String,
+    val settingsNotifications: String,
+    val settingsNotificationsDesc: String,
+
+    // ── Settings — Advanced ───────────────────────────────────
+    val settingsSectionAdvanced: String,
+    val settingsRootMethod: String,
+    val settingsRootMethodDesc: String,
+    val settingsDebugLog: String,
+    val settingsDebugLogDesc: String,
+    val settingsClearCache: String,
+    val settingsClearCacheDesc: String,
+
+    // ── Settings — About App ──────────────────────────────────
+    val settingsSectionAbout: String,
+    val settingsVersion: String,
+    val settingsSourceCode: String,
+    val settingsSourceCodeDesc: String,
+    val settingsLicense: String,
+    val settingsLicenseDesc: String,
 )
 
 val LocalStrings = staticCompositionLocalOf<AppStrings> {
