@@ -22,7 +22,7 @@ fun UnityAdsBanner(
         .fillMaxWidth()
         .wrapContentHeight()
 ) {
-    val context = LocalContext.current
+    val context  = LocalContext.current
     val activity = context as? Activity ?: return
 
     AndroidView(
@@ -36,6 +36,7 @@ fun UnityAdsBanner(
             )
             banner.listener = object : BannerView.IListener {
                 override fun onBannerLoaded(bannerAdView: BannerView) {}
+                override fun onBannerShown(bannerAdView: BannerView) {}
                 override fun onBannerClick(bannerAdView: BannerView) {}
                 override fun onBannerFailedToLoad(bannerAdView: BannerView, errorInfo: BannerErrorInfo) {}
                 override fun onBannerLeftApplication(bannerView: BannerView) {}

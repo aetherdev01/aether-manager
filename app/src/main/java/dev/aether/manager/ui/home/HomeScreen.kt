@@ -99,7 +99,7 @@ fun HomeScreen(vm: MainViewModel) {
             }
         }
 
-        AdMobBanner()
+        AdBanner()
     }
 }
 
