@@ -120,8 +120,8 @@ object AppProfileRepository {
         RootUtils.sh("pkill -f app_monitor.sh 2>/dev/null || true")
         // Hapus semua profile JSON
         RootUtils.sh("rm -f $PROFILE_DIR/*.json 2>/dev/null || true")
-        // Hapus script monitor agar di-regenerate saat profile baru dibuat
-        RootUtils.sh("rm -f $MONITOR_SCRIPT $SERVICE_SCRIPT 2>/dev/null || true")
+        // Hapus script monitor dan cache default RR agar di-regenerate fresh
+        RootUtils.sh("rm -f $MONITOR_SCRIPT $SERVICE_SCRIPT $PROFILE_DIR/.default_rr 2>/dev/null || true")
     }
 
     suspend fun isMonitorRunning(): Boolean {
@@ -136,6 +136,7 @@ object AppProfileRepository {
             .lines().filter { it.endsWith(".json") }
 
         val cases = StringBuilder()
+        val profilePkgs = mutableListOf<String>()
         for (path in profilesRaw) {
             val pkg = path.substringAfterLast("/").removeSuffix(".json")
             val raw = RootUtils.sh("cat $path 2>/dev/null").stdout.trim()
@@ -143,6 +144,7 @@ object AppProfileRepository {
             try {
                 val j = JSONObject(raw)
                 if (!j.optBoolean("enabled", false)) continue
+                profilePkgs.add(pkg)
                 val gov    = j.optString("cpu_governor", "default")
                 val rr     = j.optString("refresh_rate", "default")
                 val tweaks = j.optJSONObject("tweaks") ?: JSONObject()
@@ -216,18 +218,38 @@ object AppProfileRepository {
 LAST=""
 PROFILE_DIR=$PROFILE_DIR
 
-# ── Snapshot default refresh rate sebelum monitor mulai ──────────────────────
-# Dibaca sekali dari settings system; kalau kosong fallback ke sysfs atau 60.
-_DEF_PEAK=${'$'}(settings get system peak_refresh_rate 2>/dev/null | grep -v null || echo "")
-_DEF_MIN=${'$'}(settings get system min_refresh_rate 2>/dev/null | grep -v null || echo "")
-# Fallback: baca dari sysfs kalau settings kosong
-if [ -z "${'$'}_DEF_PEAK" ]; then
-  _DEF_PEAK=${'$'}(cat /sys/class/display/panel0/default_refresh_rate \
-                      /sys/class/display/panel0/max_refresh_rate \
-                      2>/dev/null | head -1 | tr -d '[:space:]')
-fi
-[ -z "${'$'}_DEF_PEAK" ] && _DEF_PEAK="60"
-[ -z "${'$'}_DEF_MIN"  ] && _DEF_MIN="${'$'}_DEF_PEAK"
+# ── Default refresh rate — persist ke file agar aman dari monitor restart ──────
+# File ini HANYA ditulis saat tidak ada profile app yang sedang aktif,
+# sehingga tidak pernah menangkap nilai yang sudah di-override oleh profile.
+_DEF_RR_FILE="$PROFILE_DIR/.default_rr"
+
+_snapshot_default_rr() {
+  # Baca dari file dulu (hasil snapshot sebelumnya)
+  if [ -f "${'$'}_DEF_RR_FILE" ]; then
+    _DEF_PEAK=${'$'}(cat "${'$'}_DEF_RR_FILE" 2>/dev/null | tr -d '[:space:]')
+  fi
+  # Jika file belum ada, baca dari settings system
+  if [ -z "${'$'}_DEF_PEAK" ]; then
+    _TMP=${'$'}(settings get system peak_refresh_rate 2>/dev/null)
+    if [ -n "${'$'}_TMP" ] && [ "${'$'}_TMP" != "null" ]; then
+      _DEF_PEAK="${'$'}_TMP"
+    fi
+  fi
+  # Fallback sysfs default_refresh_rate (bukan max — bukan hardware ceiling)
+  if [ -z "${'$'}_DEF_PEAK" ]; then
+    _DEF_PEAK=${'$'}(cat /sys/class/display/panel0/default_refresh_rate 2>/dev/null | tr -d '[:space:]')
+  fi
+  # Hard fallback
+  [ -z "${'$'}_DEF_PEAK" ] && _DEF_PEAK="60"
+  _DEF_MIN="${'$'}_DEF_PEAK"
+  # Simpan ke file agar restart monitor tidak salah baca
+  echo "${'$'}_DEF_PEAK" > "${'$'}_DEF_RR_FILE" 2>/dev/null || true
+}
+
+# Panggil snapshot — file belum ada = baca dari sistem, sudah ada = pakai file
+_DEF_PEAK=""
+_DEF_MIN=""
+_snapshot_default_rr
 
 # ── Universal governor helper ─────────────────────────────────────────────────
 # Supports: per-cpu paths (legacy), per-policy paths (GKI/modern), MTK, Exynos
@@ -355,15 +377,15 @@ _restore_default() {
     [ -d "${'$'}_gf" ] && (echo msm-adreno-tz > "${'$'}_gf/governor" 2>/dev/null || \
                             echo simple_ondemand > "${'$'}_gf/governor" 2>/dev/null || true)
   done
+  # Pastikan file cache RR tetap sinkron dengan nilai yang baru di-restore
+  echo "${'$'}_DEF_PEAK" > "${'$'}_DEF_RR_FILE" 2>/dev/null || true
 }
 
 apply_profile() {
   local pkg="${'$'}1"
   case "${'$'}pkg" in
 ${cases}
-    *)
-      _restore_default
-      ;;
+    *) ;;
   esac
 }
 
@@ -391,11 +413,29 @@ get_foreground_pkg() {
   return 1
 }
 
+# Track whether the last applied state was a profile-app (needs restore on exit)
+PROFILE_ACTIVE=0
+
+is_profile_pkg() {
+  case "${'$'}1" in
+${profilePkgs.joinToString("\n") { "    \"$it\") return 0 ;;" }}
+    *) return 1 ;;
+  esac
+}
+
 while true; do
   CURRENT=${'$'}(get_foreground_pkg)
   if [ -n "${'$'}CURRENT" ] && [ "${'$'}CURRENT" != "${'$'}LAST" ]; then
+    # Foreground app berganti — apply profile jika ada, restore jika tidak
     LAST="${'$'}CURRENT"
-    apply_profile "${'$'}CURRENT"
+    if is_profile_pkg "${'$'}CURRENT"; then
+      apply_profile "${'$'}CURRENT"
+      PROFILE_ACTIVE=1
+    elif [ "${'$'}PROFILE_ACTIVE" = "1" ]; then
+      # Keluar dari profile app → restore default
+      _restore_default
+      PROFILE_ACTIVE=0
+    fi
   fi
   sleep 1
 done

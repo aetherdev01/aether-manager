@@ -38,17 +38,21 @@ fun AppProfileScreen(vm: AppProfileViewModel) {
     val state by vm.state.collectAsState()
     val editing by vm.editingProfile.collectAsState()
     val snack by vm.snack.collectAsState()
-    val snackState = remember { SnackbarHostState() }
+    val iosToast = dev.aether.manager.ui.components.rememberIosToastState()
 
     LaunchedEffect(snack) {
         if (snack != null) {
-            snackState.showSnackbar(snack!!, duration = SnackbarDuration.Short)
+            val isError = snack!!.startsWith("Gagal") || snack!!.startsWith("Error")
+            iosToast.show(
+                message = snack!!,
+                type = if (isError) dev.aether.manager.ui.components.IosToastType.ERROR
+                       else dev.aether.manager.ui.components.IosToastType.SUCCESS
+            )
             vm.clearSnack()
         }
     }
 
     Scaffold(
-        snackbarHost = { SnackbarHost(snackState) },
         containerColor = MaterialTheme.colorScheme.background,
     ) { pad ->
         Box(Modifier.padding(bottom = pad.calculateBottomPadding()).fillMaxSize()) {
@@ -63,6 +67,7 @@ fun AppProfileScreen(vm: AppProfileViewModel) {
                     is AppsUiState.Ready   -> ReadyContent(s, vm)
                 }
             }
+            dev.aether.manager.ui.components.IosToastHost(iosToast)
         }
     }
 

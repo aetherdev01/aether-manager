@@ -27,6 +27,9 @@ import dev.aether.manager.i18n.ProvideStrings
 import dev.aether.manager.ui.AetherTheme
 import dev.aether.manager.ui.about.AboutScreen
 import dev.aether.manager.ui.appprofile.AppProfileScreen
+import dev.aether.manager.ui.components.IosToastHost
+import dev.aether.manager.ui.components.IosToastType
+import dev.aether.manager.ui.components.rememberIosToastState
 import dev.aether.manager.ui.components.RebootBottomSheet
 import dev.aether.manager.ui.home.HomeScreen
 import dev.aether.manager.ui.settings.SettingsScreen
@@ -75,7 +78,7 @@ fun AetherApp(vm: MainViewModel, apVm: AppProfileViewModel, updateVm: UpdateView
     }
 
     val snack by vm.snackMessage.collectAsState()
-    val snackbarHostState = remember { SnackbarHostState() }
+    val iosToast = rememberIosToastState()
 
     data class NavItem(
         val screen: Screen,
@@ -93,7 +96,11 @@ fun AetherApp(vm: MainViewModel, apVm: AppProfileViewModel, updateVm: UpdateView
 
     LaunchedEffect(snack) {
         if (snack != null) {
-            snackbarHostState.showSnackbar(snack!!, duration = SnackbarDuration.Short)
+            val isError = snack!!.startsWith("Gagal") || snack!!.startsWith("Error")
+            iosToast.show(
+                message = snack!!,
+                type = if (isError) IosToastType.ERROR else IosToastType.SUCCESS
+            )
             vm.clearSnack()
         }
     }
@@ -111,7 +118,6 @@ fun AetherApp(vm: MainViewModel, apVm: AppProfileViewModel, updateVm: UpdateView
 
     // ── Main scaffold ─────────────────────────────────────────────────────
     Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text("Aether Manager", fontWeight = FontWeight.Medium, fontSize = 20.sp) },
@@ -179,6 +185,7 @@ fun AetherApp(vm: MainViewModel, apVm: AppProfileViewModel, updateVm: UpdateView
                     Screen.ABOUT -> AboutScreen(vm = vm)
                 }
             }
+            IosToastHost(iosToast)
         }
     }
 

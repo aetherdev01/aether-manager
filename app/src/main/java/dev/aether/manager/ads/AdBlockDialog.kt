@@ -43,8 +43,8 @@ fun AdBlockDetectedDialog(
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(
-            dismissOnBackPress  = true,   // bisa dismiss dengan back
-            dismissOnClickOutside = false // tapi tidak dengan tap luar (supaya terbaca dulu)
+            dismissOnBackPress   = false,
+            dismissOnClickOutside = false
         )
     ) {
         AnimatedVisibility(
