@@ -16,6 +16,7 @@ import androidx.lifecycle.*
 import androidx.savedstate.SavedStateRegistry
 import androidx.savedstate.SavedStateRegistryController
 import androidx.savedstate.SavedStateRegistryOwner
+import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import androidx.core.app.NotificationCompat
 import dev.aether.manager.ui.AetherTheme
 import dev.aether.manager.i18n.ProvideStrings

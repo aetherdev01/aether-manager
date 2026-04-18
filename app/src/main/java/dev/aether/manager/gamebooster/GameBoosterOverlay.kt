@@ -26,6 +26,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.ViewModelStoreOwner
 
 // ── Color tokens ──────────────────────────────────────────────────────────────
 private val PanelBg      = Color(0xF0101018)
@@ -44,10 +45,9 @@ fun GameBoosterOverlay(
 ) {
     val context = LocalContext.current
     val vm = remember {
-        ViewModelProvider(
-            composeView.findViewTreeViewModelStoreOwner()!!,
-            GameBoosterViewModel.Factory(context)
-        )[GameBoosterViewModel::class.java]
+        val owner = composeView.context as? ViewModelStoreOwner
+            ?: error("Context is not a ViewModelStoreOwner")
+        ViewModelProvider(owner, GameBoosterViewModel.Factory(context))[GameBoosterViewModel::class.java]
     }
 
     val monitor by vm.monitor.collectAsState()

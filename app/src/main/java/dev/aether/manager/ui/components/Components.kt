@@ -118,11 +118,9 @@ fun IosToastHost(state: IosToastState) {
                     else                 -> null
                 }
                 Snackbar(
-                    snackbarData        = snackData,
                     shape               = RoundedCornerShape(14.dp),
                     containerColor      = MaterialTheme.colorScheme.inverseSurface,
                     contentColor        = MaterialTheme.colorScheme.inverseOnSurface,
-                    actionContentColor  = accentColor,
                     modifier            = Modifier.padding(horizontal = 16.dp),
                 ) {
                     Row(
@@ -142,6 +140,7 @@ fun IosToastHost(state: IosToastState) {
                             style      = MaterialTheme.typography.bodySmall,
                             fontWeight = FontWeight.SemiBold,
                             maxLines   = 2,
+                            color      = MaterialTheme.colorScheme.inverseOnSurface,
                         )
                     }
                 }
