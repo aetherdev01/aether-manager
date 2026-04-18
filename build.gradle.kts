@@ -1,13 +1,6 @@
-plugins {
-    alias(libs.plugins.android.application) apply false
-    alias(libs.plugins.kotlin.android) apply false
-    alias(libs.plugins.kotlin.compose) apply false
-}
-
 subprojects {
     configurations.all {
         resolutionStrategy {
-            // Paksa versi stable, hindari alpha/beta
             force("androidx.core:core:1.16.0")
             force("androidx.core:core-ktx:1.16.0")
             force("androidx.activity:activity:1.10.1")
