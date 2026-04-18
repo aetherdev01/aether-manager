@@ -1,81 +1,133 @@
-# Add project specific ProGuard rules here.
-# You can control the set of applied configuration files using the
-# proguardFiles setting in build.gradle.
-#
-# For more details, see
-#   http://developer.android.com/guide/developing/tools/proguard.html
+# ═══════════════════════════════════════════════════════════════════
+#  Aether Manager — ProGuard / R8 Rules
+#  @AetherDev22
+# ═══════════════════════════════════════════════════════════════════
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+# ── Aggressive renaming ─────────────────────────────────────────────
+-repackageclasses 'a'
+-allowaccessmodification
+-overloadaggressively
+-useuniqueclassmembernames
 
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
+# ── Strip debug info ────────────────────────────────────────────────
+-renamesourcefileattribute SourceFile
+# Aktifkan ini untuk stack trace production (matikan untuk release publik):
 #-keepattributes SourceFile,LineNumberTable
 
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
-#-renamesourcefileattribute SourceFile
-
-##---------------Begin: proguard configuration for Gson  ----------
-# Gson uses generic type information stored in a class file when working with fields. Proguard
-# removes such information by default, so configure it to keep all of it.
--keepattributes Signature
-
-# For using GSON @Expose annotation
--keepattributes *Annotation*
-
-# Gson specific classes
--dontwarn sun.misc.**
-#-keep class com.google.gson.stream.** { *; }
-
-# Application classes that will be serialized/deserialized over Gson
--keep class com.google.gson.examples.android.model.** { <fields>; }
-
-# Prevent proguard from stripping interface information from TypeAdapter, TypeAdapterFactory,
-# JsonSerializer, JsonDeserializer instances (so they can be used in @JsonAdapter)
--keep class * extends com.google.gson.TypeAdapter
--keep class * implements com.google.gson.TypeAdapterFactory
--keep class * implements com.google.gson.JsonSerializer
--keep class * implements com.google.gson.JsonDeserializer
-
-# Prevent R8 from leaving Data object members always null
--keepclassmembers,allowobfuscation class * {
-  @com.google.gson.annotations.SerializedName <fields>;
+# ── Remove logging (semua level) ────────────────────────────────────
+-assumenosideeffects class android.util.Log {
+    public static int v(...);
+    public static int d(...);
+    public static int i(...);
+    public static int w(...);
+    public static int e(...);
+    public static int wtf(...);
+    public static boolean isLoggable(...);
 }
 
-# Retain generic signatures of TypeToken and its subclasses with R8 version 3.0 and higher.
--keep,allowobfuscation,allowshrinking class com.google.gson.reflect.TypeToken
--keep,allowobfuscation,allowshrinking class * extends com.google.gson.reflect.TypeToken
+# ── Remove Kotlin null checks & intrinsics ──────────────────────────
+-assumenosideeffects class kotlin.jvm.internal.Intrinsics {
+    public static void check*(...);
+    public static void throw*(...);
+}
+-assumenosideeffects class java.util.Objects {
+    ** requireNonNull(...);
+}
 
-##---------------End: proguard configuration for Gson  ----------
+# ── Kotlin metadata (agar reflection tetap kerja) ───────────────────
+-keepattributes *Annotation*
+-keepattributes Signature
+-keepattributes InnerClasses
+-keepattributes EnclosingMethod
 
+# ── Kotlin coroutines ───────────────────────────────────────────────
+-keepnames class kotlinx.coroutines.internal.MainDispatcherFactory {}
+-keepnames class kotlinx.coroutines.CoroutineExceptionHandler {}
+-keepclassmembernames class kotlinx.** {
+    volatile <fields>;
+}
+-dontwarn kotlinx.coroutines.**
+
+# ── Jetpack Compose ─────────────────────────────────────────────────
+-keep class androidx.compose.** { *; }
+-keepclassmembers class * {
+    @androidx.compose.runtime.Composable *;
+}
+-dontwarn androidx.compose.**
+
+# ── Navigation Compose ──────────────────────────────────────────────
+-keepnames class * extends androidx.navigation.NavArgs
+-dontwarn androidx.navigation.**
+
+# ── DataStore ───────────────────────────────────────────────────────
+-keep class androidx.datastore.** { *; }
+-dontwarn androidx.datastore.**
+
+# ── ViewModel / Lifecycle ───────────────────────────────────────────
+-keep class * extends androidx.lifecycle.ViewModel { *; }
+-keepclassmembers class * extends androidx.lifecycle.AndroidViewModel {
+    public <init>(android.app.Application);
+}
+
+# ── Parcelable ──────────────────────────────────────────────────────
 -keep class * implements android.os.Parcelable {
     public static final android.os.Parcelable$Creator *;
 }
-
 -keepnames class * implements android.os.Parcelable
 
+# ── Serializable ────────────────────────────────────────────────────
+-keepclassmembers class * implements java.io.Serializable {
+    static final long serialVersionUID;
+    private static final java.io.ObjectStreamField[] serialPersistentFields;
+    private void writeObject(java.io.ObjectOutputStream);
+    private void readObject(java.io.ObjectInputStream);
+    java.lang.Object writeReplace();
+    java.lang.Object readResolve();
+}
 
+# ── JNI / Native ────────────────────────────────────────────────────
 -keepclasseswithmembernames,includedescriptorclasses class * {
     native <methods>;
 }
 
--assumenosideeffects class kotlin.jvm.internal.Intrinsics {
-	public static void check*(...);
-	public static void throw*(...);
+# ── Gson ────────────────────────────────────────────────────────────
+-dontwarn sun.misc.**
+-keep class * extends com.google.gson.TypeAdapter
+-keep class * implements com.google.gson.TypeAdapterFactory
+-keep class * implements com.google.gson.JsonSerializer
+-keep class * implements com.google.gson.JsonDeserializer
+-keepclassmembers,allowobfuscation class * {
+    @com.google.gson.annotations.SerializedName <fields>;
 }
+-keep,allowobfuscation,allowshrinking class com.google.gson.reflect.TypeToken
+-keep,allowobfuscation,allowshrinking class * extends com.google.gson.reflect.TypeToken
 
--assumenosideeffects class java.util.Objects{
-    ** requireNonNull(...);
-}
+# ── Unity Ads ───────────────────────────────────────────────────────
+-keep class com.unity3d.ads.** { *; }
+-dontwarn com.unity3d.ads.**
 
-#-keep class com.frb.engine.Starter {
-#    public static void main(java.lang.String[]);
+# ── Aether: StringCrypt decoder (WAJIB di-keep) ─────────────────────
+# Kelas ini di-inject oleh StringEncryptTransform, jangan di-obfuscate
+-keep class dev.aether.manager.security.StringCrypt { *; }
+
+# ── Aether app entry points ─────────────────────────────────────────
+-keep class dev.aether.manager.AetherApplication { *; }
+-keep class dev.aether.manager.MainActivity { *; }
+-keep class dev.aether.manager.SplashActivity { *; }
+-keep class dev.aether.manager.SetupActivity { *; }
+
+# ── WebView JS interface ─────────────────────────────────────────────
+#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
+#    public *;
 #}
 
--keepattributes SourceFile,LineNumberTable
--renamesourcefileattribute SourceFile
+# ── Enum ────────────────────────────────────────────────────────────
+-keepclassmembers enum * {
+    public static **[] values();
+    public static ** valueOf(java.lang.String);
+}
+
+# ── Suppress common warnings ────────────────────────────────────────
+-dontwarn java.lang.invoke.**
+-dontwarn javax.annotation.**
+-dontwarn org.jetbrains.annotations.**

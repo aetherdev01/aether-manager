@@ -8,7 +8,7 @@ on:
 
 jobs:
   build:
-    name: Build APK
+    name: Build Release APK
     runs-on: ubuntu-latest
 
     steps:
@@ -46,20 +46,12 @@ jobs:
           KEY_PASSWORD:   ${{ secrets.KEY_PASSWORD }}
         run: ./gradlew assembleRelease --no-daemon
 
-      - name: Build Debug APK
-        run: ./gradlew assembleDebug --no-daemon
-
-      - name: Get APK names
+      - name: Get APK name
         run: |
           RELEASE_APK=$(find app/build/outputs/apk/release -name "*.apk" | head -1)
-          DEBUG_APK=$(find app/build/outputs/apk/debug -name "*.apk" | head -1)
           echo "RELEASE_APK=$RELEASE_APK" >> $GITHUB_ENV
-          echo "DEBUG_APK=$DEBUG_APK"     >> $GITHUB_ENV
           echo "RELEASE_NAME=$(basename $RELEASE_APK)" >> $GITHUB_ENV
-          echo "DEBUG_NAME=$(basename $DEBUG_APK)"     >> $GITHUB_ENV
-          echo "── Output ──"
           ls -lh app/build/outputs/apk/release/
-          ls -lh app/build/outputs/apk/debug/
 
       - name: Upload Release APK
         uses: actions/upload-artifact@v4
@@ -67,13 +59,6 @@ jobs:
           name: ${{ env.RELEASE_NAME }}
           path: ${{ env.RELEASE_APK }}
           retention-days: 30
-
-      - name: Upload Debug APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ env.DEBUG_NAME }}
-          path: ${{ env.DEBUG_APK }}
-          retention-days: 7
 
       - name: Create GitHub Release
         if: startsWith(github.ref, 'refs/tags/v')
