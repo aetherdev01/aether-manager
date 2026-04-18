@@ -37,7 +37,6 @@ fun SettingsScreen(
     onResetMonitor  : () -> Unit,
 ) {
     val s             = LocalStrings.current
-    val ctx           = LocalContext.current
     val backupList    by vm.backupList.collectAsState()
     val working       by vm.backupWorking.collectAsState()
     var showReset         by remember { mutableStateOf(false) }
@@ -61,7 +60,8 @@ fun SettingsScreen(
     var notifications by remember { mutableStateOf(true) }
     var debugLog      by remember { mutableStateOf(false) }
 
-    val rootMethod = remember { RootManager(ctx).detectRootType() }
+    val rootMethod = remember { RootManager.detectRootType() }
+    val ctx        = LocalContext.current
     val versionName = remember {
         try { ctx.packageManager.getPackageInfo(ctx.packageName, 0).versionName ?: "v?" }
         catch (e: Exception) { "v?" }
