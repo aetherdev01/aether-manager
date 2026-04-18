@@ -3,11 +3,6 @@ package dev.aether.manager.i18n
 val StringsEn = AppStrings(
     // Splash
     splashSubtitle = "System Optimizer",
-    splashStep0 = "Initializing system…",
-    splashStep1 = "Checking root access…",
-    splashStep2 = "Loading configuration…",
-    splashStep3 = "Preparing monitor…",
-    splashStep4 = "Ready!",
 
     // Setup
     setupWelcomeTitle = "Welcome!",
@@ -47,12 +42,14 @@ val StringsEn = AppStrings(
     setupBtnSkip = "Skip",
     setupBtnRetry = "Retry",
     setupRootRequired = "This permission is required to continue",
+    setupAllPermsGranted = "All permissions granted",
 
     // Nav
     navHome = "Home",
     navTweak = "Tweak",
     navLog = "Log",
     navAbout = "About",
+    navApps = "Apps",
 
     // Home
     homeSystemStatus = "Device",
@@ -150,12 +147,25 @@ val StringsEn = AppStrings(
     aboutTagOpenSource = "Open Source",
     aboutTagAndroid = "Android",
 
-    // Settings
+    // Log / Reboot
+    logRebootOptions = "Reboot Options",
+    logRebootSystem = "Reboot System",
+    logRebootSystemDesc = "Normal Device Restart",
+    logRebootRecovery = "Reboot Recovery",
+    logRebootRecoveryDesc = "Reboot to Recovery Mode",
+    logReloadUi = "Reload UI",
+    logReloadUiDesc = "Refresh Data Without Reboot",
+    logBtnCancel = "Cancel",
+
+    // Settings / Backup
     settingsTitle = "Settings",
     settingsSectionBackup = "Backup & Reset",
     settingsBtnBackup = "Backup",
+    settingsBtnBackupNow = "Backup Now",
     settingsBtnResetDefault = "Reset Default",
+    settingsBtnResetAll = "Reset All to Default",
     settingsNoBackup = "No backups saved yet",
+    settingsBackupSaved = "Saved backups",
     settingsResetTitle = "Reset to Default?",
     settingsResetDesc = "All tweaks will be disabled and system values restored to Android defaults. Existing backup files will not be deleted.",
     settingsResetConfirm = "Reset",
@@ -165,9 +175,6 @@ val StringsEn = AppStrings(
     settingsRestoreConfirm = "Restore",
     settingsBackupProfile = "Profile: %s",
     settingsBtnDelete = "Delete",
-
-    // Nav (extra)
-    navApps = "Apps",
 
     // Update dialog
     updateAvailable = "Update Available",
@@ -186,13 +193,35 @@ val StringsEn = AppStrings(
     updateChangelogLoading = "Loading changelog…",
     updateChangelogEmpty = "No changelog available.",
 
-    // Log / Reboot
-    logRebootOptions = "Reboot Options",
-    logRebootSystem = "Reboot System",
-    logRebootSystemDesc = "Normal Device Restart",
-    logRebootRecovery = "Reboot Recovery",
-    logRebootRecoveryDesc = "Reboot to Recovery Mode",
-    logReloadUi = "Reload UI",
-    logReloadUiDesc = "Refresh Data Without Reboot",
-    logBtnCancel = "Cancel",
+    // App Profile screen
+    appProfileTitle = "App Profiles",
+    appProfileMonitorOn = "Monitor ON",
+    appProfileMonitorOff = "Monitor OFF",
+    appProfileAppsCount = "%d Apps",
+    appProfileActiveCount = "%d Active Profiles",
+    appProfileSearchHint = "Search apps…",
+    appProfileNoResults = "No results found",
+    appProfileEmpty = "No app profiles yet",
+    appProfileDeleteTitle = "Delete Profile?",
+    appProfileDeleteDesc = "Profile \"%s\" will be permanently deleted.",
+    appProfileDeleteConfirm = "Delete",
+    appProfileBtnCancel = "Cancel",
+    appProfileLoading = "Loading apps…",
+    appProfileRetry = "Retry",
+    appProfileEditorActive = "Active",
+    appProfileEditorInactive = "Inactive",
+    appProfileCpuGovernor = "CPU Governor",
+    appProfileRefreshRate = "Refresh Rate",
+    appProfileExtraTweaks = "Extra Tweaks",
+    appProfileSaveBtn = "Save Profile",
+    appProfileDisableDoze = "Disable Doze",
+    appProfileDisableDozeDesc = "Prevent Doze mode while app is active",
+    appProfileLockCpuMin = "Lock CPU Min Freq",
+    appProfileLockCpuMinDesc = "Lock minimum CPU frequency to prevent drops",
+    appProfileKillBg = "Kill Background Apps",
+    appProfileKillBgDesc = "Kill all background apps when this app opens",
+    appProfileGpuBoost = "GPU Boost",
+    appProfileGpuBoostDesc = "Set GPU governor to performance",
+    appProfileIoLatency = "I/O Latency Opt",
+    appProfileIoLatencyDesc = "Reduce read-ahead I/O for lower latency",
 )

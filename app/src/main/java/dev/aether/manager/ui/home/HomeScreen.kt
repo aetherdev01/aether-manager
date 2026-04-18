@@ -98,8 +98,6 @@ fun HomeScreen(vm: MainViewModel) {
                 MonitorSection(monitorState)
             }
         }
-
-        AdBanner()
     }
 }
 

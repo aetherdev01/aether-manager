@@ -26,6 +26,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.*
 import dev.aether.manager.data.*
+import dev.aether.manager.i18n.LocalStrings
 import dev.aether.manager.ui.home.TabSectionTitle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -84,6 +85,7 @@ fun AppProfileScreen(vm: AppProfileViewModel) {
 
 @Composable
 private fun LoadingContent() {
+    val s = LocalStrings.current
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
             CircularProgressIndicator(
@@ -91,7 +93,7 @@ private fun LoadingContent() {
                 strokeWidth = 3.dp,
                 color = MaterialTheme.colorScheme.primary,
             )
-            Text("Memuat aplikasi…", style = MaterialTheme.typography.bodyMedium,
+            Text(s.appProfileLoading, style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
@@ -99,12 +101,13 @@ private fun LoadingContent() {
 
 @Composable
 private fun ErrorContent(msg: String, onRetry: () -> Unit) {
+    val s = LocalStrings.current
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp),
             modifier = Modifier.padding(32.dp)) {
             Icon(Icons.Outlined.ErrorOutline, null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(48.dp))
             Text(msg, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            FilledTonalButton(onClick = onRetry) { Text("Coba Lagi") }
+            FilledTonalButton(onClick = onRetry) { Text(s.appProfileRetry) }
         }
     }
 }
@@ -113,6 +116,7 @@ private fun ErrorContent(msg: String, onRetry: () -> Unit) {
 
 @Composable
 private fun ReadyContent(state: AppsUiState.Ready, vm: AppProfileViewModel) {
+    val s = LocalStrings.current
     var searchQuery by remember { mutableStateOf("") }
 
     val filtered = remember(state.apps, state.profiles, searchQuery) {
@@ -138,7 +142,7 @@ private fun ReadyContent(state: AppsUiState.Ready, vm: AppProfileViewModel) {
         // ── Section header ────────────────────────────────────────────
         TabSectionTitle(
             icon  = Icons.Outlined.Apps,
-            title = "App Profiles",
+            title = s.appProfileTitle,
             trailing = {
                     val monitorBg by animateColorAsState(
                         if (state.monitorRunning) MaterialTheme.colorScheme.primaryContainer
@@ -167,7 +171,7 @@ private fun ReadyContent(state: AppsUiState.Ready, vm: AppProfileViewModel) {
                                 Modifier.size(6.dp).clip(CircleShape).background(monitorFg)
                             )
                             Text(
-                                if (state.monitorRunning) "Monitor ON" else "Monitor OFF",
+                                if (state.monitorRunning) s.appProfileMonitorOn else s.appProfileMonitorOff,
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.SemiBold,
                                 color = monitorFg,
@@ -184,12 +188,12 @@ private fun ReadyContent(state: AppsUiState.Ready, vm: AppProfileViewModel) {
         ) {
             AppStatChip(
                 icon  = Icons.Outlined.PhoneAndroid,
-                label = "$totalCount Aplikasi",
+                label = s.appProfileAppsCount.format(totalCount),
                 modifier = Modifier.weight(1f),
             )
             AppStatChip(
                 icon   = Icons.Outlined.Tune,
-                label  = "$activeCount Profile Aktif",
+                label  = s.appProfileActiveCount.format(activeCount),
                 active = activeCount > 0,
                 modifier = Modifier.weight(1f),
             )
@@ -270,6 +274,7 @@ private fun SearchFilterBar(
     query: String,
     onQueryChange: (String) -> Unit,
 ) {
+    val s = LocalStrings.current
     Row(
         Modifier
             .fillMaxWidth()
@@ -280,7 +285,7 @@ private fun SearchFilterBar(
         OutlinedTextField(
             value = query,
             onValueChange = onQueryChange,
-            placeholder  = { Text("Cari aplikasi…", style = MaterialTheme.typography.bodySmall) },
+            placeholder  = { Text(s.appProfileSearchHint, style = MaterialTheme.typography.bodySmall) },
             leadingIcon  = { Icon(Icons.Outlined.Search, null, modifier = Modifier.size(18.dp)) },
             trailingIcon = if (query.isNotEmpty()) {{
                 IconButton(onClick = { onQueryChange("") }, modifier = Modifier.size(30.dp)) {
@@ -297,6 +302,7 @@ private fun SearchFilterBar(
 
 @Composable
 private fun EmptyListHint(isSearch: Boolean) {
+    val s = LocalStrings.current
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Icon(
@@ -306,7 +312,7 @@ private fun EmptyListHint(isSearch: Boolean) {
                 modifier = Modifier.size(40.dp)
             )
             Text(
-                if (isSearch) "Tidak ada hasil" else "Belum ada app profile",
+                if (isSearch) s.appProfileNoResults else s.appProfileEmpty,
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -382,18 +388,19 @@ private fun AppListItem(
     }
 
     if (showDeleteDialog) {
+        val s = LocalStrings.current
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
             icon  = { Icon(Icons.Outlined.DeleteOutline, null, tint = MaterialTheme.colorScheme.error) },
-            title = { Text("Hapus Profile?") },
-            text  = { Text("Profile \"${app.label}\" akan dihapus permanen.") },
+            title = { Text(s.appProfileDeleteTitle) },
+            text  = { Text(s.appProfileDeleteDesc.format(app.label)) },
             confirmButton = {
                 TextButton(onClick = { showDeleteDialog = false; onDelete?.invoke() }) {
-                    Text("Hapus", color = MaterialTheme.colorScheme.error)
+                    Text(s.appProfileDeleteConfirm, color = MaterialTheme.colorScheme.error)
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showDeleteDialog = false }) { Text("Batal") }
+                TextButton(onClick = { showDeleteDialog = false }) { Text(s.appProfileBtnCancel) }
             }
         )
     }
@@ -448,6 +455,7 @@ fun AppProfileEditor(
     onSave: (AppProfile) -> Unit,
 ) {
     var draft by remember(profile) { mutableStateOf(profile) }
+    val s = LocalStrings.current
     val iconBitmap by produceState<Bitmap?>(initialValue = null, key1 = profile.packageName) {
         value = withContext(Dispatchers.IO) {
             runCatching { appIcon?.let { drawableToBitmap(it) } }.getOrNull()
@@ -480,16 +488,17 @@ fun AppProfileEditor(
                         colors = SwitchDefaults.colors(
                             checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
                             checkedTrackColor = MaterialTheme.colorScheme.primary))
-                    Text(if (draft.enabled) "Aktif" else "Nonaktif", style = MaterialTheme.typography.labelSmall,
+                    Text(if (draft.enabled) s.appProfileEditorActive else s.appProfileEditorInactive,
+                        style = MaterialTheme.typography.labelSmall,
                         color = if (draft.enabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
             HorizontalDivider()
-            EditorSectionHeader(Icons.Filled.Memory, "CPU Governor")
+            EditorSectionHeader(Icons.Filled.Memory, s.appProfileCpuGovernor)
             GovernorSelector(selected = draft.cpuGovernor, onSelect = { draft = draft.copy(cpuGovernor = it) }, enabled = draft.enabled)
-            EditorSectionHeader(Icons.Filled.DisplaySettings, "Refresh Rate")
+            EditorSectionHeader(Icons.Filled.DisplaySettings, s.appProfileRefreshRate)
             RefreshRateSelector(selected = draft.refreshRate, onSelect = { draft = draft.copy(refreshRate = it) }, enabled = draft.enabled)
-            EditorSectionHeader(Icons.Filled.Tune, "Tweaks Tambahan")
+            EditorSectionHeader(Icons.Filled.Tune, s.appProfileExtraTweaks)
             ExtraTweaksPanel(tweaks = draft.extraTweaks, enabled = draft.enabled, onChange = { draft = draft.copy(extraTweaks = it) })
             Spacer(Modifier.height(4.dp))
             Button(onClick = { onSave(draft) }, enabled = !saving,
@@ -499,7 +508,7 @@ fun AppProfileEditor(
                 } else {
                     Icon(Icons.Filled.Save, null, modifier = Modifier.size(18.dp))
                     Spacer(Modifier.width(8.dp))
-                    Text("Simpan Profile", style = MaterialTheme.typography.labelLarge)
+                    Text(s.appProfileSaveBtn, style = MaterialTheme.typography.labelLarge)
                 }
             }
         }
@@ -592,22 +601,23 @@ private fun RefreshRateSelector(selected: String, onSelect: (String) -> Unit, en
 
 @Composable
 private fun ExtraTweaksPanel(tweaks: AppExtraTweaks, enabled: Boolean, onChange: (AppExtraTweaks) -> Unit) {
+    val s = LocalStrings.current
     Surface(shape = RoundedCornerShape(14.dp), color = MaterialTheme.colorScheme.surfaceContainer,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.15f))) {
         Column(Modifier.fillMaxWidth()) {
-            TweakToggleRow(Icons.Outlined.BatterySaver, "Disable Doze", "Cegah Doze mode saat app aktif",
+            TweakToggleRow(Icons.Outlined.BatterySaver, s.appProfileDisableDoze, s.appProfileDisableDozeDesc,
                 tweaks.disableDoze, enabled) { onChange(tweaks.copy(disableDoze = it)) }
             HorizontalDivider(Modifier.padding(horizontal = 14.dp), thickness = 0.5.dp)
-            TweakToggleRow(Icons.Outlined.Speed, "Lock CPU Min Freq", "Kunci frekuensi minimum CPU agar tidak drop",
+            TweakToggleRow(Icons.Outlined.Speed, s.appProfileLockCpuMin, s.appProfileLockCpuMinDesc,
                 tweaks.lockCpuMin, enabled) { onChange(tweaks.copy(lockCpuMin = it)) }
             HorizontalDivider(Modifier.padding(horizontal = 14.dp), thickness = 0.5.dp)
-            TweakToggleRow(Icons.Outlined.CleaningServices, "Kill Background Apps", "Matikan semua background app saat dibuka",
+            TweakToggleRow(Icons.Outlined.CleaningServices, s.appProfileKillBg, s.appProfileKillBgDesc,
                 tweaks.killBackground, enabled) { onChange(tweaks.copy(killBackground = it)) }
             HorizontalDivider(Modifier.padding(horizontal = 14.dp), thickness = 0.5.dp)
-            TweakToggleRow(Icons.Outlined.Videocam, "GPU Boost", "Set GPU governor ke performance",
+            TweakToggleRow(Icons.Outlined.Videocam, s.appProfileGpuBoost, s.appProfileGpuBoostDesc,
                 tweaks.gpuBoost, enabled) { onChange(tweaks.copy(gpuBoost = it)) }
             HorizontalDivider(Modifier.padding(horizontal = 14.dp), thickness = 0.5.dp)
-            TweakToggleRow(Icons.Outlined.Storage, "I/O Latency Opt", "Kurangi read-ahead I/O untuk latency lebih rendah",
+            TweakToggleRow(Icons.Outlined.Storage, s.appProfileIoLatency, s.appProfileIoLatencyDesc,
                 tweaks.ioLatency, enabled, isLast = true) { onChange(tweaks.copy(ioLatency = it)) }
         }
     }

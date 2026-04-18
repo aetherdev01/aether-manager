@@ -9,11 +9,6 @@ import androidx.compose.runtime.staticCompositionLocalOf
 data class AppStrings(
     // ── Splash ───────────────────────────────────────────────
     val splashSubtitle: String,
-    val splashStep0: String,
-    val splashStep1: String,
-    val splashStep2: String,
-    val splashStep3: String,
-    val splashStep4: String,
 
     // ── Setup ────────────────────────────────────────────────
     val setupWelcomeTitle: String,
@@ -53,12 +48,14 @@ data class AppStrings(
     val setupBtnSkip: String,
     val setupBtnRetry: String,
     val setupRootRequired: String,
+    val setupAllPermsGranted: String,
 
     // ── Nav ──────────────────────────────────────────────────
     val navHome: String,
     val navTweak: String,
     val navLog: String,
     val navAbout: String,
+    val navApps: String,
 
     // ── Home ─────────────────────────────────────────────────
     val homeSystemStatus: String,
@@ -71,16 +68,16 @@ data class AppStrings(
     val homeLabelTemp: String,
     val homeLabelStorage: String,
     val homeLabelUptime: String,
-    val homeRamUsed: String,      // "%s digunakan"
+    val homeRamUsed: String,       // "%s used"
     val homeUptimeSince: String,
-    val homeStorageOf: String,    // "dari %s GB"
+    val homeStorageOf: String,     // "of %.1f GB"
     val homeTempCpu: String,
     val homeTempBat: String,
     val homeTempOverheat: String,
     val homeSelinux: String,
     val homeProfile: String,
     val homeBootloopTitle: String,
-    val homeBootloopSub: String,  // "Boot count: %d"
+    val homeBootloopSub: String,   // "Boot count: %d"
     val homeLabelOs: String,
     val homeLabelKernel: String,
     val homeLabelSoc: String,
@@ -166,12 +163,15 @@ data class AppStrings(
     val logReloadUiDesc: String,
     val logBtnCancel: String,
 
-    // ── Settings screen ──────────────────────────────────────
+    // ── Settings / Backup screen ─────────────────────────────
     val settingsTitle: String,
     val settingsSectionBackup: String,
     val settingsBtnBackup: String,
+    val settingsBtnBackupNow: String,
     val settingsBtnResetDefault: String,
+    val settingsBtnResetAll: String,
     val settingsNoBackup: String,
+    val settingsBackupSaved: String,
     val settingsResetTitle: String,
     val settingsResetDesc: String,
     val settingsResetConfirm: String,
@@ -181,9 +181,6 @@ data class AppStrings(
     val settingsRestoreConfirm: String,
     val settingsBackupProfile: String,   // "Profile: %s"
     val settingsBtnDelete: String,
-
-    // ── Nav (extra) ──────────────────────────────────────────
-    val navApps: String,
 
     // ── Update dialog ────────────────────────────────────────
     val updateAvailable: String,
@@ -201,6 +198,38 @@ data class AppStrings(
     val updateAboutDesc: String,
     val updateChangelogLoading: String,
     val updateChangelogEmpty: String,
+
+    // ── App Profile screen ───────────────────────────────────
+    val appProfileTitle: String,
+    val appProfileMonitorOn: String,
+    val appProfileMonitorOff: String,
+    val appProfileAppsCount: String,    // "%d Aplikasi"
+    val appProfileActiveCount: String,  // "%d Profile Aktif"
+    val appProfileSearchHint: String,
+    val appProfileNoResults: String,
+    val appProfileEmpty: String,
+    val appProfileDeleteTitle: String,
+    val appProfileDeleteDesc: String,   // "Profile \"%s\" akan dihapus permanen."
+    val appProfileDeleteConfirm: String,
+    val appProfileBtnCancel: String,
+    val appProfileLoading: String,
+    val appProfileRetry: String,
+    val appProfileEditorActive: String,
+    val appProfileEditorInactive: String,
+    val appProfileCpuGovernor: String,
+    val appProfileRefreshRate: String,
+    val appProfileExtraTweaks: String,
+    val appProfileSaveBtn: String,
+    val appProfileDisableDoze: String,
+    val appProfileDisableDozeDesc: String,
+    val appProfileLockCpuMin: String,
+    val appProfileLockCpuMinDesc: String,
+    val appProfileKillBg: String,
+    val appProfileKillBgDesc: String,
+    val appProfileGpuBoost: String,
+    val appProfileGpuBoostDesc: String,
+    val appProfileIoLatency: String,
+    val appProfileIoLatencyDesc: String,
 )
 
 val LocalStrings = staticCompositionLocalOf<AppStrings> {

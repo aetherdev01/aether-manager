@@ -32,9 +32,7 @@ import dev.aether.manager.ui.home.HomeScreen
 import dev.aether.manager.ui.settings.SettingsScreen
 import dev.aether.manager.ui.tweak.TweakScreen
 import androidx.compose.ui.platform.LocalContext
-import dev.aether.manager.ads.InterstitialAdManager
-import dev.aether.manager.ads.InterstitialAdTrigger
-import dev.aether.manager.ui.components.AdBanner
+import dev.aether.manager.ads.RewardedAdManager
 import dev.aether.manager.update.UpdateDialogHost
 import dev.aether.manager.update.UpdateViewModel
 import dev.aether.manager.util.RootUtils
@@ -66,13 +64,15 @@ fun AetherApp(vm: MainViewModel, apVm: AppProfileViewModel, updateVm: UpdateView
     val context = LocalContext.current
     var currentScreen  by remember { mutableStateOf(Screen.HOME) }
     var showReboot     by remember { mutableStateOf(false) }
-    var showSettings   by remember { mutableStateOf(false) }   // ← SettingsScreen overlay
+    var showSettings   by remember { mutableStateOf(false) }
 
-    // Trigger interstitial saat app pertama kali dibuka
-    InterstitialAdTrigger(key = Unit)
-
-    // Trigger interstitial saat pindah tab
-    InterstitialAdTrigger(key = currentScreen)
+    // Rewarded ad: tampil saat user buka tab APPS (tidak mengganggu, hanya sekali per kunjungan)
+    val activity = context as android.app.Activity
+    LaunchedEffect(currentScreen) {
+        if (currentScreen == Screen.APPS) {
+            RewardedAdManager.showIfReady(activity)
+        }
+    }
 
     val snack by vm.snackMessage.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -119,7 +119,6 @@ fun AetherApp(vm: MainViewModel, apVm: AppProfileViewModel, updateVm: UpdateView
                         Icon(Icons.Outlined.Settings, null)
                     }
                     IconButton(onClick = {
-                        InterstitialAdManager.showIfReady(context as android.app.Activity)
                         showReboot = true
                     }) {
                         Icon(Icons.Outlined.RestartAlt, null)
@@ -132,11 +131,7 @@ fun AetherApp(vm: MainViewModel, apVm: AppProfileViewModel, updateVm: UpdateView
             )
         },
         bottomBar = {
-            Column {
-                // ── Unity Ads Banner ──────────────────────────────────
-                AdBanner()
-
-                NavigationBar(containerColor = MaterialTheme.colorScheme.surfaceContainer, tonalElevation = 0.dp) {
+            NavigationBar(containerColor = MaterialTheme.colorScheme.surfaceContainer, tonalElevation = 0.dp) {
                     navItems.forEachIndexed { idx, item ->
                         val selected = currentScreen == item.screen
                         val scale by animateFloatAsState(
@@ -162,7 +157,6 @@ fun AetherApp(vm: MainViewModel, apVm: AppProfileViewModel, updateVm: UpdateView
                         )
                     }
                 }
-            }
         },
         contentWindowInsets = WindowInsets.systemBars
     ) { paddingValues ->

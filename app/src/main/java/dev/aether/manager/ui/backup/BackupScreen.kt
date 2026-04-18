@@ -15,10 +15,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import dev.aether.manager.data.MainViewModel
+import dev.aether.manager.i18n.LocalStrings
 import dev.aether.manager.util.BackupManager
 
 @Composable
 fun BackupScreen(vm: MainViewModel) {
+    val s             = LocalStrings.current
     val backupList    by vm.backupList.collectAsState()
     val working       by vm.backupWorking.collectAsState()
     var showReset     by remember { mutableStateOf(false) }
@@ -34,7 +36,7 @@ fun BackupScreen(vm: MainViewModel) {
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         Text(
-            "Backup & Reset",
+            s.settingsSectionBackup,
             style      = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.SemiBold
         )
@@ -55,7 +57,7 @@ fun BackupScreen(vm: MainViewModel) {
         ) {
             Icon(Icons.Outlined.Save, null, Modifier.size(18.dp))
             Spacer(Modifier.width(8.dp))
-            Text("Backup Sekarang", fontWeight = FontWeight.Medium)
+            Text(s.settingsBtnBackupNow, fontWeight = FontWeight.Medium)
         }
 
         // ── Reset ke default ──────────────────────────────────────────────
@@ -71,7 +73,7 @@ fun BackupScreen(vm: MainViewModel) {
         ) {
             Icon(Icons.Outlined.RestartAlt, null, Modifier.size(18.dp))
             Spacer(Modifier.width(8.dp))
-            Text("Reset Semua ke Default", fontWeight = FontWeight.SemiBold)
+            Text(s.settingsBtnResetAll, fontWeight = FontWeight.SemiBold)
         }
 
         // ── Daftar backup ─────────────────────────────────────────────────
@@ -90,7 +92,7 @@ fun BackupScreen(vm: MainViewModel) {
                     )
                     Spacer(Modifier.height(8.dp))
                     Text(
-                        "Belum ada backup",
+                        s.settingsNoBackup,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -98,7 +100,7 @@ fun BackupScreen(vm: MainViewModel) {
             }
         } else {
             Text(
-                "Backup tersimpan",
+                s.settingsBackupSaved,
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -117,42 +119,39 @@ fun BackupScreen(vm: MainViewModel) {
 
     // ── Confirm reset ─────────────────────────────────────────────────────
     if (showReset) {
+        val s2 = LocalStrings.current
         AlertDialog(
             onDismissRequest = { showReset = false },
             icon  = { Icon(Icons.Outlined.Warning, null, tint = MaterialTheme.colorScheme.error) },
-            title = { Text("Reset ke Default?") },
-            text  = {
-                Text(
-                    "Semua tweak dinonaktifkan dan nilai sistem dikembalikan ke default Android. " +
-                    "File backup yang ada tidak terhapus."
-                )
-            },
+            title = { Text(s2.settingsResetTitle) },
+            text  = { Text(s2.settingsResetDesc) },
             confirmButton = {
                 TextButton(
                     onClick = { showReset = false; vm.resetToDefaults() },
                     colors  = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
-                ) { Text("Reset") }
+                ) { Text(s2.settingsResetConfirm) }
             },
             dismissButton = {
-                TextButton(onClick = { showReset = false }) { Text("Batal") }
+                TextButton(onClick = { showReset = false }) { Text(s2.settingsBtnCancel) }
             }
         )
     }
 
     // ── Confirm restore ───────────────────────────────────────────────────
     restoreTarget?.let { fname ->
+        val s2 = LocalStrings.current
         AlertDialog(
             onDismissRequest = { restoreTarget = null },
             icon  = { Icon(Icons.Outlined.Restore, null) },
-            title = { Text("Restore Backup?") },
-            text  = { Text("Setting aktif diganti dengan backup ini dan langsung diterapkan ke sistem.") },
+            title = { Text(s2.settingsRestoreTitle) },
+            text  = { Text(s2.settingsRestoreDesc) },
             confirmButton = {
                 TextButton(onClick = { restoreTarget = null; vm.restoreBackup(fname) }) {
-                    Text("Restore")
+                    Text(s2.settingsRestoreConfirm)
                 }
             },
             dismissButton = {
-                TextButton(onClick = { restoreTarget = null }) { Text("Batal") }
+                TextButton(onClick = { restoreTarget = null }) { Text(s2.settingsBtnCancel) }
             }
         )
     }
@@ -165,6 +164,7 @@ private fun BackupItem(
     onRestore: () -> Unit,
     onDelete : () -> Unit,
 ) {
+    val s = LocalStrings.current
     Surface(
         shape    = RoundedCornerShape(12.dp),
         color    = MaterialTheme.colorScheme.surfaceContainerHigh,
@@ -197,16 +197,16 @@ private fun BackupItem(
                     fontWeight = FontWeight.Medium
                 )
                 Text(
-                    "Profile: ${entry.profile}",
+                    s.settingsBackupProfile.format(entry.profile),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
             IconButton(onClick = onRestore, enabled = !working) {
-                Icon(Icons.Outlined.Restore, "Restore", tint = MaterialTheme.colorScheme.primary)
+                Icon(Icons.Outlined.Restore, s.settingsRestoreConfirm, tint = MaterialTheme.colorScheme.primary)
             }
             IconButton(onClick = onDelete, enabled = !working) {
-                Icon(Icons.Outlined.Delete, "Hapus", tint = MaterialTheme.colorScheme.error)
+                Icon(Icons.Outlined.Delete, s.settingsBtnDelete, tint = MaterialTheme.colorScheme.error)
             }
         }
     }

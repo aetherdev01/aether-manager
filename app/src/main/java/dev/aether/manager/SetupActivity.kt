@@ -261,7 +261,7 @@ fun SetupScreen(onDone: () -> Unit) {
                                     modifier = Modifier.size(16.dp),
                                 )
                                 Text(
-                                    text       = "Semua izin terpenuhi",
+                                    text       = s.setupAllPermsGranted,
                                     fontSize   = 13.sp,
                                     color      = Color(0xFF4CAF50),
                                     fontWeight = FontWeight.SemiBold,
