@@ -56,8 +56,7 @@
 -keep class * implements android.os.Parcelable {
     public static final android.os.Parcelable$Creator *;
 }
--keep class com.unity3d.** { *; }
--keep class com.unity3d.ads.** { *; }
+
 -keepnames class * implements android.os.Parcelable
 
 
