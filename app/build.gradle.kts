@@ -115,9 +115,16 @@ android {
 }
 
 dependencies {
+    // ── Core ──────────────────────────────────────────────────────────────
     implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.appcompat)
+
+    // ── Lifecycle & ViewModel ─────────────────────────────────────────────
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.androidx.lifecycle.runtime.compose)   // collectAsStateWithLifecycle
+
+    // ── Compose ───────────────────────────────────────────────────────────
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
@@ -125,10 +132,53 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.androidx.material.icons.extended)
     implementation(libs.androidx.navigation.compose)
+
+    // ── Coroutines ────────────────────────────────────────────────────────
     implementation(libs.kotlinx.coroutines.android)
+
+    // ── DataStore ─────────────────────────────────────────────────────────
     implementation(libs.androidx.datastore.preferences)
+
+    // ── Accompanist ───────────────────────────────────────────────────────
     implementation(libs.accompanist.systemuicontroller)
-    implementation(libs.androidx.appcompat)
+
+    // ── Splash Screen ─────────────────────────────────────────────────────
+    implementation(libs.androidx.core.splashscreen)
+
+    // ── Image Loading (Coil) ──────────────────────────────────────────────
+    implementation(libs.coil.compose)
+
+    // ── Networking (OkHttp) ───────────────────────────────────────────────
+    implementation(libs.okhttp)
+    implementation(libs.okhttp.logging)                        // log request/response di debug
+
+    // ── JSON (Gson) ───────────────────────────────────────────────────────
+    implementation(libs.gson)
+
+    // ── Background Work (WorkManager) ─────────────────────────────────────
+    implementation(libs.androidx.work.runtime.ktx)
+
+    // ── Ads ───────────────────────────────────────────────────────────────
     implementation(libs.unity.ads)
+
+    // ── Native Libraries (.so) ────────────────────────────────────────────
+    // libsu — root shell execution (libsu-core.so), ganti NativeExec manual
+    implementation(libs.libsu.core)
+    implementation(libs.libsu.service)                         // optional: root service binding
+    implementation(libs.libsu.io)                              // optional: root file I/O
+
+    // MMKV — key-value storage native (libmmkv.so), lebih cepat dari DataStore
+    implementation(libs.mmkv)
+
+    // ReLinker — safe .so loader, cocok untuk libaether-x.so
+    implementation(libs.relinker)
+
+    // Zstd-jni — kompresi native (libzstd-jni.so), untuk backup file
+    implementation(libs.zstd.jni)
+
+    // sqlite-android — SQLite native terbaru (libsqliteX.so)
+    implementation(libs.sqlite.android)
+
+    // ── Debug ─────────────────────────────────────────────────────────────
     debugImplementation(libs.androidx.ui.tooling)
 }
