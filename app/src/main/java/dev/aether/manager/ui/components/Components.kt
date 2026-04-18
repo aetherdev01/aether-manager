@@ -1,14 +1,7 @@
 package dev.aether.manager.ui.components
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.*
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -23,18 +16,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Popup
-import androidx.compose.ui.window.PopupProperties
 import kotlinx.coroutines.delay
 
-// ── iOS Pill Notification (drops from status bar) ────────────────────────────
+// ── M3 Snackbar Toast (bottom-center) ────────────────────────────────────────
 
 enum class IosToastType { LOADING, SUCCESS, ERROR, INFO }
 
@@ -49,7 +39,6 @@ fun rememberIosToastState(): IosToastState = remember { IosToastState() }
 class IosToastState {
     var current by mutableStateOf<IosToastData?>(null)
         private set
-    // true = pill visible, false = animate out
     var visible by mutableStateOf(false)
         private set
 
@@ -92,85 +81,72 @@ fun IosToastHost(state: IosToastState) {
         }
     }
 
-    AnimatedVisibility(
-        visible = visible && data != null,
-        enter = fadeIn(tween(300)) +
-                slideInVertically(tween(380, easing = FastOutSlowInEasing)) { -it - 80 },
-        exit  = fadeOut(tween(280)) +
-                slideOutVertically(tween(320, easing = FastOutSlowInEasing)) { -it - 80 },
-    ) {
-        if (data != null) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 12.dp),
-                contentAlignment = Alignment.TopCenter
-            ) {
-                IosPillCard(data)
-            }
-        }
-    }
-}
+    val snackbarHostState = remember { SnackbarHostState() }
 
-@Composable
-private fun IosPillCard(data: IosToastData) {
-    val isLoading = data.type == IosToastType.LOADING
-
-    val accentColor = when (data.type) {
-        IosToastType.SUCCESS -> Color(0xFF34C759)
-        IosToastType.ERROR   -> Color(0xFFFF3B30)
-        IosToastType.INFO    -> Color(0xFF007AFF)
-        IosToastType.LOADING -> MaterialTheme.colorScheme.primary
-    }
-    val icon = when (data.type) {
-        IosToastType.SUCCESS -> Icons.Filled.CheckCircle
-        IosToastType.ERROR   -> Icons.Filled.Error
-        IosToastType.INFO    -> Icons.Filled.Info
-        IosToastType.LOADING -> null
-    }
-
-    Surface(
-        shape = RoundedCornerShape(50.dp),
-        color = MaterialTheme.colorScheme.inverseSurface,
-        shadowElevation = 16.dp,
-        tonalElevation = 0.dp,
-        modifier = Modifier
-            .shadow(20.dp, RoundedCornerShape(50.dp))
-            .widthIn(min = 160.dp, max = 300.dp),
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 18.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            // Leading indicator — spinner or icon
-            Box(modifier = Modifier.size(22.dp), contentAlignment = Alignment.Center) {
-                if (isLoading) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(18.dp),
-                        strokeWidth = 2.dp,
-                        color = accentColor,
-                        trackColor = accentColor.copy(alpha = 0.2f),
-                    )
-                } else if (icon != null) {
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = null,
-                        tint = accentColor,
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-            }
-            // Message
-            Text(
-                text = data.message,
-                style = MaterialTheme.typography.bodySmall,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.inverseOnSurface,
-                maxLines = 2,
-                lineHeight = 17.sp,
+    LaunchedEffect(data, visible) {
+        if (visible && data != null && data.type != IosToastType.LOADING) {
+            snackbarHostState.currentSnackbarData?.dismiss()
+            snackbarHostState.showSnackbar(
+                message  = data.message,
+                duration = SnackbarDuration.Short,
+                withDismissAction = false,
             )
         }
+    }
+
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.BottomCenter
+    ) {
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier  = Modifier
+                .navigationBarsPadding()
+                .imePadding()
+                .padding(bottom = 80.dp), // di atas bottom nav bar
+            snackbar = { snackData ->
+                val accentColor = when (data?.type) {
+                    IosToastType.SUCCESS -> Color(0xFF34C759)
+                    IosToastType.ERROR   -> Color(0xFFFF3B30)
+                    IosToastType.INFO    -> Color(0xFF007AFF)
+                    else                 -> MaterialTheme.colorScheme.primary
+                }
+                val icon = when (data?.type) {
+                    IosToastType.SUCCESS -> Icons.Filled.CheckCircle
+                    IosToastType.ERROR   -> Icons.Filled.Error
+                    IosToastType.INFO    -> Icons.Filled.Info
+                    else                 -> null
+                }
+                Snackbar(
+                    snackbarData        = snackData,
+                    shape               = RoundedCornerShape(14.dp),
+                    containerColor      = MaterialTheme.colorScheme.inverseSurface,
+                    contentColor        = MaterialTheme.colorScheme.inverseOnSurface,
+                    actionContentColor  = accentColor,
+                    modifier            = Modifier.padding(horizontal = 16.dp),
+                ) {
+                    Row(
+                        verticalAlignment    = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    ) {
+                        if (icon != null) {
+                            Icon(
+                                imageVector  = icon,
+                                contentDescription = null,
+                                tint         = accentColor,
+                                modifier     = Modifier.size(18.dp)
+                            )
+                        }
+                        Text(
+                            text       = snackData.visuals.message,
+                            style      = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.SemiBold,
+                            maxLines   = 2,
+                        )
+                    }
+                }
+            }
+        )
     }
 }
 
@@ -348,7 +324,6 @@ fun InfoClickCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val scale by remember { mutableStateOf(1f) }
     Surface(
         onClick = onClick,
         modifier = modifier,
