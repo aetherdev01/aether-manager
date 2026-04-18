@@ -136,7 +136,6 @@ private fun ReadyContent(state: AppsUiState.Ready, vm: AppProfileViewModel) {
         modifier = Modifier
             .fillMaxSize()
             .padding(horizontal = 16.dp)
-            .padding(top = 6.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         // ── Section header ────────────────────────────────────────────
@@ -526,6 +525,7 @@ private fun EditorSectionHeader(icon: ImageVector, title: String) {
 
 @Composable
 private fun GovernorSelector(selected: String, onSelect: (String) -> Unit, enabled: Boolean) {
+    val s = LocalStrings.current
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             listOf("default", "performance", "powersave").forEach { gov ->
