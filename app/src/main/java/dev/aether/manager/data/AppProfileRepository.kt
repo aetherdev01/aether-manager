@@ -233,7 +233,7 @@ _apply_governor() {
   if echo " ${'$'}_AVAIL " | grep -qiw "${'$'}_REQ"; then
     # Exact match (case-insensitive)
     _GOV=$(echo " ${'$'}_AVAIL " | tr ' ' '\n' | grep -im1 "^${'$'}_REQ${'$'}" | head -1)
-    _GOV=${_GOV:-${'$'}_REQ}
+    _GOV=${'$'}{_GOV:-${'$'}_REQ}
   else
     # Not available — resolve best equivalent
     case "${'$'}_REQ" in
