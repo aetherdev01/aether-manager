@@ -1,17 +1,21 @@
 package dev.aether.manager.data
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import android.app.NotificationManager
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import dev.aether.manager.util.BackupManager
 import dev.aether.manager.util.DeviceInfo
 import dev.aether.manager.util.RootManager
 import dev.aether.manager.util.RootUtils
+import dev.aether.manager.util.SettingsPrefs
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.io.File
 
 data class TweaksState(
     val schedboost: Boolean = false,
@@ -59,7 +63,7 @@ sealed class UiState<out T> {
     data class Error(val msg: String) : UiState<Nothing>()
 }
 
-class MainViewModel : ViewModel() {
+class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     private val _rootGranted = MutableStateFlow<Boolean?>(null)
     val rootGranted: StateFlow<Boolean?> = _rootGranted.asStateFlow()
@@ -197,6 +201,7 @@ class MainViewModel : ViewModel() {
                 val map = RootUtils.readTweaksConf()
                 RootUtils.applyTweaksDirect(map)
                 _tweaks.value = mapToTweaksState(map)
+                autoBackupIfEnabled()
             } catch (e: Exception) {
                 _tweaks.value = current
                 snack("Gagal apply: ${e.message}")
@@ -323,6 +328,82 @@ class MainViewModel : ViewModel() {
         _backupWorking.value = false
     }
 
+    // ── Settings state ───────────────────────────────────────────────────
+
+    private val _darkModeOverride  = MutableStateFlow(SettingsPrefs.isDarkModeOverride(app))
+    private val _darkMode          = MutableStateFlow(SettingsPrefs.getDarkMode(app))
+    private val _dynamicColor      = MutableStateFlow(SettingsPrefs.getDynamicColor(app))
+    private val _autoBackup        = MutableStateFlow(SettingsPrefs.getAutoBackup(app))
+    private val _applyOnBoot       = MutableStateFlow(SettingsPrefs.getApplyOnBoot(app))
+    private val _notifications     = MutableStateFlow(SettingsPrefs.getNotifications(app))
+    private val _debugLog          = MutableStateFlow(SettingsPrefs.getDebugLog(app))
+
+    val darkModeOverride : StateFlow<Boolean> = _darkModeOverride.asStateFlow()
+    val darkMode         : StateFlow<Boolean> = _darkMode.asStateFlow()
+    val dynamicColor     : StateFlow<Boolean> = _dynamicColor.asStateFlow()
+    val autoBackup       : StateFlow<Boolean> = _autoBackup.asStateFlow()
+    val applyOnBoot      : StateFlow<Boolean> = _applyOnBoot.asStateFlow()
+    val notifications    : StateFlow<Boolean> = _notifications.asStateFlow()
+    val debugLog         : StateFlow<Boolean> = _debugLog.asStateFlow()
+
+    fun setDarkMode(dark: Boolean) {
+        SettingsPrefs.setDarkMode(app, dark)
+        _darkMode.value         = dark
+        _darkModeOverride.value = true
+    }
+
+    fun clearDarkModeOverride() {
+        SettingsPrefs.clearDarkModeOverride(app)
+        _darkModeOverride.value = false
+    }
+
+    fun setDynamicColor(enabled: Boolean) {
+        SettingsPrefs.setDynamicColor(app, enabled)
+        _dynamicColor.value = enabled
+    }
+
+    fun setAutoBackup(enabled: Boolean) {
+        SettingsPrefs.setAutoBackup(app, enabled)
+        _autoBackup.value = enabled
+    }
+
+    fun setApplyOnBoot(enabled: Boolean) {
+        SettingsPrefs.setApplyOnBoot(app, enabled)
+        _applyOnBoot.value = enabled
+    }
+
+    fun setNotifications(enabled: Boolean) {
+        SettingsPrefs.setNotifications(app, enabled)
+        _notifications.value = enabled
+        if (!enabled) {
+            val nm = app.getSystemService(NotificationManager::class.java)
+            nm?.cancelAll()
+        }
+    }
+
+    fun setDebugLog(enabled: Boolean) {
+        SettingsPrefs.setDebugLog(app, enabled)
+        _debugLog.value = enabled
+    }
+
+    fun clearAppCache() = viewModelScope.launch(Dispatchers.IO) {
+        try {
+            app.cacheDir?.deleteRecursively()
+            app.externalCacheDir?.deleteRecursively()
+            snack("Cache berhasil dihapus ✓")
+        } catch (e: Exception) {
+            snack("Gagal hapus cache: ${e.message}")
+        }
+    }
+
+    // Called by setTweak after every change when autoBackup is on
+    private fun autoBackupIfEnabled() {
+        if (_autoBackup.value) createBackup()
+    }
+
     fun snack(msg: String) { _snackMessage.value = msg }
     fun clearSnack() { _snackMessage.value = null }
 }
+
+// Extension to get Application context easily
+private fun MainViewModel.ctx() = getApplication<Application>()

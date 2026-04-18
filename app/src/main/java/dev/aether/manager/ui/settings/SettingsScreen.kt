@@ -1,11 +1,15 @@
 package dev.aether.manager.ui.settings
 
+import android.content.Intent
+import android.net.Uri
+import android.provider.Settings
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -24,6 +28,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.aether.manager.data.MainViewModel
+import dev.aether.manager.i18n.AppLanguage
+import dev.aether.manager.i18n.LocalLanguage
+import dev.aether.manager.i18n.LocalSetLanguage
 import dev.aether.manager.i18n.LocalStrings
 import dev.aether.manager.util.BackupManager
 import dev.aether.manager.util.RootManager
@@ -36,35 +43,44 @@ fun SettingsScreen(
     onResetProfiles : () -> Unit,
     onResetMonitor  : () -> Unit,
 ) {
-    val s             = LocalStrings.current
-    val backupList    by vm.backupList.collectAsState()
-    val working       by vm.backupWorking.collectAsState()
+    val s           = LocalStrings.current
+    val ctx         = LocalContext.current
+    val backupList  by vm.backupList.collectAsState()
+    val working     by vm.backupWorking.collectAsState()
+
     var showReset         by remember { mutableStateOf(false) }
     var showResetProfiles by remember { mutableStateOf(false) }
     var showResetMonitor  by remember { mutableStateOf(false) }
-    var restoreTarget by remember { mutableStateOf<String?>(null) }
-    val scrollState   = rememberScrollState()
+    var showClearCache    by remember { mutableStateOf(false) }
+    var restoreTarget     by remember { mutableStateOf<String?>(null) }
+    val scrollState       = rememberScrollState()
 
-    // ── Collapsible states ────────────────────────────────────
+    // ── Collapsible section states ────────────────────────────────────────
     var backupExpanded     by remember { mutableStateOf(true) }
     var appearanceExpanded by remember { mutableStateOf(false) }
     var generalExpanded    by remember { mutableStateOf(false) }
     var advancedExpanded   by remember { mutableStateOf(false) }
     var aboutExpanded      by remember { mutableStateOf(false) }
 
-    // ── Toggle prefs (UI-only placeholders) ───────────────────
-    var darkMode      by remember { mutableStateOf(false) }
-    var dynamicColor  by remember { mutableStateOf(true) }
-    var autoBackup    by remember { mutableStateOf(false) }
-    var applyOnBoot   by remember { mutableStateOf(true) }
-    var notifications by remember { mutableStateOf(true) }
-    var debugLog      by remember { mutableStateOf(false) }
+    // ── Settings state from ViewModel (persisted) ─────────────────────────
+    val darkModeOverride by vm.darkModeOverride.collectAsState()
+    val darkMode         by vm.darkMode.collectAsState()
+    val dynamicColor     by vm.dynamicColor.collectAsState()
+    val autoBackup       by vm.autoBackup.collectAsState()
+    val applyOnBoot      by vm.applyOnBoot.collectAsState()
+    val notifications    by vm.notifications.collectAsState()
+    val debugLog         by vm.debugLog.collectAsState()
 
+    // ── Language ──────────────────────────────────────────────────────────
+    val currentLanguage = LocalLanguage.current
+    val setLanguage     = LocalSetLanguage.current
+    var showLangSheet   by remember { mutableStateOf(false) }
+
+    // ── Static info ───────────────────────────────────────────────────────
     val rootMethod = remember { RootManager.detectRootType() }
-    val ctx        = LocalContext.current
     val versionName = remember {
         try { ctx.packageManager.getPackageInfo(ctx.packageName, 0).versionName ?: "v?" }
-        catch (e: Exception) { "v?" }
+        catch (_: Exception) { "v?" }
     }
 
     LaunchedEffect(Unit) { vm.loadBackups() }
@@ -102,9 +118,7 @@ fun SettingsScreen(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
 
-            // ══════════════════════════════════════════════════
-            // SECTION: Backup & Reset  (collapsible)
-            // ══════════════════════════════════════════════════
+            // ══ Backup & Reset ════════════════════════════════════════════
             SettingsSectionCard(
                 icon     = Icons.Outlined.Archive,
                 title    = s.settingsSectionBackup,
@@ -123,7 +137,6 @@ fun SettingsScreen(
                             color    = MaterialTheme.colorScheme.primary
                         )
                     }
-
                     Row(
                         modifier              = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -153,7 +166,6 @@ fun SettingsScreen(
                             Text(s.settingsBtnResetDefault, fontWeight = FontWeight.SemiBold)
                         }
                     }
-
                     Row(
                         modifier              = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -191,7 +203,7 @@ fun SettingsScreen(
                             Text(s.settingsBtnResetMonitor, fontWeight = FontWeight.Medium, maxLines = 1)
                         }
                     }
-
+                    // Backup list
                     if (backupList.isEmpty()) {
                         Surface(
                             shape    = RoundedCornerShape(12.dp),
@@ -248,9 +260,7 @@ fun SettingsScreen(
                 }
             }
 
-            // ══════════════════════════════════════════════════
-            // SECTION: Appearance
-            // ══════════════════════════════════════════════════
+            // ══ Appearance ════════════════════════════════════════════════
             SettingsSectionCard(
                 icon     = Icons.Outlined.Palette,
                 title    = s.settingsSectionAppearance,
@@ -258,12 +268,15 @@ fun SettingsScreen(
                 onToggle = { appearanceExpanded = !appearanceExpanded }
             ) {
                 Column(modifier = Modifier.padding(bottom = 4.dp)) {
+                    // Dark mode — toggle with tri-state (system / on / off)
+                    val systemDark = isSystemInDarkTheme()
                     SettingsRowSwitch(
                         icon            = Icons.Outlined.DarkMode,
                         title           = s.settingsDarkMode,
-                        subtitle        = s.settingsDarkModeDesc,
-                        checked         = darkMode,
-                        onCheckedChange = { darkMode = it }
+                        subtitle        = if (darkModeOverride) s.settingsDarkModeDesc
+                                          else s.settingsDarkModeDesc,
+                        checked         = if (darkModeOverride) darkMode else systemDark,
+                        onCheckedChange = { vm.setDarkMode(it) }
                     )
                     SettingsDivider()
                     SettingsRowSwitch(
@@ -271,21 +284,20 @@ fun SettingsScreen(
                         title           = s.settingsDynamicColor,
                         subtitle        = s.settingsDynamicColorDesc,
                         checked         = dynamicColor,
-                        onCheckedChange = { dynamicColor = it }
+                        onCheckedChange = { vm.setDynamicColor(it) }
                     )
                     SettingsDivider()
+                    // Language picker row
                     SettingsRowInfo(
                         icon     = Icons.Outlined.Language,
                         title    = s.settingsLanguage,
-                        subtitle = s.settingsLanguageDesc,
-                        onClick  = { /* open language picker */ }
+                        subtitle = currentLanguage.nativeName,
+                        onClick  = { showLangSheet = true }
                     )
                 }
             }
 
-            // ══════════════════════════════════════════════════
-            // SECTION: General
-            // ══════════════════════════════════════════════════
+            // ══ General ═══════════════════════════════════════════════════
             SettingsSectionCard(
                 icon     = Icons.Outlined.Tune,
                 title    = s.settingsSectionGeneral,
@@ -298,7 +310,7 @@ fun SettingsScreen(
                         title           = s.settingsAutoBackup,
                         subtitle        = s.settingsAutoBackupDesc,
                         checked         = autoBackup,
-                        onCheckedChange = { autoBackup = it }
+                        onCheckedChange = { vm.setAutoBackup(it) }
                     )
                     SettingsDivider()
                     SettingsRowSwitch(
@@ -306,7 +318,7 @@ fun SettingsScreen(
                         title           = s.settingsApplyOnBoot,
                         subtitle        = s.settingsApplyOnBootDesc,
                         checked         = applyOnBoot,
-                        onCheckedChange = { applyOnBoot = it }
+                        onCheckedChange = { vm.setApplyOnBoot(it) }
                     )
                     SettingsDivider()
                     SettingsRowSwitch(
@@ -314,14 +326,12 @@ fun SettingsScreen(
                         title           = s.settingsNotifications,
                         subtitle        = s.settingsNotificationsDesc,
                         checked         = notifications,
-                        onCheckedChange = { notifications = it }
+                        onCheckedChange = { vm.setNotifications(it) }
                     )
                 }
             }
 
-            // ══════════════════════════════════════════════════
-            // SECTION: Advanced
-            // ══════════════════════════════════════════════════
+            // ══ Advanced ══════════════════════════════════════════════════
             SettingsSectionCard(
                 icon     = Icons.Outlined.Engineering,
                 title    = s.settingsSectionAdvanced,
@@ -341,21 +351,19 @@ fun SettingsScreen(
                         title           = s.settingsDebugLog,
                         subtitle        = s.settingsDebugLogDesc,
                         checked         = debugLog,
-                        onCheckedChange = { debugLog = it }
+                        onCheckedChange = { vm.setDebugLog(it) }
                     )
                     SettingsDivider()
                     SettingsRowInfo(
                         icon     = Icons.Outlined.CleaningServices,
                         title    = s.settingsClearCache,
                         subtitle = s.settingsClearCacheDesc,
-                        onClick  = { /* clear cache */ }
+                        onClick  = { showClearCache = true }
                     )
                 }
             }
 
-            // ══════════════════════════════════════════════════
-            // SECTION: About
-            // ══════════════════════════════════════════════════
+            // ══ About ═════════════════════════════════════════════════════
             SettingsSectionCard(
                 icon     = Icons.Outlined.Info,
                 title    = s.settingsSectionAbout,
@@ -374,7 +382,12 @@ fun SettingsScreen(
                         icon     = Icons.Outlined.Code,
                         title    = s.settingsSourceCode,
                         subtitle = s.settingsSourceCodeDesc,
-                        onClick  = { /* open GitHub */ }
+                        onClick  = {
+                            ctx.startActivity(
+                                Intent(Intent.ACTION_VIEW,
+                                    Uri.parse("https://github.com/get01projects/aether-manager"))
+                            )
+                        }
                     )
                     SettingsDivider()
                     SettingsRowInfo(
@@ -383,12 +396,26 @@ fun SettingsScreen(
                         subtitle = s.settingsLicenseDesc,
                         onClick  = null
                     )
+                    SettingsDivider()
+                    SettingsRowInfo(
+                        icon     = Icons.Outlined.AppSettingsAlt,
+                        title    = "App Info",
+                        subtitle = "System app settings",
+                        onClick  = {
+                            ctx.startActivity(
+                                Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                                    data = Uri.fromParts("package", ctx.packageName, null)
+                                }
+                            )
+                        }
+                    )
                 }
             }
         }
     }
 
-    // ── Dialog: Confirm reset ─────────────────────────────────────────────
+    // ── Dialogs ───────────────────────────────────────────────────────────
+
     if (showReset) {
         AlertDialog(
             onDismissRequest = { showReset = false },
@@ -407,7 +434,6 @@ fun SettingsScreen(
         )
     }
 
-    // ── Dialog: Confirm restore ───────────────────────────────────────────
     restoreTarget?.let { fname ->
         AlertDialog(
             onDismissRequest = { restoreTarget = null },
@@ -425,7 +451,6 @@ fun SettingsScreen(
         )
     }
 
-    // ── Dialog: Confirm reset app profiles ────────────────────────────────
     if (showResetProfiles) {
         AlertDialog(
             onDismissRequest = { showResetProfiles = false },
@@ -444,7 +469,6 @@ fun SettingsScreen(
         )
     }
 
-    // ── Dialog: Confirm reset monitor ─────────────────────────────────────
     if (showResetMonitor) {
         AlertDialog(
             onDismissRequest = { showResetMonitor = false },
@@ -462,6 +486,106 @@ fun SettingsScreen(
             }
         )
     }
+
+    if (showClearCache) {
+        AlertDialog(
+            onDismissRequest = { showClearCache = false },
+            icon  = { Icon(Icons.Outlined.CleaningServices, null) },
+            title = { Text(s.settingsClearCache) },
+            text  = { Text(s.settingsClearCacheDesc) },
+            confirmButton = {
+                TextButton(onClick = { showClearCache = false; vm.clearAppCache() }) {
+                    Text(s.settingsResetConfirm)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showClearCache = false }) { Text(s.settingsBtnCancel) }
+            }
+        )
+    }
+
+    // ── Language picker bottom sheet ──────────────────────────────────────
+    if (showLangSheet) {
+        LanguagePickerSheet(
+            current  = currentLanguage,
+            onSelect = { lang -> setLanguage(lang); showLangSheet = false },
+            onDismiss = { showLangSheet = false }
+        )
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// LANGUAGE PICKER SHEET
+// ─────────────────────────────────────────────────────────────────────────────
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun LanguagePickerSheet(
+    current  : AppLanguage,
+    onSelect : (AppLanguage) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    ModalBottomSheet(onDismissRequest = onDismiss) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 32.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Text(
+                "Pilih Bahasa / Select Language",
+                style      = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                modifier   = Modifier.padding(bottom = 8.dp)
+            )
+            AppLanguage.entries.forEach { lang ->
+                val selected = lang == current
+                Surface(
+                    shape    = RoundedCornerShape(12.dp),
+                    color    = if (selected) MaterialTheme.colorScheme.primaryContainer
+                               else MaterialTheme.colorScheme.surfaceContainerLow,
+                    modifier = Modifier.fillMaxWidth().clickable { onSelect(lang) }
+                ) {
+                    Row(
+                        modifier          = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Text(
+                            lang.langIcon,
+                            style      = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Bold,
+                            color      = if (selected) MaterialTheme.colorScheme.onPrimaryContainer
+                                         else MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Column(Modifier.weight(1f)) {
+                            Text(
+                                lang.nativeName,
+                                style      = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Medium,
+                                color      = if (selected) MaterialTheme.colorScheme.onPrimaryContainer
+                                             else MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                lang.displayName,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = if (selected) MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                                        else MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        if (selected) {
+                            Icon(
+                                Icons.Outlined.CheckCircle, null,
+                                tint     = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -475,10 +599,6 @@ private fun SettingsDivider() = HorizontalDivider(
     thickness = 0.5.dp
 )
 
-// ─────────────────────────────────────────────────────────────────────────────
-// COLLAPSIBLE SECTION CARD
-// ─────────────────────────────────────────────────────────────────────────────
-
 @Composable
 private fun SettingsSectionCard(
     icon     : ImageVector,
@@ -491,7 +611,6 @@ private fun SettingsSectionCard(
         targetValue = if (expanded) 180f else 0f,
         label       = "chevron"
     )
-
     Surface(
         shape    = RoundedCornerShape(16.dp),
         color    = MaterialTheme.colorScheme.surfaceContainerLow,
@@ -533,12 +652,9 @@ private fun SettingsSectionCard(
                 Icon(
                     Icons.Outlined.KeyboardArrowDown, null,
                     tint     = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier
-                        .size(20.dp)
-                        .rotate(rotation)
+                    modifier = Modifier.size(20.dp).rotate(rotation)
                 )
             }
-
             AnimatedVisibility(
                 visible = expanded,
                 enter   = expandVertically(),
@@ -556,10 +672,6 @@ private fun SettingsSectionCard(
     }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// SETTINGS ROW — SWITCH
-// ─────────────────────────────────────────────────────────────────────────────
-
 @Composable
 private fun SettingsRowSwitch(
     icon            : ImageVector,
@@ -576,26 +688,14 @@ private fun SettingsRowSwitch(
         verticalAlignment     = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Icon(
-            icon, null,
-            tint     = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.size(20.dp)
-        )
+        Icon(icon, null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp))
         Column(Modifier.weight(1f)) {
             Text(title,    style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
             Text(subtitle, style = MaterialTheme.typography.bodySmall,  color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
-        Switch(
-            checked         = checked,
-            onCheckedChange = onCheckedChange,
-            modifier        = Modifier.height(24.dp)
-        )
+        Switch(checked = checked, onCheckedChange = onCheckedChange, modifier = Modifier.height(24.dp))
     }
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-// SETTINGS ROW — INFO / NAVIGATION
-// ─────────────────────────────────────────────────────────────────────────────
 
 @Composable
 private fun SettingsRowInfo(
@@ -604,33 +704,24 @@ private fun SettingsRowInfo(
     subtitle : String,
     onClick  : (() -> Unit)?,
 ) {
-    val baseModifier = Modifier
-        .fillMaxWidth()
-        .padding(horizontal = 14.dp, vertical = 12.dp)
-    val rowModifier = if (onClick != null)
+    val mod = if (onClick != null)
         Modifier.fillMaxWidth().clickable(onClick = onClick).padding(horizontal = 14.dp, vertical = 12.dp)
-    else baseModifier
+    else
+        Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 12.dp)
 
     Row(
-        modifier              = rowModifier,
+        modifier              = mod,
         verticalAlignment     = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Icon(
-            icon, null,
-            tint     = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.size(20.dp)
-        )
+        Icon(icon, null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp))
         Column(Modifier.weight(1f)) {
             Text(title,    style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
             Text(subtitle, style = MaterialTheme.typography.bodySmall,  color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         if (onClick != null) {
-            Icon(
-                Icons.Outlined.ChevronRight, null,
-                tint     = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(18.dp)
-            )
+            Icon(Icons.Outlined.ChevronRight, null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
         }
     }
 }
@@ -658,29 +749,14 @@ private fun SettingsBackupItem(
         Box(
             modifier = Modifier
                 .size(36.dp)
-                .background(
-                    MaterialTheme.colorScheme.surfaceContainerHigh,
-                    RoundedCornerShape(10.dp)
-                ),
+                .background(MaterialTheme.colorScheme.surfaceContainerHigh, RoundedCornerShape(10.dp)),
             contentAlignment = Alignment.Center
         ) {
-            Icon(
-                Icons.Outlined.Archive, null,
-                tint     = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(18.dp)
-            )
+            Icon(Icons.Outlined.Archive, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
         }
         Column(Modifier.weight(1f)) {
-            Text(
-                entry.timestamp,
-                style      = MaterialTheme.typography.bodySmall,
-                fontWeight = FontWeight.Medium
-            )
-            Text(
-                profileLabel,
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            Text(entry.timestamp, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Medium)
+            Text(profileLabel,    style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         IconButton(onClick = onRestore, enabled = !working) {
             Icon(Icons.Outlined.Restore, "Restore", tint = MaterialTheme.colorScheme.primary)

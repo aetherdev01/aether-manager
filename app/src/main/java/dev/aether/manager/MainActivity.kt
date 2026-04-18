@@ -30,6 +30,7 @@ import dev.aether.manager.data.MainViewModel
 import dev.aether.manager.i18n.LanguageDropdownCompact
 import dev.aether.manager.i18n.LocalStrings
 import dev.aether.manager.i18n.ProvideStrings
+import androidx.compose.foundation.isSystemInDarkTheme
 import dev.aether.manager.ui.AetherTheme
 import dev.aether.manager.ui.about.AboutScreen
 import dev.aether.manager.ui.appprofile.AppProfileScreen
@@ -53,7 +54,11 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            AetherTheme {
+            val darkModeOverride by vm.darkModeOverride.collectAsState()
+            val darkMode         by vm.darkMode.collectAsState()
+            val dynamicColor     by vm.dynamicColor.collectAsState()
+            val effectiveDark    = if (darkModeOverride) darkMode else isSystemInDarkTheme()
+            AetherTheme(darkTheme = effectiveDark, dynamicColor = dynamicColor) {
                 ProvideStrings {
                     AetherApp(vm, apVm, updateVm)
                 }
