@@ -1,11 +1,19 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Aether Manager — Root Management for Android</title>
+  <title>Aether Manager Root Management for Android</title>
   <meta name="description" content="Native Android app for rooted devices. Performance profiles, kernel tweaks, system monitor, and per-app optimization." />
   <meta name="theme-color" content="#0F1418" />
+
+  <!-- Anti-flicker: apply saved theme before render -->
+  <script>
+    (function(){
+      var t = localStorage.getItem('am-theme') || 'dark';
+      document.documentElement.setAttribute('data-theme', t);
+    })();
+  </script>
 
   <!-- Open Graph -->
   <meta property="og:title" content="Aether Manager" />
@@ -104,12 +112,25 @@
     </ul>
   </nav>
 
-  <!-- Hamburger (mobile) -->
-  <button class="hamburger" id="hamburgerBtn" aria-label="Open menu" aria-expanded="false">
+  <!-- Hamburger (mobile) -->\n  <button class="hamburger" id="hamburgerBtn" aria-label="Open menu" aria-expanded="false">
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
       <line x1="3" y1="7" x2="21" y2="7"/>
       <line x1="3" y1="12" x2="21" y2="12"/>
       <line x1="3" y1="17" x2="21" y2="17"/>
+    </svg>
+  </button>
+
+  <!-- Theme toggle -->
+  <button class="theme-toggle" id="themeToggle" aria-label="Toggle light/dark mode">
+    <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+    </svg>
+    <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="5"/>
+      <line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+      <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
     </svg>
   </button>
 </header>
@@ -189,7 +210,7 @@
       </h1>
 
       <p class="hero-desc">
-        Aether Manager is a native Android app for rooted devices — giving you full control over performance profiles, kernel tweaks, system monitoring, and per-app optimization.
+        Aether Manager is a native Android app for rooted devices giving you full control over performance profiles, kernel tweaks, system monitoring, and per-app optimization.
       </p>
 
       <div class="hero-actions">
@@ -264,7 +285,7 @@
       <div class="section-eyebrow">Features</div>
       <h2 class="section-title">Everything you need.<br/>Nothing you don't.</h2>
       <p class="section-desc">
-        Built from the ground up for rooted Android devices — deep system access, real-time data, and fine-grained control.
+        Built from the ground up for rooted Android devices deep system access, real-time data, and fine-grained control.
       </p>
     </div>
 
@@ -317,15 +338,15 @@
         <p class="feature-desc">Per-app optimization with <strong>automatic CPU governor</strong>, <strong>refresh rate</strong>, and system tweak switching. Game differently, browse efficiently.</p>
       </div>
 
-      <!-- Native Engine -->
+      <!-- Shell & Storage Engine -->
       <div class="feature-card">
         <div class="feature-icon-wrap feature-icon-primary">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
           </svg>
         </div>
-        <h3 class="feature-title">Native C Engine</h3>
-        <p class="feature-desc">Shell execution powered by <code>libaether-x.so</code> — a pure C17 native engine with Android Bionic compatibility. Zero JVM overhead for root commands.</p>
+        <h3 class="feature-title">Powered by libsu</h3>
+        <p class="feature-desc">Shell execution via <code>libsu</code> for reliable root commands, <code>MMKV</code> for ultra-fast key-value storage, and <code>SQLite</code> for persistent app profile data.</p>
       </div>
 
       <!-- Root Support -->
@@ -494,7 +515,7 @@
         </div>
         <div>
           <div class="spec-label">Target SDK</div>
-          <div class="spec-value">Android 15 (API 36)</div>
+          <div class="spec-value">Android 16 (API 36)</div>
         </div>
       </div>
     </div>
@@ -525,7 +546,7 @@
             GitHub Releases
           </a>
           <a
-            href="https://t.me/get01projects"
+            href="https://saweria.co/AetherDev"
             target="_blank"
             rel="noopener"
             class="btn btn-outlined"
@@ -534,15 +555,6 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z"/>
             </svg>
-            Telegram Channel
-          </a>
-          <a
-            href="https://saweria.co/AetherDev"
-            target="_blank"
-            rel="noopener"
-            class="btn btn-tonal"
-            style="color: var(--md-sys-color-on-primary-container);"
-          >
             ☕ Support Dev
           </a>
         </div>
@@ -612,46 +624,15 @@
 
     <div class="contributors-grid reveal">
       <!-- Main developer — full width -->
-      <a href="https://github.com/aetherdev01" target="_blank" rel="noopener" class="contributor-chip contributor-main">
+      <a href="t.me/AetherDev22" target="_blank" rel="noopener" class="contributor-chip contributor-main">
         <div class="contributor-avatar" style="background: var(--md-sys-color-primary-container);">A</div>
         <div>
-          <div class="contributor-name">@AetherDev01</div>
-          <div class="contributor-role">Developer · AetherManager</div>
+          <div class="contributor-name">@AetherDev22</div>
+          <div class="contributor-role">Developer of Aether Manager</div>
         </div>
       </a>
 
-      <!-- Third-party credits -->
-      <a href="https://github.com/topjohnwu" target="_blank" rel="noopener" class="contributor-chip">
-        <div class="contributor-avatar" style="background: var(--md-sys-color-tertiary-container); color: var(--md-sys-color-on-tertiary-container);">T</div>
-        <div>
-          <div class="contributor-name">topjohnwu</div>
-          <div class="contributor-role">Magisk</div>
-        </div>
-      </a>
 
-      <a href="https://github.com/tiann" target="_blank" rel="noopener" class="contributor-chip">
-        <div class="contributor-avatar" style="background: var(--md-sys-color-secondary-container); color: var(--md-sys-color-on-secondary-container);">T</div>
-        <div>
-          <div class="contributor-name">tiann</div>
-          <div class="contributor-role">KernelSU</div>
-        </div>
-      </a>
-
-      <a href="https://source.android.com" target="_blank" rel="noopener" class="contributor-chip">
-        <div class="contributor-avatar" style="background: #1a3a2a; color: #6fcf97; font-size: 11px; font-weight: 800;">AOSP</div>
-        <div>
-          <div class="contributor-name">Android Open Source</div>
-          <div class="contributor-role">Platform Foundation</div>
-        </div>
-      </a>
-
-      <a href="https://unity.com/products/unity-ads" target="_blank" rel="noopener" class="contributor-chip">
-        <div class="contributor-avatar" style="background: #1a1a2e; color: #9ecaff; font-size: 11px; font-weight: 800;">UA</div>
-        <div>
-          <div class="contributor-name">Unity Ads</div>
-          <div class="contributor-role">Ad Network · In-app Ads</div>
-        </div>
-      </a>
     </div>
   </div>
 </section>
@@ -682,7 +663,7 @@
         <div class="appinfo-label">Material You</div>
         <h3 class="appinfo-title">Material Design 3</h3>
         <p class="appinfo-desc">
-          Built entirely on Google's latest design system — dynamic color theming, expressive motion, and adaptive layouts that feel right at home on any Android device.
+          Built entirely on Google's latest design system dynamic color theming, expressive motion, and adaptive layouts that feel right at home on any Android device.
         </p>
         <div class="appinfo-chips">
           <span class="appinfo-chip">Dynamic Color</span>
@@ -700,7 +681,7 @@
         <div class="appinfo-label">Performance</div>
         <h3 class="appinfo-title">Buttery Smooth</h3>
         <p class="appinfo-desc">
-          60–120 fps animations across every transition. Native C engine handles shell commands with zero JVM overhead — no lag, no stutter.
+          60–120 fps animations across every transition. Powered by libsu for root shell and MMKV for near-zero latency settings — no lag, no stutter.
         </p>
       </div>
 
@@ -715,7 +696,7 @@
         <div class="appinfo-label">Experience</div>
         <h3 class="appinfo-title">User Friendly</h3>
         <p class="appinfo-desc">
-          Designed for real users — not just developers. Clear labels, intuitive gestures, and contextual help make advanced root tools accessible to everyone.
+          Designed for real users not just developers. Clear labels, intuitive gestures, and contextual help make advanced root tools accessible to everyone.
         </p>
       </div>
 
@@ -725,19 +706,6 @@
     <div class="appinfo-details reveal-stagger">
 
       <div class="appinfo-detail-card">
-        <div class="appinfo-detail-icon appinfo-icon-primary">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="5" y="2" width="14" height="20" rx="2"/>
-            <line x1="12" y1="18" x2="12.01" y2="18"/>
-          </svg>
-        </div>
-        <div class="appinfo-detail-body">
-          <div class="appinfo-detail-label">Platform</div>
-          <div class="appinfo-detail-value">Android 8.0 – 16</div>
-        </div>
-      </div>
-
-      <div class="appinfo-detail-card">
         <div class="appinfo-detail-icon appinfo-icon-tertiary">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
@@ -745,32 +713,7 @@
         </div>
         <div class="appinfo-detail-body">
           <div class="appinfo-detail-label">Language</div>
-          <div class="appinfo-detail-value">Kotlin · C17 Native</div>
-        </div>
-      </div>
-
-      <div class="appinfo-detail-card">
-        <div class="appinfo-detail-icon appinfo-icon-secondary">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-          </svg>
-        </div>
-        <div class="appinfo-detail-body">
-          <div class="appinfo-detail-label">Root Support</div>
-          <div class="appinfo-detail-value">Magisk · KernelSU · APatch</div>
-        </div>
-      </div>
-
-      <div class="appinfo-detail-card">
-        <div class="appinfo-detail-icon" style="background: var(--md-sys-color-error-container); color: var(--md-sys-color-error);">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="4" y="4" width="16" height="16" rx="2"/>
-            <rect x="9" y="9" width="6" height="6" rx="1"/>
-          </svg>
-        </div>
-        <div class="appinfo-detail-body">
-          <div class="appinfo-detail-label">Architecture</div>
-          <div class="appinfo-detail-value">ARM · ARM64 (ABI Split)</div>
+          <div class="appinfo-detail-value">Kotlin · Java 17</div>
         </div>
       </div>
 
@@ -784,7 +727,7 @@
         </div>
         <div class="appinfo-detail-body">
           <div class="appinfo-detail-label">Ads</div>
-          <div class="appinfo-detail-value">Unity Ads (non-intrusive)</div>
+          <div class="appinfo-detail-value">Unity Ads</div>
         </div>
       </div>
 
@@ -813,7 +756,7 @@
       </div>
       <div class="appinfo-privacy-body">
         <div class="appinfo-privacy-title">Privacy First</div>
-        <p class="appinfo-privacy-desc">Aether Manager does not collect personal data. All operations run entirely on-device. No accounts, no telemetry, no cloud sync — your device stays yours.</p>
+        <p class="appinfo-privacy-desc">Aether Manager does not collect personal data. All operations run entirely on-device. No accounts, no telemetry, no cloud sync your device stays yours.</p>
       </div>
     </div>
 
@@ -828,12 +771,15 @@
 <footer>
   <div class="container">
     <div class="footer-inner">
-      <div>
-        <div class="footer-brand">
+      <div style="display:flex;flex-direction:column;align-items:center;text-align:center;">
+        <div class="footer-brand" style="justify-content:center;">
+          <div class="footer-brand-icon" style="background:none;padding:0;display:flex;align-items:center;">
+            <img src="assets/ic.png" alt="Aether Manager icon" style="width:32px;height:32px;border-radius:8px;display:block;" />
+          </div>
           <span class="footer-name">Aether Manager</span>
         </div>
         <p class="footer-copy" style="margin-top: 6px;">
-          Copyright &copy; 2026 AetherDev22
+          Copyright &copy; 2026 AetherDev22. Licensed under Apache 2.0.
         </p>
       </div>
 
@@ -1008,6 +954,23 @@
   }, { rootMargin: '-40% 0px -55% 0px' });
 
   sections.forEach(s => io.observe(s));
+/* ── Theme toggle ───────────────────────────────────────── */
+(function () {
+  const btn  = document.getElementById('themeToggle');
+  const html = document.documentElement;
+  const DARK = 'dark';
+  const LIGHT = 'light';
+
+  // Load saved preference or default dark
+  const saved = localStorage.getItem('am-theme') || DARK;
+  html.setAttribute('data-theme', saved);
+
+  btn.addEventListener('click', () => {
+    const current = html.getAttribute('data-theme');
+    const next    = current === DARK ? LIGHT : DARK;
+    html.setAttribute('data-theme', next);
+    localStorage.setItem('am-theme', next);
+  });
 })();
 </script>
 
