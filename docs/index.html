@@ -13,15 +13,19 @@
   <meta property="og:type" content="website" />
   <meta property="og:image" content="preview/p1.jpg" />
 
-  <!-- Fonts -->
+  <!-- Preload LCP image -->
+  <link rel="preload" as="image" href="preview/p1.jpg" fetchpriority="high" />
+
+  <!-- Fonts (non-blocking) -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
     href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Google+Sans+Display:wght@400;700&family=Google+Sans+Mono&display=swap"
-    rel="stylesheet"
+    rel="stylesheet" media="print" onload="this.media='all'"
   />
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Google+Sans+Display:wght@400;700&family=Google+Sans+Mono&display=swap" rel="stylesheet" /></noscript>
 
-  <link rel="stylesheet" href="assets/style.css" />
+  <link rel="stylesheet" href="assets/style.min.css" />
   <style>
     /* Disable text selection sitewide */
     body {
@@ -287,7 +291,7 @@
   </div>
 
   <div class="container">
-    <div class="hero-content reveal">
+    <div class="hero-content">
       <div class="hero-badge">
         Root Management · Android 8.0+
       </div>
@@ -348,11 +352,11 @@
       </div>
     </div>
 
-    <div class="hero-visual reveal">
+    <div class="hero-visual">
       <div class="phone-mockup">
         <div class="phone-frame">
           <div class="phone-screen">
-            <img src="preview/p1.jpg" alt="Aether Manager screenshot" loading="eager" />
+            <img src="preview/p1.jpg" alt="Aether Manager screenshot" loading="eager" fetchpriority="high" width="260" height="563" />
           </div>
         </div>
         <div class="phone-glow"></div>
@@ -471,7 +475,7 @@
       <div class="carousel-viewport" id="carouselViewport">
         <div class="carousel-track" id="carouselTrack">
           <div class="carousel-slide is-active" data-idx="0">
-            <img src="preview/p1.jpg" alt="Home screen" loading="eager" />
+            <img src="preview/p1.jpg" alt="Home screen" loading="eager" fetchpriority="high" width="260" height="563" />
           </div>
           <div class="carousel-slide" data-idx="1">
             <img src="preview/p2.jpg" alt="Performance profiles" loading="lazy" />
@@ -706,7 +710,7 @@
     <div class="contributors-grid reveal">
       <a href="https://t.me/AetherDev22" target="_blank" rel="noopener" class="contributor-card">
         <div class="contributor-photo-wrap">
-          <img src="assets/pr.jpg" alt="AetherDev22 profile photo" />
+          <img src="assets/pr.jpg" alt="AetherDev22 profile photo" width="80" height="80" loading="lazy" />
           <div class="contributor-photo-ring"></div>
         </div>
         <div class="contributor-info">
