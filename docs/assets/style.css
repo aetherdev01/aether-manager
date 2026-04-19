@@ -1303,6 +1303,200 @@ footer {
 .reveal-stagger.visible > *:nth-child(7) { opacity: 1; transform: none; transition-delay: 360ms; }
 .reveal-stagger.visible > *:nth-child(8) { opacity: 1; transform: none; transition-delay: 420ms; }
 
+/* ── App Info Section ────────────────────────────────────── */
+.appinfo-row {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.appinfo-card {
+  background: var(--md-sys-color-surface-container);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: var(--md-sys-shape-corner-extra-large);
+  padding: 28px 28px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition:
+    background var(--md-sys-motion-duration-medium1) var(--md-sys-motion-easing-standard),
+    transform var(--md-sys-motion-duration-medium1) var(--md-sys-motion-easing-emphasized),
+    box-shadow var(--md-sys-motion-duration-medium1) var(--md-sys-motion-easing-standard);
+}
+
+.appinfo-card:hover {
+  background: var(--md-sys-color-surface-container-high);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+}
+
+.appinfo-card-large {
+  background: linear-gradient(135deg, var(--md-sys-color-primary-container) 0%, rgba(0,74,125,0.6) 100%);
+  border-color: var(--md-sys-color-primary-container);
+}
+
+.appinfo-icon-wrap {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--md-sys-shape-corner-large);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 4px;
+}
+
+.appinfo-icon-wrap svg { width: 24px; height: 24px; }
+.appinfo-icon-primary  { background: var(--md-sys-color-primary-container); color: var(--md-sys-color-on-primary-container); }
+.appinfo-icon-secondary { background: var(--md-sys-color-secondary-container); color: var(--md-sys-color-on-secondary-container); }
+.appinfo-icon-tertiary  { background: var(--md-sys-color-tertiary-container); color: var(--md-sys-color-on-tertiary-container); }
+
+.appinfo-label {
+  font-size: var(--md-typescale-label-medium-size);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--md-sys-color-primary);
+}
+
+.appinfo-card-large .appinfo-label {
+  color: var(--md-sys-color-on-primary-container);
+  opacity: 0.8;
+}
+
+.appinfo-title {
+  font-size: var(--md-typescale-headline-small-size);
+  font-weight: 700;
+  color: var(--md-sys-color-on-surface);
+  margin: 0;
+}
+
+.appinfo-card-large .appinfo-title {
+  color: var(--md-sys-color-on-primary-container);
+}
+
+.appinfo-desc {
+  font-size: var(--md-typescale-body-medium-size);
+  color: var(--md-sys-color-on-surface-variant);
+  line-height: 1.6;
+  margin: 0;
+  flex: 1;
+}
+
+.appinfo-card-large .appinfo-desc {
+  color: var(--md-sys-color-on-primary-container);
+  opacity: 0.85;
+}
+
+.appinfo-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.appinfo-chip {
+  font-size: var(--md-typescale-label-small-size);
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: var(--md-sys-shape-corner-full);
+  background: rgba(158,202,255,0.15);
+  color: var(--md-sys-color-on-primary-container);
+  border: 1px solid rgba(158,202,255,0.25);
+}
+
+/* Detail cards row */
+.appinfo-details {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.appinfo-detail-card {
+  background: var(--md-sys-color-surface-container-low);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: var(--md-sys-shape-corner-large);
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  transition:
+    background var(--md-sys-motion-duration-short3) var(--md-sys-motion-easing-standard),
+    transform var(--md-sys-motion-duration-medium1) var(--md-sys-motion-easing-emphasized);
+}
+
+.appinfo-detail-card:hover {
+  background: var(--md-sys-color-surface-container);
+  transform: translateY(-2px);
+}
+
+.appinfo-detail-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--md-sys-shape-corner-medium);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.appinfo-detail-icon svg { width: 20px; height: 20px; }
+
+.appinfo-detail-label {
+  font-size: var(--md-typescale-label-small-size);
+  color: var(--md-sys-color-on-surface-variant);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 600;
+}
+
+.appinfo-detail-value {
+  font-size: var(--md-typescale-label-large-size);
+  font-weight: 600;
+  color: var(--md-sys-color-on-surface);
+  margin-top: 2px;
+}
+
+/* Privacy banner */
+.appinfo-privacy {
+  background: linear-gradient(135deg, var(--md-sys-color-surface-container) 0%, rgba(0,74,125,0.15) 100%);
+  border: 1px solid var(--md-sys-color-primary-container);
+  border-radius: var(--md-sys-shape-corner-extra-large);
+  padding: 28px 32px;
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.appinfo-privacy-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--md-sys-shape-corner-large);
+  background: var(--md-sys-color-primary-container);
+  color: var(--md-sys-color-on-primary-container);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.appinfo-privacy-icon svg { width: 24px; height: 24px; }
+
+.appinfo-privacy-title {
+  font-size: var(--md-typescale-title-large-size);
+  font-weight: 700;
+  color: var(--md-sys-color-on-surface);
+  margin-bottom: 6px;
+}
+
+.appinfo-privacy-desc {
+  font-size: var(--md-typescale-body-medium-size);
+  color: var(--md-sys-color-on-surface-variant);
+  line-height: 1.65;
+  margin: 0;
+}
+
 /* ── Responsive ──────────────────────────────────────────── */
 @media (max-width: 900px) {
   .hero .container {
@@ -1323,6 +1517,10 @@ footer {
   .specs-grid { grid-template-columns: 1fr; }
 
   .bug-grid { grid-template-columns: 1fr; }
+
+  .appinfo-row { grid-template-columns: 1fr; }
+  .appinfo-details { grid-template-columns: 1fr 1fr; }
+  .appinfo-privacy { flex-direction: column; }
 
   .download-card { flex-direction: column; padding: 40px 32px; text-align: center; }
 
@@ -1345,6 +1543,8 @@ footer {
     padding: 0 calc(50% - 130px);
   }
   .carousel-slide { flex: 0 0 260px; }
+
+  .appinfo-details { grid-template-columns: 1fr; }
 }
 
 /* ── Code / Mono ─────────────────────────────────────────── */
