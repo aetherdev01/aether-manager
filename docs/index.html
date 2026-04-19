@@ -30,10 +30,119 @@
       -ms-user-select: none;
       user-select: none;
     }
-    /* Main contributor chip — full width row */
-    .contributor-main {
-      grid-column: 1 / -1;
+
+    /* ── Contributor Card Redesign ── */
+    .contributor-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      padding: 40px 32px;
+      background: var(--md-sys-color-surface-container);
+      border: 1px solid var(--md-sys-color-outline-variant);
+      border-radius: 28px;
+      text-decoration: none;
+      max-width: 380px;
+      margin: 0 auto;
+      position: relative;
+      overflow: hidden;
+      transition:
+        transform 300ms cubic-bezier(0.2, 0, 0, 1),
+        border-color 200ms ease,
+        box-shadow 300ms ease;
+    }
+    .contributor-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 50% -10%, color-mix(in srgb, var(--md-sys-color-primary) 12%, transparent) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .contributor-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--md-sys-color-primary);
+      box-shadow: 0 12px 40px color-mix(in srgb, var(--md-sys-color-primary) 18%, transparent);
+      text-decoration: none;
+    }
+    .contributor-photo-wrap {
+      position: relative;
+      width: 100px;
+      height: 100px;
+      flex-shrink: 0;
+    }
+    .contributor-photo-wrap img {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 3px solid var(--md-sys-color-primary-container);
+      display: block;
+    }
+    .contributor-photo-ring {
+      position: absolute;
+      inset: -5px;
+      border-radius: 50%;
+      border: 2px solid color-mix(in srgb, var(--md-sys-color-primary) 35%, transparent);
+      animation: ring-pulse 2.8s ease-in-out infinite;
+    }
+    @keyframes ring-pulse {
+      0%, 100% { opacity: 0.5; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.04); }
+    }
+    .contributor-info {
+      text-align: center;
+    }
+    .contributor-handle {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--md-sys-color-on-surface);
+      letter-spacing: -0.3px;
+      margin-bottom: 4px;
+    }
+    .contributor-title {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--md-sys-color-primary);
+      margin-bottom: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+    }
+    .contributor-desc {
+      font-size: 13.5px;
+      color: var(--md-sys-color-on-surface-variant);
+      line-height: 1.55;
+    }
+    .contributor-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
       justify-content: center;
+    }
+    .contributor-tag {
+      font-size: 11.5px;
+      font-weight: 500;
+      color: var(--md-sys-color-on-secondary-container);
+      background: var(--md-sys-color-secondary-container);
+      border-radius: 100px;
+      padding: 4px 12px;
+    }
+    .contributor-tg-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 4px;
+      padding: 6px 14px;
+      border-radius: 100px;
+      background: color-mix(in srgb, var(--md-sys-color-primary) 10%, transparent);
+      border: 1px solid color-mix(in srgb, var(--md-sys-color-primary) 30%, transparent);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--md-sys-color-primary);
+    }
+    .contributor-tg-badge svg {
+      width: 14px;
+      height: 14px;
+      fill: currentColor;
     }
   </style>
 
@@ -595,16 +704,33 @@
     </div>
 
     <div class="contributors-grid reveal">
-      <!-- Main developer — full width -->
-      <a href="t.me/AetherDev22" target="_blank" rel="noopener" class="contributor-chip contributor-main">
-        <div class="contributor-avatar" style="background: var(--md-sys-color-primary-container);">A</div>
-        <div>
-          <div class="contributor-name">@AetherDev22</div>
-          <div class="contributor-role">Developer of Aether Manager</div>
+      <a href="https://t.me/AetherDev22" target="_blank" rel="noopener" class="contributor-card">
+        <div class="contributor-photo-wrap">
+          <img src="assets/pr.jpg" alt="AetherDev22 profile photo" />
+          <div class="contributor-photo-ring"></div>
+        </div>
+        <div class="contributor-info">
+          <div class="contributor-handle">@AetherDev22</div>
+          <div class="contributor-title">Lead Developer</div>
+          <div class="contributor-desc">
+            Creator and sole developer of Aether Manager —<br>
+            building powerful root tools for Android enthusiasts.
+          </div>
+        </div>
+        <div class="contributor-tags">
+          <span class="contributor-tag">Kotlin</span>
+          <span class="contributor-tag">Shizuku</span>
+          <span class="contributor-tag">KernelSU</span>
+          <span class="contributor-tag">Magisk</span>
+          <span class="contributor-tag">Android</span>
+        </div>
+        <div class="contributor-tg-badge">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
+          </svg>
+          Telegram Channel
         </div>
       </a>
-
-
     </div>
   </div>
 </section>
