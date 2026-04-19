@@ -936,7 +936,7 @@
         io.unobserve(e.target);
       }
     });
-  }, { threshold: 0.12 });
+  }, { threshold: 0, rootMargin: '0px 0px -40px 0px' });
 
   document.querySelectorAll('.reveal, .reveal-stagger').forEach(el => io.observe(el));
 })();
@@ -955,6 +955,8 @@
   }, { rootMargin: '-40% 0px -55% 0px' });
 
   sections.forEach(s => io.observe(s));
+})();
+
 /* ── Theme toggle ───────────────────────────────────────── */
 (function () {
   const btn  = document.getElementById('themeToggle');
