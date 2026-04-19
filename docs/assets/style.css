@@ -1202,7 +1202,6 @@ footer {
 .footer-brand {
   display: flex;
   align-items: center;
-  gap: 10px;
 }
 
 .footer-brand-icon {
@@ -1339,14 +1338,20 @@ footer {
 .appinfo-icon-wrap {
   width: 48px;
   height: 48px;
+  min-width: 48px;
+  min-height: 48px;
+  max-width: 48px;
+  max-height: 48px;
   border-radius: var(--md-sys-shape-corner-large);
   display: flex;
   align-items: center;
   justify-content: center;
   margin-bottom: 4px;
+  overflow: hidden;
+  flex-shrink: 0;
 }
 
-.appinfo-icon-wrap svg { width: 24px; height: 24px; }
+.appinfo-icon-wrap svg { width: 24px; height: 24px; flex-shrink: 0; }
 .appinfo-icon-primary  { background: var(--md-sys-color-primary-container); color: var(--md-sys-color-on-primary-container); }
 .appinfo-icon-secondary { background: var(--md-sys-color-secondary-container); color: var(--md-sys-color-on-secondary-container); }
 .appinfo-icon-tertiary  { background: var(--md-sys-color-tertiary-container); color: var(--md-sys-color-on-tertiary-container); }
