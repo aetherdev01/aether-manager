@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<paths>
-    <!-- Untuk download APK update ke cache dir -->
-    <cache-path name="apk_updates" path="." />
-</paths>
