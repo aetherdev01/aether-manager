@@ -17,7 +17,7 @@
     drawer.classList.remove('open');
     hamburger.classList.remove('is-open');
     hamburger.setAttribute('aria-expanded', 'false');
-    document.body.style.overflow = '';
+    setTimeout(function(){ document.body.style.overflow = ''; }, 420);
   }
 
   hamburger.addEventListener('click', openDrawer);
