@@ -1411,7 +1411,7 @@ footer {
   const slides = document.querySelectorAll('.carousel-slide');
   const counter = document.getElementById('carouselCounter');
   const TOTAL = slides.length;
-  let current = 0, startX = 0, dragDx = 0, dragging = false;
+  let current = 0, startX = 0, startY = 0, dragDx = 0, dragging = false, lockScroll = false;
 
   function slideWidth() { return slides[0].offsetWidth + 20; }
   function setTrackX(extra = 0) {
@@ -1438,16 +1438,24 @@ footer {
     if (e.key === 'ArrowRight') goTo(current + 1);
   });
   viewport.addEventListener('touchstart', e => {
-    startX = e.touches[0].clientX; dragging = true; dragDx = 0;
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    dragging = true; dragDx = 0; lockScroll = false;
     track.style.transition = 'none';
   }, { passive: true });
   viewport.addEventListener('touchmove', e => {
     if (!dragging) return;
-    dragDx = e.touches[0].clientX - startX;
+    const dx = e.touches[0].clientX - startX;
+    const dy = e.touches[0].clientY - startY;
+    if (!lockScroll && Math.abs(dx) < 5 && Math.abs(dy) < 5) return;
+    if (!lockScroll) lockScroll = Math.abs(dx) > Math.abs(dy);
+    if (!lockScroll) return;
+    e.preventDefault();
+    dragDx = dx;
     setTrackX(dragDx);
-  }, { passive: true });
+  }, { passive: false });
   viewport.addEventListener('touchend', () => {
-    if (!dragging) return; dragging = false;
+    if (!dragging) return; dragging = false; lockScroll = false;
     const th = viewport.offsetWidth * 0.18;
     if (dragDx < -th) goTo(current + 1);
     else if (dragDx > th) goTo(current - 1);
