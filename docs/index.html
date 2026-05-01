@@ -1,1 +1,1579 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Aether Manager Root Management for Android</title><meta name="description" content="Native Android app for rooted devices. Performance profiles, kernel tweaks, system monitor, and per-app optimization."/><meta name="theme-color" content="#f5f0eb"/><meta property="og:title" content="Aether Manager"/><meta property="og:description" content="Native root management app for Android Performance Profiles, Kernel Tweaks, System Monitor."/><meta property="og:type" content="website"/><meta property="og:image" content="preview/p1.jpg"/><link rel="preconnect" href="https://fonts.googleapis.com"/><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/><link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;500;600;700;800;900&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet"/><link rel="icon" type="image/png" href="assets/ic.png"/><link rel="manifest" href="manifest.json"/><meta name="mobile-web-app-capable" content="yes"/><meta name="apple-mobile-web-app-capable" content="yes"/><style>:root { --bg: #f5f0eb; --bg-card: #ede8e1; --bg-card2: #e8e2da; --surface: #faf7f3; --amber: #8B5E08; --amber-light: #b07a1a; --amber-muted: rgba(139,94,8,0.12); --amber-border: rgba(139,94,8,0.25); --text: #1a1410; --text-2: #4a3f33; --text-3: #7a6e62; --border: rgba(26,20,16,0.1); --border-soft: rgba(26,20,16,0.06); --radius-sm: 12px; --radius: 20px; --radius-lg: 28px; --radius-xl: 36px; --shadow-sm: 0 2px 12px rgba(26,20,16,0.06); --shadow: 0 4px 24px rgba(26,20,16,0.08); --shadow-lg: 0 12px 48px rgba(26,20,16,0.12); --font-head: 'Unbounded', sans-serif; --font-body: 'DM Sans', sans-serif; --ease: cubic-bezier(0.22, 1, 0.36, 1); --ease-in: cubic-bezier(0.55, 0, 1, 0.45);}*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }html { scroll-behavior: smooth; font-size: 16px; }body { font-family: var(--font-body); background: var(--bg); color: var(--text); -webkit-font-smoothing: antialiased; overflow-x: hidden; user-select: none;}body::before { content: ''; position: fixed; inset: 0; background-image: linear-gradient(rgba(26,20,16,0.045) 1px, transparent 1px), linear-gradient(90deg, rgba(26,20,16,0.045) 1px, transparent 1px); background-size: 40px 40px; pointer-events: none; z-index: 0;}main, footer, section { position: relative; z-index: 1; }header { position: relative; z-index: 1000; }a { text-decoration: none; color: inherit; }.navbar { position: fixed; top: 12px; left: 50%; transform: translateX(-50%); width: calc(100% - 32px); max-width: 900px; background: rgba(245,240,235,0.88); backdrop-filter: blur(20px) saturate(1.4); -webkit-backdrop-filter: blur(20px) saturate(1.4); border: 1px solid var(--border); border-radius: 999px; padding: 10px 16px 10px 20px; display: flex; align-items: center; justify-content: space-between; z-index: 1100; transition: box-shadow 0.3s var(--ease);}.navbar.scrolled { box-shadow: var(--shadow); }.brand { font-family: var(--font-head); font-weight: 700; font-size: 15px; letter-spacing: -0.2px; color: var(--text); display: flex; align-items: center; gap: 2px;}.brand .accent { color: var(--amber); }.nav-links { display: flex; align-items: center; gap: 4px; list-style: none;}.nav-links a { font-family: var(--font-body); font-size: 13.5px; font-weight: 500; color: var(--text-2); padding: 7px 14px; border-radius: 999px; transition: background 0.2s, color 0.2s;}.nav-links a:hover, .nav-links a.active { background: var(--amber-muted); color: var(--amber);}.nav-btn { background: var(--amber); color: #fff !important; padding: 8px 18px !important; border-radius: 999px !important; font-weight: 600 !important; font-size: 13px !important; transition: background 0.2s, transform 0.2s !important;}.nav-btn:hover { background: var(--amber-light) !important; transform: scale(1.03); }.hamburger { display: none; background: none; border: 1px solid var(--border); border-radius: 10px; width: 38px; height: 38px; cursor: pointer; align-items: center; justify-content: center; transition: background 0.2s;}.hamburger:hover { background: var(--amber-muted); }.hamburger svg { stroke: var(--text); }.mobile-menu { position: fixed; top: 0; left: 0; right: 0; background: var(--surface); border-bottom: 1px solid var(--border); border-radius: 0 0 var(--radius-lg) var(--radius-lg); padding: 80px 24px 28px; z-index: 1300; transform: translateY(-110%); transition: transform 0.45s var(--ease); box-shadow: var(--shadow-lg);}.mobile-menu.open { transform: translateY(0); }.mobile-menu a { display: flex; align-items: center; gap: 12px; font-family: var(--font-body); font-size: 16px; font-weight: 500; color: var(--text-2); padding: 14px 16px; border-radius: var(--radius-sm); transition: background 0.2s, color 0.2s;}.mobile-menu a:hover, .mobile-menu a.mm-active { background: var(--amber-muted); color: var(--amber); }.mobile-menu .mm-divider { height: 1px; background: var(--border-soft); margin: 8px 0; }.mm-download { display: block; margin-top: 12px; text-align: center; background: var(--amber) !important; color: #fff !important; border-radius: 999px !important; font-size: 14px; font-weight: 700; padding: 14px 24px !important;}.hero { display: flex; align-items: center; padding: 120px 20px 80px;}.container { width: 100%; max-width: 900px; margin: 0 auto; padding: 0 8px;}.hero-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center;}.hero-eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; color: var(--amber); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 20px;}.hero-eyebrow-dot { width: 6px; height: 6px; background: var(--amber); border-radius: 50%; animation: pulse-dot 2s ease-in-out infinite;}@keyframes pulse-dot { 0%,100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.5); opacity: 0.6; }}.hero-title { font-family: var(--font-head); font-size: clamp(28px, 5vw, 48px); font-weight: 800; line-height: 1.12; letter-spacing: -0.5px; color: var(--text); margin-bottom: 20px;}.hero-title .accent { color: var(--amber); }.hero-desc { font-size: 16px; line-height: 1.7; color: var(--text-2); max-width: 460px; margin-bottom: 32px;}.hero-actions { display: flex; gap: 12px; flex-wrap: wrap;}.btn-primary { display: inline-flex; align-items: center; gap: 8px; background: var(--amber); color: #fff; font-family: var(--font-body); font-size: 14px; font-weight: 600; padding: 13px 24px; border-radius: 999px; transition: background 0.2s var(--ease), transform 0.2s var(--ease), box-shadow 0.2s; cursor: pointer;}.btn-primary:hover { background: var(--amber-light); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(139,94,8,0.28);}.btn-secondary { display: inline-flex; align-items: center; gap: 8px; background: var(--bg-card); color: var(--text); font-family: var(--font-body); font-size: 14px; font-weight: 600; padding: 13px 24px; border-radius: 999px; border: 1px solid var(--border); transition: background 0.2s, transform 0.2s, border-color 0.2s;}.btn-secondary:hover { background: var(--bg-card2); transform: translateY(-2px); border-color: var(--amber-border);}.hero-stats { display: flex; gap: 24px; margin-top: 40px; padding-top: 32px; border-top: 1px solid var(--border);}.hero-stat-val { font-family: var(--font-head); font-size: 28px; font-weight: 800; color: var(--text); letter-spacing: -1px;}.hero-stat-lbl { font-size: 12px; font-weight: 500; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.6px; margin-top: 2px;}.phone-mockup { position: relative; width: 200px; flex-shrink: 0; justify-self: center;}.phone-frame { background: var(--text); border-radius: 36px; padding: 12px; box-shadow: 0 32px 80px rgba(26,20,16,0.2), 0 4px 16px rgba(26,20,16,0.1); position: relative; z-index: 1;}.phone-frame::before { content: ''; position: absolute; top: 8px; left: 50%; transform: translateX(-50%); width: 60px; height: 6px; background: rgba(255,255,255,0.12); border-radius: 999px; z-index: 2;}.phone-screen { border-radius: 26px; overflow: hidden; background: #111; aspect-ratio: 9/19.5;}.phone-screen img { width: 100%; height: 100%; object-fit: cover; display: block;}.phone-glow { position: absolute; bottom: -24px; left: 50%; transform: translateX(-50%); width: 140px; height: 40px; background: rgba(139,94,8,0.3); filter: blur(24px); border-radius: 50%;}section { padding: 80px 20px; }.section-eyebrow { font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; color: var(--amber); margin-bottom: 14px;}.section-title { font-family: var(--font-head); font-size: clamp(20px, 3.2vw, 30px); font-weight: 800; line-height: 1.18; letter-spacing: -0.3px; color: var(--text); margin-bottom: 14px;}.mm-scrim { display: none; position: fixed; inset: 0; background: rgba(26,20,16,0.45); z-index: 1200; opacity: 0; transition: opacity 0.35s;}.mm-scrim.open { display: block; opacity: 1; }.section-title .accent { color: var(--amber); }.section-desc { font-size: 15px; line-height: 1.7; color: var(--text-2); max-width: 520px;}.section-header { margin-bottom: 48px; }.section-header.center { text-align: center; }.section-header.center .section-desc { margin: 0 auto; }.badges-row { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 56px;}.badge { display: flex; align-items: center; gap: 8px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 999px; padding: 8px 16px; font-size: 13px; font-weight: 600; color: var(--text-2);}.badge svg { width: 15px; height: 15px; stroke: var(--amber); fill: none; }.features-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px;}.feature-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 28px 24px; transition: transform 0.3s var(--ease), border-color 0.2s, box-shadow 0.3s; position: relative; overflow: hidden;}.feature-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, var(--amber), transparent); opacity: 0; transition: opacity 0.3s;}.feature-card:hover { transform: translateY(-4px); border-color: var(--amber-border); box-shadow: var(--shadow-lg);}.feature-card:hover::before { opacity: 1; }.feature-icon { width: 44px; height: 44px; background: var(--amber-muted); border-radius: 14px; display: flex; align-items: center; justify-content: center; margin-bottom: 18px;}.feature-icon svg { width: 20px; height: 20px; stroke: var(--amber); fill: none; }.feature-title { font-family: var(--font-body); font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 8px; letter-spacing: -0.2px;}.feature-desc { font-size: 14px; line-height: 1.65; color: var(--text-2);}#preview { overflow: hidden; }.carousel-wrapper { position: relative; }.carousel-outer { overflow: visible; }.carousel-viewport { overflow: hidden; border-radius: var(--radius-lg); cursor: grab;}.carousel-viewport:active { cursor: grabbing; }.carousel-track { display: flex; gap: 20px; will-change: transform;}.carousel-slide { flex-shrink: 0; width: 200px; border-radius: 28px; overflow: hidden; transition: transform 0.4s var(--ease), opacity 0.4s, box-shadow 0.4s; opacity: 0.45; transform: scale(0.93); box-shadow: 0 4px 20px rgba(26,20,16,0.12); border: 1px solid var(--border);}.carousel-slide.is-active { opacity: 1; transform: scale(1); box-shadow: 0 12px 40px rgba(26,20,16,0.18); border-color: var(--amber-border);}.carousel-slide img { width: 100%; display: block; border-radius: 28px;}.carousel-controls { display: flex; align-items: center; justify-content: center; gap: 16px; margin-top: 28px;}.carousel-dots { display: flex; gap: 6px; }.carousel-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text-3); border: none; cursor: pointer; transition: background 0.2s, width 0.3s var(--ease);}.carousel-dot.active { background: var(--amber); width: 20px; border-radius: 4px;}.carousel-counter { font-family: var(--font-head); font-size: 13px; font-weight: 700; color: var(--text-3); min-width: 28px; text-align: center;}.specs-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px;}.spec-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px 20px; display: flex; align-items: flex-start; gap: 16px; transition: border-color 0.2s, box-shadow 0.2s;}.spec-card:hover { border-color: var(--amber-border); box-shadow: var(--shadow-sm);}.spec-icon { width: 38px; height: 38px; flex-shrink: 0; background: var(--amber-muted); border-radius: 10px; display: flex; align-items: center; justify-content: center;}.spec-icon svg { width: 18px; height: 18px; stroke: var(--amber); fill: none; }.spec-label { font-size: 11px; font-weight: 600; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 4px; }.spec-value { font-size: 14px; font-weight: 600; color: var(--text); }.download-card { background: var(--text); border-radius: var(--radius-xl); padding: 56px 48px; text-align: center; position: relative; overflow: hidden;}.download-card::before { content: ''; position: absolute; top: -60px; right: -60px; width: 240px; height: 240px; background: radial-gradient(circle, rgba(139,94,8,0.4) 0%, transparent 65%); pointer-events: none;}.download-card::after { content: ''; position: absolute; bottom: -40px; left: -40px; width: 200px; height: 200px; background: radial-gradient(circle, rgba(139,94,8,0.25) 0%, transparent 65%); pointer-events: none;}.download-title { font-family: var(--font-head); font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; letter-spacing: -0.5px; margin-bottom: 14px; position: relative; z-index: 1;}.download-desc { font-size: 15px; line-height: 1.7; color: rgba(255,255,255,0.62); max-width: 440px; margin: 0 auto 32px; position: relative; z-index: 1;}.download-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; position: relative; z-index: 1;}.btn-primary-dark { display: inline-flex; align-items: center; gap: 8px; background: var(--amber); color: #fff; font-family: var(--font-body); font-size: 14px; font-weight: 700; padding: 13px 26px; border-radius: 999px; transition: background 0.2s, transform 0.2s;}.btn-primary-dark:hover { background: var(--amber-light); transform: translateY(-2px); }.btn-ghost { display: inline-flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.8); font-family: var(--font-body); font-size: 14px; font-weight: 600; padding: 13px 26px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.18); transition: background 0.2s, transform 0.2s;}.btn-ghost:hover { background: rgba(255,255,255,0.15); transform: translateY(-2px); }.bug-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px;}.bug-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 24px; transition: border-color 0.2s, box-shadow 0.2s;}.bug-card:hover { border-color: var(--amber-border); box-shadow: var(--shadow-sm);}.bug-type { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.7px; color: var(--amber); margin-bottom: 10px;}.bug-type svg { width: 14px; height: 14px; stroke: var(--amber); fill: none; }.bug-title { font-family: var(--font-head); font-size: 15px; font-weight: 700; margin-bottom: 8px; }.bug-desc { font-size: 13.5px; line-height: 1.6; color: var(--text-2); }.bug-desc code { background: var(--amber-muted); color: var(--amber); padding: 1px 6px; border-radius: 5px; font-size: 12px; font-family: monospace;}.contributor-card { display: flex; align-items: center; gap: 20px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 28px 28px; max-width: 480px; margin: 0 auto; transition: border-color 0.2s, box-shadow 0.3s, transform 0.3s; position: relative;}.contributor-card:hover { border-color: var(--amber-border); box-shadow: var(--shadow-lg); transform: translateY(-4px);}.contributor-card-lead { max-width: 100%; padding: 32px; background: var(--surface);}.contributor-card-team { max-width: 100%; padding: 20px 22px; margin: 0;}.contributor-badge { display: inline-block; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: var(--amber); background: var(--amber-muted); border-radius: 999px; padding: 3px 10px; margin-bottom: 6px;}.contributor-photo { border-radius: 50%; object-fit: cover; flex-shrink: 0; }.contributor-photo-lg { width: 88px; height: 88px; border: 3px solid var(--bg-card); }.contributor-handle { font-family: var(--font-head); font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 3px;}.contributor-role { font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--amber); margin-bottom: 8px;}.contributor-bio { font-size: 13.5px; color: var(--text-2); line-height: 1.55;}.team-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px;}.appinfo-grid { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 16px;}.appinfo-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 28px 24px; transition: border-color 0.2s, box-shadow 0.3s;}.appinfo-card:hover { border-color: var(--amber-border); box-shadow: var(--shadow);}.appinfo-icon { width: 44px; height: 44px; background: var(--amber-muted); border-radius: 14px; display: flex; align-items: center; justify-content: center; margin-bottom: 18px;}.appinfo-icon svg { width: 20px; height: 20px; stroke: var(--amber); fill: none; }.appinfo-lbl { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--text-3); margin-bottom: 6px; }.appinfo-title { font-family: var(--font-head); font-size: 16px; font-weight: 800; letter-spacing: -0.2px; margin-bottom: 10px; }.appinfo-desc { font-size: 13.5px; line-height: 1.65; color: var(--text-2); }.appinfo-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 16px; }.appinfo-chip { font-size: 11.5px; font-weight: 600; color: var(--amber); background: var(--amber-muted); border-radius: 999px; padding: 4px 12px;}.dwyor-card { background: #fffaf3; border: 1.5px solid rgba(139,94,8,0.35); border-radius: var(--radius-lg); padding: 24px 28px; display: flex; align-items: flex-start; gap: 18px;}.dwyor-icon { flex-shrink: 0; width: 42px; height: 42px; background: rgba(139,94,8,0.12); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-top: 2px;}.dwyor-icon svg { width: 20px; height: 20px; stroke: var(--amber); }.dwyor-label { font-size: 10.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.2px; color: var(--amber); margin-bottom: 4px;}.dwyor-title { font-family: var(--font-head); font-size: 13px; font-weight: 800; color: var(--text); margin-bottom: 8px;}.dwyor-desc { font-size: 13.5px; line-height: 1.65; color: var(--text-2);}.dwyor-desc strong { color: #7a5200; font-weight: 600; font-style: italic;}footer { border-top: 1px solid var(--border); padding: 40px 20px;}.footer-inner { max-width: 900px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap;}.footer-brand { font-family: var(--font-head); font-size: 16px; font-weight: 800; color: var(--text); margin-bottom: 4px;}.footer-brand span { color: var(--amber); }.footer-copy { font-size: 12.5px; color: var(--text-3); }.footer-links { display: flex; gap: 4px; list-style: none; flex-wrap: wrap;}.footer-links a { font-size: 13px; font-weight: 500; color: var(--text-2); padding: 6px 12px; border-radius: 999px; transition: background 0.2s, color 0.2s;}.footer-links a:hover { background: var(--amber-muted); color: var(--amber); }.reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.65s var(--ease), transform 0.65s var(--ease);}.reveal.visible { opacity: 1; transform: none; }.reveal-stagger .feature-card,.reveal-stagger .spec-card,.reveal-stagger .bug-card { opacity: 0; transform: translateY(20px); transition: opacity 0.5s var(--ease), transform 0.5s var(--ease);}.reveal-stagger.visible .feature-card,.reveal-stagger.visible .spec-card,.reveal-stagger.visible .bug-card { opacity: 1; transform: none;}.reveal-stagger.visible .feature-card:nth-child(1) { transition-delay: 0s; }.reveal-stagger.visible .feature-card:nth-child(2) { transition-delay: 0.07s; }.reveal-stagger.visible .feature-card:nth-child(3) { transition-delay: 0.14s; }.reveal-stagger.visible .feature-card:nth-child(4) { transition-delay: 0.21s; }.reveal-stagger.visible .feature-card:nth-child(5) { transition-delay: 0.28s; }.reveal-stagger.visible .spec-card:nth-child(1) { transition-delay: 0s; }.reveal-stagger.visible .spec-card:nth-child(2) { transition-delay: 0.07s; }.reveal-stagger.visible .spec-card:nth-child(3) { transition-delay: 0.14s; }.reveal-stagger.visible .spec-card:nth-child(4) { transition-delay: 0.21s; }.reveal-stagger.visible .bug-card:nth-child(1) { transition-delay: 0s; }.reveal-stagger.visible .bug-card:nth-child(2) { transition-delay: 0.09s; }.reveal-stagger.visible .bug-card:nth-child(3) { transition-delay: 0.18s; }.team-grid .contributor-card-team { opacity: 0; transform: translateY(16px); transition: opacity 0.45s var(--ease), transform 0.45s var(--ease);}.team-grid.visible .contributor-card-team { opacity: 1; transform: none; }.team-grid.visible .contributor-card-team:nth-child(1) { transition-delay: 0s; }.team-grid.visible .contributor-card-team:nth-child(2) { transition-delay: 0.08s; }.hero-content > * { opacity: 0; transform: translateY(18px); animation: hero-in 0.7s var(--ease) forwards;}.hero-eyebrow { animation-delay: 0.05s; }.hero-title { animation-delay: 0.15s; }.hero-desc { animation-delay: 0.22s; }.hero-actions { animation-delay: 0.3s; }.hero-stats { animation-delay: 0.38s; }.phone-mockup { opacity: 0; animation: hero-in 0.9s 0.2s var(--ease) forwards; }@keyframes hero-in { to { opacity: 1; transform: none; }}@media (max-width: 680px) { .nav-links { display: none; } .hamburger { display: flex; } .hero-inner { grid-template-columns: 1fr; } .phone-mockup { display: none; } .hero { padding-top: 88px; padding-bottom: 48px; } .hero-stats { flex-wrap: wrap; gap: 16px; } .appinfo-grid { grid-template-columns: 1fr; } .download-card { padding: 36px 24px; }}@media (max-width: 480px) { .hero-title { font-size: 32px; letter-spacing: -1px; } .section-title { font-size: 24px; } section { padding: 60px 16px; }}</style></head><body><header><nav class="navbar" id="navbar"><a href="#" class="brand"><span class="accent">Aether</span>Manager</a><ul class="nav-links"><li><a href="#features">Features</a></li><li><a href="#preview">Preview</a></li><li><a href="#requirements">Requirements</a></li><li><a href="#appinfo">App Info</a></li><li><a href="https://github.com/aetherdev01/aether-manager/releases" target="_blank" rel="noopener" class="nav-btn">Download</a></li></ul><button class="hamburger" id="hamburgerBtn" aria-label="Menu" aria-expanded="false"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round"><line x1="3" y1="7" x2="21" y2="7"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="17" x2="21" y2="17"/></svg></button></nav><div class="mm-scrim" id="mmScrim"></div><div class="mobile-menu" id="mobileMenu" role="dialog" aria-modal="true" aria-label="Navigation"><a href="#features" class="mm-link"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg> Features </a><a href="#preview" class="mm-link"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="5" y="2" width="14" height="20" rx="2"/></svg> Preview </a><a href="#requirements" class="mm-link"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg> Requirements </a><a href="#appinfo" class="mm-link"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> App Info </a><div class="mm-divider"></div><a href="https://t.me/get01projects" target="_blank" rel="noopener" class="mm-link"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z"/></svg> Telegram </a><a href="https://github.com/aetherdev01/aether-manager/releases" target="_blank" rel="noopener" class="mm-download">Download APK</a></div></header><main><section class="hero" id="home"><div class="container"><div class="hero-inner"><div class="hero-content"><h1 class="hero-title">Root your Android<br/><span class="accent">Master your device</span></h1><p class="hero-desc">Aether Manager is a native Android app for rooted devices giving you full control over performance profiles, kernel tweaks, system monitoring, and per-app optimization.</p><div class="hero-actions"><a href="https://github.com/aetherdev01/aether-manager/releases" target="_blank" rel="noopener" class="btn-primary"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 17V3M5 10l7 7 7-7M3 21h18"/></svg> Download APK </a><a href="#preview" class="btn-secondary"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> See Preview </a><a href="https://t.me/get01projects" target="_blank" rel="noopener" class="btn-secondary"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z"/></svg> Telegram </a></div><div class="hero-stats"><div><div class="hero-stat-val">17+</div><div class="hero-stat-lbl">Kernel Tweaks</div></div><div><div class="hero-stat-val">4</div><div class="hero-stat-lbl">Perf. Profiles</div></div><div><div class="hero-stat-val">API 26+</div><div class="hero-stat-lbl">Android 8.0</div></div></div></div><div class="phone-mockup"><div class="phone-frame"><div class="phone-screen"><img src="preview/p1.jpg" alt="Aether Manager screenshot" loading="eager" fetchpriority="high" width="200" height="433"/></div></div><div class="phone-glow"></div></div></div></div></section><section id="features" style="content-visibility:auto;contain-intrinsic-size:0 600px;"><div class="container"><div class="section-header reveal"><div class="section-eyebrow">Features</div><h2 class="section-title">Everything you need.<br/>Nothing you don't.</h2><p class="section-desc">Built from the ground up for rooted Android devices deep system access, real-time data, and fine-grained control.</p></div><div class="features-grid reveal-stagger"><div class="feature-card"><div class="feature-icon"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div><h3 class="feature-title">Performance Profiles</h3><p class="feature-desc">Switch between <strong>Balance</strong>, <strong>Performance</strong>, <strong>Gaming</strong>, and <strong>Battery Saver</strong> profiles with a single tap. Applies CPU governor, GPU freq, and I/O tweaks automatically.</p></div><div class="feature-card"><div class="feature-icon"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93A10 10 0 1 1 4.93 19.07"/><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83"/></svg></div><h3 class="feature-title">Kernel Tweaks</h3><p class="feature-desc">17+ individual tweaks across <strong>CPU</strong>, <strong>GPU</strong>, <strong>memory</strong>, <strong>I/O</strong>, <strong>network</strong>, and <strong>battery</strong>. Toggle each one independently with live validation.</p></div><div class="feature-card"><div class="feature-icon"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div><h3 class="feature-title">System Monitor</h3><p class="feature-desc">Real-time stats for <strong>SoC</strong>, <strong>RAM</strong>, <strong>CPU/GPU frequency</strong>, <strong>temperature</strong>, and <strong>uptime</strong> all updated live without draining your battery.</p></div><div class="feature-card"><div class="feature-icon"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="8" height="10" rx="1"/><rect x="14" y="2" width="8" height="8" rx="1"/><rect x="14" y="14" width="8" height="8" rx="1"/><path d="M10 11h4M10 16h4"/></svg></div><h3 class="feature-title">App Profile</h3><p class="feature-desc">Per-app optimization with <strong>automatic CPU governor</strong>, <strong>refresh rate</strong>, and system tweak switching. Game differently, browse efficiently.</p></div><div class="feature-card"><div class="feature-icon"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><h3 class="feature-title">Magisk & KernelSU</h3><p class="feature-desc">First-class support for <strong>Magisk</strong>, <strong>KernelSU</strong>, and <strong>APatch</strong>. Automatic root manager detection with graceful fallback handling.</p></div></div></div></section><section id="preview" style="content-visibility:auto;contain-intrinsic-size:0 600px;"><div class="container"><div class="section-header center reveal"><div class="section-eyebrow">Screenshots</div><h2 class="section-title">See it in action</h2><p class="section-desc">Swipe or drag to explore all screens.</p></div></div><div class="reveal" style="padding: 0 20px;"><div class="carousel-wrapper"><div class="carousel-outer"><div class="carousel-viewport" id="carouselViewport"><div class="carousel-track" id="carouselTrack"><div class="carousel-slide is-active" data-idx="0"><img src="preview/p1.jpg" alt="Home screen" loading="eager" fetchpriority="high" width="200" height="433"/></div><div class="carousel-slide" data-idx="1"><img src="preview/p2.jpg" alt="Performance profiles" loading="lazy" width="200" height="433"/></div><div class="carousel-slide" data-idx="2"><img src="preview/p3.jpg" alt="Kernel tweaks" loading="lazy" width="200" height="433"/></div><div class="carousel-slide" data-idx="3"><img src="preview/p4.jpg" alt="System monitor" loading="lazy" width="200" height="433"/></div><div class="carousel-slide" data-idx="4"><img src="preview/p5.jpg" alt="App profile" loading="lazy" width="200" height="433"/></div><div class="carousel-slide" data-idx="5"><img src="preview/p6.jpg" alt="Settings" loading="lazy" width="200" height="433"/></div><div class="carousel-slide" data-idx="6"><img src="preview/p7.jpg" alt="Tweaks detail" loading="lazy" width="200" height="433"/></div><div class="carousel-slide" data-idx="7"><img src="preview/p8.jpg" alt="Log viewer" loading="lazy" width="200" height="433"/></div><div class="carousel-slide" data-idx="8"><img src="preview/p9.jpg" alt="About" loading="lazy" width="200" height="433"/></div></div></div><div class="carousel-controls"><span class="carousel-counter" id="carouselCounter">1</span><div class="carousel-dots" id="carouselDots"><button class="carousel-dot active" aria-label="Slide 1"></button><button class="carousel-dot" aria-label="Slide 2"></button><button class="carousel-dot" aria-label="Slide 3"></button><button class="carousel-dot" aria-label="Slide 4"></button><button class="carousel-dot" aria-label="Slide 5"></button><button class="carousel-dot" aria-label="Slide 6"></button><button class="carousel-dot" aria-label="Slide 7"></button><button class="carousel-dot" aria-label="Slide 8"></button><button class="carousel-dot" aria-label="Slide 9"></button></div><span class="carousel-counter">/ 9</span></div></div></div></div></section><section id="requirements" style="content-visibility:auto;contain-intrinsic-size:0 400px;"><div class="container"><div class="section-header reveal"><div class="section-eyebrow">Requirements</div><h2 class="section-title">What you need</h2><p class="section-desc">Aether Manager targets modern rooted Android devices. Make sure your setup matches below.</p></div><div class="specs-grid reveal-stagger"><div class="spec-card"><div class="spec-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><div><div class="spec-label">Root Manager</div><div class="spec-value">Magisk · KernelSU · APatch</div></div></div><div class="spec-card"><div class="spec-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg></div><div><div class="spec-label">Android Version</div><div class="spec-value">8.0+ (API 26 – 36)</div></div></div><div class="spec-card"><div class="spec-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg></div><div><div class="spec-label">Architecture</div><div class="spec-value">ARM · ARM64</div></div></div><div class="spec-card"><div class="spec-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><div><div class="spec-label">Target SDK</div><div class="spec-value">Android 16 (API 36)</div></div></div></div></div></section><section id="download" style="content-visibility:auto;contain-intrinsic-size:0 400px;"><div class="container"><div class="download-card reveal"><h2 class="download-title">Ready to install?</h2><p class="download-desc">GitHub Releases is the only official source. All APKs are signed by AetherDev. Join the Telegram channel for update notifications.</p><div class="download-actions"><a href="https://github.com/aetherdev01/aether-manager/releases" target="_blank" rel="noopener" class="btn-primary-dark"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 17V3M5 10l7 7 7-7M3 21h18"/></svg> GitHub Releases </a><a href="https://saweria.co/AetherDev" target="_blank" rel="noopener" class="btn-ghost"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 8h1a4 4 0 0 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V8z"/></svg> Support Dev </a></div></div></div></section><section id="bugs" style="content-visibility:auto;contain-intrinsic-size:0 400px;"><div class="container"><div class="section-header reveal"><div class="section-eyebrow">Bug Reports</div><h2 class="section-title">Found an issue?</h2><p class="section-desc">Only reports with full logs will be accepted. Include the right info based on issue type below.</p></div><div class="bug-grid reveal-stagger"><div class="bug-card"><div class="bug-type"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Root / Permission</div><div class="bug-title">Root or permission issue</div><p class="bug-desc">Include root manager name &amp; version, Android version, and MIUI/OneUI/AOSP info.</p></div><div class="bug-card"><div class="bug-type"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> App Crash</div><div class="bug-title">App crashes or force closes</div><p class="bug-desc">Record and upload a full logcat captured at the moment of the crash. Use <code>adb logcat</code> or Matlog.</p></div><div class="bug-card"><div class="bug-type"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93A10 10 0 1 1 4.93 19.07"/></svg> Tweak Issue</div><div class="bug-title">Tweak not working correctly</div><p class="bug-desc">Include device model, SoC name (e.g. Snapdragon 778G), and a screenshot of the <strong>Log</strong> tab.</p></div></div></div></section><section id="dwyor" style="padding-top: 0;"><div class="container"><div class="dwyor-card reveal"><div class="dwyor-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div><div class="dwyor-body"><div class="dwyor-label">DWYOR</div><div class="dwyor-title">Do With Your Own Risk</div><p class="dwyor-desc">Aether Manager performs modifications at the kernel and root system level. Make sure you fully understand each tweak before enabling it. <strong>The developer is not responsible for any device damage, bootloops, data loss, or other system issues</strong> that arise from using this application. Misuse or incorrect configuration is entirely at your own risk. Use wisely.</p></div></div></div></section><section id="contributors" style="content-visibility:auto;contain-intrinsic-size:0 300px;"><div class="container"><div class="section-header center reveal"><div class="section-eyebrow">Credits</div><h2 class="section-title">Contributors</h2></div><div class="reveal"><a href="https://t.me/AetherDev22" target="_blank" rel="noopener" class="contributor-card"><img src="assets/pr.png" alt="AetherDev22 profile photo" class="contributor-photo" width="72" height="72" loading="lazy"/><div><div class="contributor-handle">@AetherDev22</div><div class="contributor-role">Lead Developer</div><div class="contributor-bio">Creator and sole developer of Aether Manager — building powerful root tools for Android enthusiasts.</div></div></a></div></div></section><section id="appinfo" style="content-visibility:auto;contain-intrinsic-size:0 500px;"><div class="container"><div class="section-header center reveal"><div class="section-eyebrow">App Info</div><h2 class="section-title">Built different.<br/><span class="accent">Designed for you.</span></h2><p class="section-desc">Engineered with Material Design 3, delivering a smooth, native Android experience with zero compromise.</p></div><div class="appinfo-grid reveal-stagger"><div class="appinfo-card"><div class="appinfo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg></div><div class="appinfo-lbl">Material You</div><h3 class="appinfo-title">Material Design 3</h3><p class="appinfo-desc">Built entirely on Google's latest design system dynamic color theming, expressive motion, and adaptive layouts that feel right at home on any Android device.</p><div class="appinfo-chips"><span class="appinfo-chip">Dynamic Color</span><span class="appinfo-chip">Monet Theme</span><span class="appinfo-chip">Dark Mode</span></div></div><div class="appinfo-card"><div class="appinfo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div><div class="appinfo-lbl">Performance</div><h3 class="appinfo-title">Buttery Smooth</h3><p class="appinfo-desc">60–120 fps animations across every transition. Native C engine handles shell commands with zero JVM overhead.</p></div><div class="appinfo-card"><div class="appinfo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><div class="appinfo-lbl">Experience</div><h3 class="appinfo-title">User Friendly</h3><p class="appinfo-desc">Designed for real users, not just developers. Clear labels, intuitive gestures, and contextual help.</p></div></div></div></section></main><footer><div class="footer-inner"><div><div class="footer-brand"><span>Aether</span>Manager</div><p class="footer-copy">Copyright © 2026 AetherDev22</p></div><ul class="footer-links"><li><a href="https://github.com/aetherdev01/aether-manager/releases" target="_blank" rel="noopener">Releases</a></li><li><a href="https://github.com/aetherdev01/aether-manager" target="_blank" rel="noopener">GitHub</a></li><li><a href="https://t.me/get01projects" target="_blank" rel="noopener">Telegram</a></li><li><a href="https://saweria.co/AetherDev" target="_blank" rel="noopener">Donate</a></li></ul></div></footer><script>'use strict';(function(){ const navbar = document.getElementById('navbar'); window.addEventListener('scroll', () => { navbar.classList.toggle('scrolled', window.scrollY > 20); }, { passive: true }); const sections = document.querySelectorAll('section[id]'); const navLinks = document.querySelectorAll('.nav-links a[href^="#"]'); const io0 = new IntersectionObserver(entries => { entries.forEach(e => { if (e.isIntersecting) { navLinks.forEach(a => a.classList.remove('active')); const a = document.querySelector(`.nav-links a[href="#${e.target.id}"]`); if (a) a.classList.add('active'); } }); }, { rootMargin: '-40% 0px -55% 0px' }); sections.forEach(s => io0.observe(s));})();(function(){ const btn = document.getElementById('hamburgerBtn'); const menu = document.getElementById('mobileMenu'); const scrim = document.getElementById('mmScrim'); let isOpen = false; function openMenu() { isOpen = true; menu.classList.add('open'); scrim.classList.add('open'); btn.setAttribute('aria-expanded', 'true'); document.body.style.overflow = 'hidden'; } function closeMenu() { isOpen = false; menu.classList.remove('open'); scrim.classList.remove('open'); btn.setAttribute('aria-expanded', 'false'); document.body.style.overflow = ''; } function toggleMenu() { isOpen ? closeMenu() : openMenu(); } btn.addEventListener('click', function(e) { e.stopPropagation(); toggleMenu(); }); scrim.addEventListener('click', closeMenu); menu.querySelectorAll('a').forEach(a => a.addEventListener('click', closeMenu)); document.addEventListener('keydown', e => { if (e.key === 'Escape') closeMenu(); });})();(function(){ const track = document.getElementById('carouselTrack'); const viewport = document.getElementById('carouselViewport'); const dots = document.querySelectorAll('.carousel-dot'); const slides = document.querySelectorAll('.carousel-slide'); const counter = document.getElementById('carouselCounter'); const TOTAL = slides.length; let current = 0, startX = 0, startY = 0, dragDx = 0, dragging = false, lockScroll = false; function slideWidth() { return slides[0].offsetWidth + 20; } function setTrackX(extra = 0) { const centerOffset = (viewport.offsetWidth / 2) - (slides[0].offsetWidth / 2); const x = -(current * slideWidth()) + centerOffset + extra; track.style.transform = `translateX(${x}px)`; } function updateUI() { slides.forEach((s, i) => s.classList.toggle('is-active', i === current)); dots.forEach((d, i) => d.classList.toggle('active', i === current)); if (counter) counter.textContent = current + 1; } function goTo(idx, animate = true) { current = Math.max(0, Math.min(TOTAL - 1, idx)); dragDx = 0; track.style.transition = animate ? 'transform 0.5s cubic-bezier(0.22,1,0.36,1)' : 'none'; setTrackX(); updateUI(); } goTo(0, false); dots.forEach((d, i) => d.addEventListener('click', () => goTo(i))); document.addEventListener('keydown', e => { if (e.key === 'ArrowLeft') goTo(current - 1); if (e.key === 'ArrowRight') goTo(current + 1); }); viewport.addEventListener('touchstart', e => { startX = e.touches[0].clientX; startY = e.touches[0].clientY; dragging = true; dragDx = 0; lockScroll = false; track.style.transition = 'none'; }, { passive: true }); viewport.addEventListener('touchmove', e => { if (!dragging) return; const dx = e.touches[0].clientX - startX; const dy = e.touches[0].clientY - startY; if (!lockScroll && Math.abs(dx) < 5 && Math.abs(dy) < 5) return; if (!lockScroll) lockScroll = Math.abs(dx) > Math.abs(dy); if (!lockScroll) return; e.preventDefault(); dragDx = dx; setTrackX(dragDx); }, { passive: false }); viewport.addEventListener('touchend', () => { if (!dragging) return; dragging = false; lockScroll = false; const th = viewport.offsetWidth * 0.18; if (dragDx < -th) goTo(current + 1); else if (dragDx > th) goTo(current - 1); else goTo(current); }); viewport.addEventListener('mousedown', e => { e.preventDefault(); startX = e.clientX; dragging = true; dragDx = 0; track.style.transition = 'none'; }); window.addEventListener('mousemove', e => { if (!dragging) return; dragDx = e.clientX - startX; setTrackX(dragDx); }); window.addEventListener('mouseup', () => { if (!dragging) return; dragging = false; const th = viewport.offsetWidth * 0.18; if (dragDx < -th) goTo(current + 1); else if (dragDx > th) goTo(current - 1); else goTo(current); });})();(function(){ const io = new IntersectionObserver(entries => { entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); io.unobserve(e.target); } }); }, { threshold: 0.1 }); document.querySelectorAll('.reveal, .reveal-stagger').forEach(el => io.observe(el));})();</script></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Aether Manager Root Management for Android</title>
+<meta name="description" content="Native Android app for rooted devices. Performance profiles, kernel tweaks, system monitor, and per-app optimization."/>
+<meta name="theme-color" content="#f5f0eb"/>
+<meta property="og:title" content="Aether Manager"/>
+<meta property="og:description" content="Native root management app for Android Performance Profiles, Kernel Tweaks, System Monitor."/>
+<meta property="og:type" content="website"/>
+<meta property="og:image" content="preview/p1.jpg"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+    <!--
+      Added Roboto font family to align with modern Android design guidelines. The existing
+      Unbounded and DM Sans fonts remain for headings but the primary body text now uses
+      Roboto. This improves legibility on smaller screens and gives the page a contemporary
+      feel. Additional weights are included for bold and regular variations.
+    -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Unbounded:wght@400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+<link rel="icon" type="image/png" href="assets/ic.png"/>
+<link rel="manifest" href="manifest.json"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<style>
+:root {
+  --bg: #f5f0eb;
+  --bg-card: #ede8e1;
+  --bg-card2: #e8e2da;
+  --surface: #faf7f3;
+  --amber: #8B5E08;
+  --amber-light: #b07a1a;
+  --amber-muted: rgba(139,94,8,0.12);
+  --amber-border: rgba(139,94,8,0.25);
+  --text: #1a1410;
+  --text-2: #4a3f33;
+  --text-3: #7a6e62;
+  --border: rgba(26,20,16,0.1);
+  --border-soft: rgba(26,20,16,0.06);
+  --radius-sm: 12px;
+  --radius: 20px;
+  --radius-lg: 28px;
+  --radius-xl: 36px;
+  --shadow-sm: 0 2px 12px rgba(26,20,16,0.06);
+  --shadow: 0 4px 24px rgba(26,20,16,0.08);
+  --shadow-lg: 0 12px 48px rgba(26,20,16,0.12);
+  /*
+    Typography variables
+    Using Unbounded for headings and Roboto for body text creates a strong visual
+    hierarchy while aligning with Material Design's preferred typefaces. The
+    Roboto family includes multiple weights so that bold text appears crisp and
+    consistent across the site.
+  */
+  --font-head: 'Unbounded', sans-serif;
+  --font-body: 'Roboto', sans-serif;
+
+  /* Card styling variables
+     Defining common card styles here allows all card-like elements (features,
+     specs, bug reports, app info, etc.) to inherit consistent backgrounds,
+     borders, shadows and radii. This helps achieve a unified Material
+     You–inspired look.
+  */
+  --card-bg: #fffefc;
+  --card-border: rgba(26, 20, 16, 0.1);
+  --card-shadow: 0 4px 20px rgba(26, 20, 16, 0.08);
+  --card-radius: 24px;
+
+  /* Animation timing variables
+     Increase global animation durations for smoother transitions. When new
+     elements appear on the page they now animate in over a longer period,
+     making the experience feel more refined and less abrupt.
+  */
+  --anim-duration-short: 0.45s;
+  --anim-duration: 0.7s;
+  --anim-duration-long: 0.85s;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in: cubic-bezier(0.55, 0, 1, 0.45);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; font-size: 16px; }
+
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+  user-select: none;
+}
+
+/* Grid background */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(26,20,16,0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(26,20,16,0.045) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+main, footer, section { position: relative; z-index: 1; }
+header { position: relative; z-index: 1000; }
+
+a { text-decoration: none; color: inherit; }
+
+/* ─── NAVBAR ─── */
+.navbar {
+  position: fixed;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 32px);
+  max-width: 900px;
+  background: rgba(245,240,235,0.88);
+  backdrop-filter: blur(20px) saturate(1.4);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 10px 16px 10px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 1100;
+  transition: box-shadow 0.3s var(--ease);
+}
+.navbar.scrolled { box-shadow: var(--shadow); }
+.brand {
+  font-family: var(--font-head);
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: -0.2px;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.brand .accent { color: var(--amber); }
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  list-style: none;
+}
+.nav-links a {
+  font-family: var(--font-body);
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--text-2);
+  padding: 7px 14px;
+  border-radius: 999px;
+  transition: background 0.2s, color 0.2s;
+}
+.nav-links a:hover, .nav-links a.active {
+  background: var(--amber-muted);
+  color: var(--amber);
+}
+
+.nav-btn {
+  background: var(--amber);
+  color: #fff !important;
+  padding: 8px 18px !important;
+  border-radius: 999px !important;
+  font-weight: 600 !important;
+  font-size: 13px !important;
+  transition: background 0.2s, transform 0.2s !important;
+}
+.nav-btn:hover { background: var(--amber-light) !important; transform: scale(1.03); }
+
+.hamburger {
+  display: none;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  width: 38px;
+  height: 38px;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+.hamburger:hover { background: var(--amber-muted); }
+.hamburger svg { stroke: var(--text); }
+
+/* ─── MOBILE MENU ─── */
+.mobile-menu {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  padding: 80px 24px 28px;
+  z-index: 1300;
+  transform: translateY(-110%);
+  transition: transform 0.45s var(--ease);
+  box-shadow: var(--shadow-lg);
+}
+.mobile-menu.open { transform: translateY(0); }
+.mobile-menu a {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text-2);
+  padding: 14px 16px;
+  border-radius: var(--radius-sm);
+  transition: background 0.2s, color 0.2s;
+}
+.mobile-menu a:hover, .mobile-menu a.mm-active { background: var(--amber-muted); color: var(--amber); }
+.mobile-menu .mm-divider { height: 1px; background: var(--border-soft); margin: 8px 0; }
+.mm-download {
+  display: block;
+  margin-top: 12px;
+  text-align: center;
+  background: var(--amber) !important;
+  color: #fff !important;
+  border-radius: 999px !important;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 14px 24px !important;
+}
+
+/* ─── HERO ─── */
+.hero {
+  display: flex;
+  align-items: center;
+  padding: 120px 20px 80px;
+}
+.container {
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 8px;
+}
+.hero-inner {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 48px;
+  align-items: center;
+}
+.hero-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--amber);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 20px;
+}
+.hero-eyebrow-dot {
+  width: 6px; height: 6px;
+  background: var(--amber);
+  border-radius: 50%;
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+@keyframes pulse-dot {
+  0%,100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.5); opacity: 0.6; }
+}
+
+.hero-title {
+  font-family: var(--font-head);
+  font-size: clamp(28px, 5vw, 48px);
+  font-weight: 800;
+  line-height: 1.12;
+  letter-spacing: -0.5px;
+  color: var(--text);
+  margin-bottom: 20px;
+}
+.hero-title .accent { color: var(--amber); }
+
+.hero-desc {
+  font-size: 16px;
+  line-height: 1.7;
+  color: var(--text-2);
+  max-width: 460px;
+  margin-bottom: 32px;
+}
+
+.hero-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--amber);
+  color: #fff;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+  padding: 13px 24px;
+  border-radius: 999px;
+  transition: background 0.2s var(--ease), transform 0.2s var(--ease), box-shadow 0.2s;
+  cursor: pointer;
+}
+.btn-primary:hover {
+  background: var(--amber-light);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(139,94,8,0.28);
+}
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-card);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+  padding: 13px 24px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  transition: background 0.2s, transform 0.2s, border-color 0.2s;
+}
+.btn-secondary:hover {
+  background: var(--bg-card2);
+  transform: translateY(-2px);
+  border-color: var(--amber-border);
+}
+
+.hero-stats {
+  display: flex;
+  gap: 24px;
+  margin-top: 40px;
+  padding-top: 32px;
+  border-top: 1px solid var(--border);
+}
+.hero-stat-val {
+  font-family: var(--font-head);
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: -1px;
+}
+.hero-stat-lbl {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin-top: 2px;
+}
+
+/* Phone mockup */
+.phone-mockup {
+  position: relative;
+  width: 200px;
+  flex-shrink: 0;
+  justify-self: center;
+}
+.phone-frame {
+  background: var(--text);
+  border-radius: 36px;
+  padding: 12px;
+  box-shadow: 0 32px 80px rgba(26,20,16,0.2), 0 4px 16px rgba(26,20,16,0.1);
+  position: relative;
+  z-index: 1;
+}
+.phone-frame::before {
+  content: '';
+  position: absolute;
+  top: 8px; left: 50%;
+  transform: translateX(-50%);
+  width: 60px; height: 6px;
+  background: rgba(255,255,255,0.12);
+  border-radius: 999px;
+  z-index: 2;
+}
+.phone-screen {
+  border-radius: 26px;
+  overflow: hidden;
+  background: #111;
+  aspect-ratio: 9/19.5;
+}
+.phone-screen img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.phone-glow {
+  position: absolute;
+  bottom: -24px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 140px;
+  height: 40px;
+  background: rgba(139,94,8,0.3);
+  filter: blur(24px);
+  border-radius: 50%;
+}
+
+/* ─── SECTION COMMON ─── */
+section { padding: 80px 20px; }
+.section-eyebrow {
+  font-size: 11.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: var(--amber);
+  margin-bottom: 14px;
+}
+.section-title {
+  font-family: var(--font-head);
+  font-size: clamp(20px, 3.2vw, 30px);
+  font-weight: 800;
+  line-height: 1.18;
+  letter-spacing: -0.3px;
+  color: var(--text);
+  margin-bottom: 14px;
+}
+.mm-scrim {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(26,20,16,0.45);
+  z-index: 1200;
+  opacity: 0;
+  transition: opacity 0.35s;
+}
+.mm-scrim.open { display: block; opacity: 1; }
+.section-title .accent { color: var(--amber); }
+.section-desc {
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--text-2);
+  max-width: 520px;
+}
+.section-header { margin-bottom: 48px; }
+.section-header.center { text-align: center; }
+.section-header.center .section-desc { margin: 0 auto; }
+
+/* ─── BADGES ROW ─── */
+.badges-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 56px;
+}
+.badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-2);
+}
+.badge svg { width: 15px; height: 15px; stroke: var(--amber); fill: none; }
+
+/* ─── FEATURES ─── */
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+.feature-card {
+  /*
+    Apply unified card styles for features to match Material You cards. Using the
+    new --card-bg, --card-border, --card-shadow and --card-radius variables
+    ensures consistency across the site. Animation timings have been updated
+    to leverage the smoother durations defined in :root.
+  */
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--card-radius);
+  padding: 28px 24px;
+  transition: transform var(--anim-duration) var(--ease), border-color var(--anim-duration-short), box-shadow var(--anim-duration);
+  box-shadow: var(--card-shadow);
+  position: relative;
+  overflow: hidden;
+}
+.feature-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--amber), transparent);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.feature-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--amber-border);
+  box-shadow: var(--shadow-lg);
+}
+.feature-card:hover::before { opacity: 1; }
+
+.feature-icon {
+  width: 44px; height: 44px;
+  background: var(--amber-muted);
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 18px;
+}
+.feature-icon svg { width: 20px; height: 20px; stroke: var(--amber); fill: none; }
+.feature-title {
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 8px;
+  letter-spacing: -0.2px;
+}
+.feature-desc {
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--text-2);
+}
+
+/* ─── CAROUSEL / PREVIEW ─── */
+#preview { overflow: hidden; }
+.carousel-wrapper { position: relative; }
+.carousel-outer { overflow: visible; }
+.carousel-viewport {
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  cursor: grab;
+}
+.carousel-viewport:active { cursor: grabbing; }
+.carousel-track {
+  display: flex;
+  gap: 20px;
+  will-change: transform;
+}
+.carousel-slide {
+  flex-shrink: 0;
+  width: 200px;
+  border-radius: 28px;
+  overflow: hidden;
+  transition: transform 0.4s var(--ease), opacity 0.4s, box-shadow 0.4s;
+  opacity: 0.45;
+  transform: scale(0.93);
+  box-shadow: 0 4px 20px rgba(26,20,16,0.12);
+  border: 1px solid var(--border);
+}
+.carousel-slide.is-active {
+  opacity: 1;
+  transform: scale(1);
+  box-shadow: 0 12px 40px rgba(26,20,16,0.18);
+  border-color: var(--amber-border);
+}
+.carousel-slide img {
+  width: 100%;
+  display: block;
+  border-radius: 28px;
+}
+.carousel-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 28px;
+}
+.carousel-dots { display: flex; gap: 6px; }
+.carousel-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--text-3);
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s, width 0.3s var(--ease);
+}
+.carousel-dot.active {
+  background: var(--amber);
+  width: 20px;
+  border-radius: 4px;
+}
+.carousel-counter {
+  font-family: var(--font-head);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-3);
+  min-width: 28px;
+  text-align: center;
+}
+
+/* ─── REQUIREMENTS ─── */
+.specs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 14px;
+}
+.spec-card {
+  /*
+    Spec cards inherit the global card styles. We retain the flex layout but
+    update backgrounds, borders, radii and shadows for a cohesive design.
+  */
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--card-radius);
+  padding: 20px 20px;
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  box-shadow: var(--card-shadow);
+  transition: border-color var(--anim-duration-short), box-shadow var(--anim-duration);
+}
+.spec-card:hover {
+  border-color: var(--amber-border);
+  box-shadow: var(--shadow);
+}
+.spec-icon {
+  width: 38px; height: 38px;
+  flex-shrink: 0;
+  background: var(--amber-muted);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.spec-icon svg { width: 18px; height: 18px; stroke: var(--amber); fill: none; }
+.spec-label { font-size: 11px; font-weight: 600; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 4px; }
+.spec-value { font-size: 14px; font-weight: 600; color: var(--text); }
+
+/* ─── DOWNLOAD CTA ─── */
+.download-card {
+  background: var(--text);
+  border-radius: var(--radius-xl);
+  padding: 56px 48px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.download-card::before {
+  content: '';
+  position: absolute;
+  top: -60px; right: -60px;
+  width: 240px; height: 240px;
+  background: radial-gradient(circle, rgba(139,94,8,0.4) 0%, transparent 65%);
+  pointer-events: none;
+}
+.download-card::after {
+  content: '';
+  position: absolute;
+  bottom: -40px; left: -40px;
+  width: 200px; height: 200px;
+  background: radial-gradient(circle, rgba(139,94,8,0.25) 0%, transparent 65%);
+  pointer-events: none;
+}
+.download-title {
+  font-family: var(--font-head);
+  font-size: clamp(22px, 4vw, 34px);
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -0.5px;
+  margin-bottom: 14px;
+  position: relative; z-index: 1;
+}
+.download-desc {
+  font-size: 15px;
+  line-height: 1.7;
+  color: rgba(255,255,255,0.62);
+  max-width: 440px;
+  margin: 0 auto 32px;
+  position: relative; z-index: 1;
+}
+.download-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+  position: relative; z-index: 1;
+}
+.btn-primary-dark {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--amber);
+  color: #fff;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 700;
+  padding: 13px 26px;
+  border-radius: 999px;
+  transition: background 0.2s, transform 0.2s;
+}
+.btn-primary-dark:hover { background: var(--amber-light); transform: translateY(-2px); }
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255,255,255,0.1);
+  color: rgba(255,255,255,0.8);
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+  padding: 13px 26px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.18);
+  transition: background 0.2s, transform 0.2s;
+}
+.btn-ghost:hover { background: rgba(255,255,255,0.15); transform: translateY(-2px); }
+
+/* ─── BUG REPORTS ─── */
+.bug-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+}
+.bug-card {
+  /*
+    Bug cards now adopt the same card styling variables for consistency. The
+    slightly larger padding remains to provide ample space for longer text.
+  */
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--card-radius);
+  padding: 24px;
+  box-shadow: var(--card-shadow);
+  transition: border-color var(--anim-duration-short), box-shadow var(--anim-duration);
+}
+.bug-card:hover {
+  border-color: var(--amber-border);
+  box-shadow: var(--shadow);
+}
+.bug-type {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  color: var(--amber);
+  margin-bottom: 10px;
+}
+.bug-type svg { width: 14px; height: 14px; stroke: var(--amber); fill: none; }
+.bug-title { font-family: var(--font-head); font-size: 15px; font-weight: 700; margin-bottom: 8px; }
+.bug-desc { font-size: 13.5px; line-height: 1.6; color: var(--text-2); }
+.bug-desc code {
+  background: var(--amber-muted);
+  color: var(--amber);
+  padding: 1px 6px;
+  border-radius: 5px;
+  font-size: 12px;
+  font-family: monospace;
+}
+
+/* ─── CONTRIBUTORS ─── */
+.contributor-card {
+  /*
+    Contributor cards now share the same unified card styling. A slightly larger
+    max-width ensures names and roles have room to breathe. Transitions use
+    the global animation durations for a smoother hover effect.
+  */
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--card-radius);
+  padding: 28px 28px;
+  max-width: 540px;
+  margin: 0 auto;
+  box-shadow: var(--card-shadow);
+  transition: border-color var(--anim-duration-short), box-shadow var(--anim-duration), transform var(--anim-duration);
+  position: relative;
+}
+.contributor-card:hover {
+  border-color: var(--amber-border);
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-4px);
+}
+.contributor-card-lead {
+  max-width: 100%;
+  padding: 32px;
+  background: var(--card-bg);
+}
+.contributor-card-team {
+  max-width: 100%;
+  padding: 20px 22px;
+  margin: 0;
+  background: var(--card-bg);
+}
+.contributor-badge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--amber);
+  background: var(--amber-muted);
+  border-radius: 999px;
+  padding: 3px 10px;
+  margin-bottom: 6px;
+}
+.contributor-photo { border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+.contributor-photo-lg { width: 88px; height: 88px; border: 3px solid var(--bg-card); }
+.contributor-handle {
+  font-family: var(--font-head);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 3px;
+}
+.contributor-role {
+  font-size: 11.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--amber);
+  margin-bottom: 8px;
+}
+.contributor-bio {
+  font-size: 13.5px;
+  color: var(--text-2);
+  line-height: 1.55;
+}
+.team-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+/* ─── APP INFO ─── */
+.appinfo-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 16px;
+}
+.appinfo-card {
+  /*
+    App info cards reflect the unified card styling variables for a modern look.
+    The shadow and transition durations are increased for a smoother hover effect.
+  */
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--card-radius);
+  padding: 28px 24px;
+  box-shadow: var(--card-shadow);
+  transition: border-color var(--anim-duration-short), box-shadow var(--anim-duration);
+}
+.appinfo-card:hover {
+  border-color: var(--amber-border);
+  box-shadow: var(--shadow-lg);
+}
+.appinfo-icon {
+  width: 44px; height: 44px;
+  background: var(--amber-muted);
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 18px;
+}
+.appinfo-icon svg { width: 20px; height: 20px; stroke: var(--amber); fill: none; }
+.appinfo-lbl { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--text-3); margin-bottom: 6px; }
+.appinfo-title { font-family: var(--font-head); font-size: 16px; font-weight: 800; letter-spacing: -0.2px; margin-bottom: 10px; }
+.appinfo-desc { font-size: 13.5px; line-height: 1.65; color: var(--text-2); }
+.appinfo-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 16px; }
+.appinfo-chip {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--amber);
+  background: var(--amber-muted);
+  border-radius: 999px;
+  padding: 4px 12px;
+}
+
+.dwyor-card {
+  /*
+    The disclaimer card adopts the unified card styles with a subtle accent
+    border. This keeps the warning visually connected to other cards while
+    still drawing attention via the amber border colour. We keep the flex
+    layout and spacing.
+  */
+  background: var(--card-bg);
+  border: 1.5px solid rgba(139, 94, 8, 0.35);
+  border-radius: var(--card-radius);
+  padding: 24px 28px;
+  display: flex;
+  align-items: flex-start;
+  gap: 18px;
+  box-shadow: var(--card-shadow);
+}
+.dwyor-icon {
+  flex-shrink: 0;
+  width: 42px; height: 42px;
+  background: rgba(139,94,8,0.12);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 2px;
+}
+.dwyor-icon svg { width: 20px; height: 20px; stroke: var(--amber); }
+.dwyor-label {
+  font-size: 10.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: var(--amber);
+  margin-bottom: 4px;
+}
+.dwyor-title {
+  font-family: var(--font-head);
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+.dwyor-desc {
+  font-size: 13.5px;
+  line-height: 1.65;
+  color: var(--text-2);
+}
+.dwyor-desc strong {
+  color: #7a5200;
+  font-weight: 600;
+  font-style: italic;
+}
+
+/* ─── FOOTER ─── */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 40px 20px;
+}
+.footer-inner {
+  max-width: 900px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+.footer-brand {
+  font-family: var(--font-head);
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+.footer-brand span { color: var(--amber); }
+.footer-copy { font-size: 12.5px; color: var(--text-3); }
+.footer-links {
+  display: flex;
+  gap: 4px;
+  list-style: none;
+  flex-wrap: wrap;
+}
+.footer-links a {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-2);
+  padding: 6px 12px;
+  border-radius: 999px;
+  transition: background 0.2s, color 0.2s;
+}
+.footer-links a:hover { background: var(--amber-muted); color: var(--amber); }
+
+/* ─── ANIMATIONS / REVEALS ─── */
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  /*
+    Use the custom animation duration variable to slow down reveal animations.
+    This creates a smoother entrance effect compared to the previous hard-coded
+    duration.
+  */
+  transition: opacity var(--anim-duration) var(--ease), transform var(--anim-duration) var(--ease);
+}
+.reveal.visible { opacity: 1; transform: none; }
+
+.reveal-stagger .feature-card,
+.reveal-stagger .spec-card,
+.reveal-stagger .bug-card {
+  opacity: 0;
+  transform: translateY(20px);
+  /*
+    Staggered reveal animations also use the shorter duration variable for a
+    gentle yet responsive entrance.
+  */
+  transition: opacity var(--anim-duration-short) var(--ease), transform var(--anim-duration-short) var(--ease);
+}
+.reveal-stagger.visible .feature-card,
+.reveal-stagger.visible .spec-card,
+.reveal-stagger.visible .bug-card {
+  opacity: 1;
+  transform: none;
+}
+.reveal-stagger.visible .feature-card:nth-child(1) { transition-delay: 0s; }
+.reveal-stagger.visible .feature-card:nth-child(2) { transition-delay: 0.07s; }
+.reveal-stagger.visible .feature-card:nth-child(3) { transition-delay: 0.14s; }
+.reveal-stagger.visible .feature-card:nth-child(4) { transition-delay: 0.21s; }
+.reveal-stagger.visible .feature-card:nth-child(5) { transition-delay: 0.28s; }
+.reveal-stagger.visible .spec-card:nth-child(1) { transition-delay: 0s; }
+.reveal-stagger.visible .spec-card:nth-child(2) { transition-delay: 0.07s; }
+.reveal-stagger.visible .spec-card:nth-child(3) { transition-delay: 0.14s; }
+.reveal-stagger.visible .spec-card:nth-child(4) { transition-delay: 0.21s; }
+.reveal-stagger.visible .bug-card:nth-child(1) { transition-delay: 0s; }
+.reveal-stagger.visible .bug-card:nth-child(2) { transition-delay: 0.09s; }
+.reveal-stagger.visible .bug-card:nth-child(3) { transition-delay: 0.18s; }
+
+.team-grid .contributor-card-team {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.45s var(--ease), transform 0.45s var(--ease);
+}
+.team-grid.visible .contributor-card-team { opacity: 1; transform: none; }
+.team-grid.visible .contributor-card-team:nth-child(1) { transition-delay: 0s; }
+.team-grid.visible .contributor-card-team:nth-child(2) { transition-delay: 0.08s; }
+
+/* hero entrance */
+.hero-content > * {
+  opacity: 0;
+  transform: translateY(18px);
+  /* Use the global animation duration for a smoother hero entrance */
+  animation: hero-in var(--anim-duration) var(--ease) forwards;
+}
+.hero-eyebrow { animation-delay: 0.05s; }
+.hero-title { animation-delay: 0.15s; }
+.hero-desc { animation-delay: 0.22s; }
+.hero-actions { animation-delay: 0.3s; }
+.hero-stats { animation-delay: 0.38s; }
+.phone-mockup {
+  opacity: 0;
+  /* Slightly longer duration for the phone mockup gives it a soft, eye‑catching entrance */
+  animation: hero-in var(--anim-duration-long) 0.2s var(--ease) forwards;
+}
+@keyframes hero-in {
+  to { opacity: 1; transform: none; }
+}
+
+/* ─── RESPONSIVE ─── */
+@media (max-width: 680px) {
+  .nav-links { display: none; }
+  .hamburger { display: flex; }
+  .hero-inner { grid-template-columns: 1fr; }
+  .phone-mockup { display: none; }
+  .hero { padding-top: 88px; padding-bottom: 48px; }
+  .hero-stats { flex-wrap: wrap; gap: 16px; }
+  .appinfo-grid { grid-template-columns: 1fr; }
+  .download-card { padding: 36px 24px; }
+}
+@media (max-width: 480px) {
+  .hero-title { font-size: 32px; letter-spacing: -1px; }
+  .section-title { font-size: 24px; }
+  section { padding: 60px 16px; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<header>
+  <nav class="navbar" id="navbar">
+    <a href="#" class="brand"><span class="accent">Aether</span>Manager</a>
+    <ul class="nav-links">
+      <li><a href="#features">Features</a></li>
+      <li><a href="#preview">Preview</a></li>
+      <li><a href="#requirements">Requirements</a></li>
+      <li><a href="#appinfo">App Info</a></li>
+      <li><a href="https://github.com/aetherdev01/aether-manager/releases" target="_blank" rel="noopener" class="nav-btn">Download</a></li>
+    </ul>
+    <button class="hamburger" id="hamburgerBtn" aria-label="Menu" aria-expanded="false">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round">
+        <line x1="3" y1="7" x2="21" y2="7"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="17" x2="21" y2="17"/>
+      </svg>
+    </button>
+  </nav>
+
+  <!-- Mobile Menu -->
+  <div class="mm-scrim" id="mmScrim"></div>
+  <div class="mobile-menu" id="mobileMenu" role="dialog" aria-modal="true" aria-label="Navigation">
+    <a href="#features" class="mm-link">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Features
+    </a>
+    <a href="#preview" class="mm-link">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="5" y="2" width="14" height="20" rx="2"/></svg>
+      Preview
+    </a>
+    <a href="#requirements" class="mm-link">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>
+      Requirements
+    </a>
+    <a href="#appinfo" class="mm-link">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      App Info
+    </a>
+    <div class="mm-divider"></div>
+    <a href="https://t.me/get01projects" target="_blank" rel="noopener" class="mm-link">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z"/></svg>
+      Telegram
+    </a>
+    <a href="https://github.com/aetherdev01/aether-manager/releases" target="_blank" rel="noopener" class="mm-download">Download APK</a>
+  </div>
+</header>
+
+<main>
+<!-- ─── HERO ─── -->
+<section class="hero" id="home">
+  <div class="container">
+    <div class="hero-inner">
+      <div class="hero-content">
+        <h1 class="hero-title">Root your Android<br/><span class="accent">Master your device</span></h1>
+        <p class="hero-desc">Aether Manager is a native Android app for rooted devices giving you full control over performance profiles, kernel tweaks, system monitoring, and per-app optimization.</p>
+        <div class="hero-actions">
+          <a href="https://github.com/aetherdev01/aether-manager/releases" target="_blank" rel="noopener" class="btn-primary">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 17V3M5 10l7 7 7-7M3 21h18"/></svg>
+            Download APK
+          </a>
+          <a href="#preview" class="btn-secondary">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            See Preview
+          </a>
+          <a href="https://t.me/get01projects" target="_blank" rel="noopener" class="btn-secondary">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z"/></svg>
+            Telegram
+          </a>
+        </div>
+        <div class="hero-stats">
+          <div>
+            <div class="hero-stat-val">17+</div>
+            <div class="hero-stat-lbl">Kernel Tweaks</div>
+          </div>
+          <div>
+            <div class="hero-stat-val">4</div>
+            <div class="hero-stat-lbl">Perf. Profiles</div>
+          </div>
+          <div>
+            <div class="hero-stat-val">API 26+</div>
+            <div class="hero-stat-lbl">Android 8.0</div>
+          </div>
+        </div>
+      </div>
+      <div class="phone-mockup">
+        <div class="phone-frame">
+          <div class="phone-screen">
+            <img src="preview/p1.jpg" alt="Aether Manager screenshot" loading="eager" fetchpriority="high" width="200" height="433"/>
+          </div>
+        </div>
+        <div class="phone-glow"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── FEATURES ─── -->
+<section id="features" style="content-visibility:auto;contain-intrinsic-size:0 600px;">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-eyebrow">Features</div>
+      <h2 class="section-title">Everything you need.<br/>Nothing you don't.</h2>
+      <p class="section-desc">Built from the ground up for rooted Android devices deep system access, real-time data, and fine-grained control.</p>
+    </div>
+    <div class="features-grid reveal-stagger">
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+        </div>
+        <h3 class="feature-title">Performance Profiles</h3>
+        <p class="feature-desc">Switch between <strong>Balance</strong>, <strong>Performance</strong>, <strong>Gaming</strong>, and <strong>Battery Saver</strong> profiles with a single tap. Applies CPU governor, GPU freq, and I/O tweaks automatically.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93A10 10 0 1 1 4.93 19.07"/><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83"/></svg>
+        </div>
+        <h3 class="feature-title">Kernel Tweaks</h3>
+        <p class="feature-desc">17+ individual tweaks across <strong>CPU</strong>, <strong>GPU</strong>, <strong>memory</strong>, <strong>I/O</strong>, <strong>network</strong>, and <strong>battery</strong>. Toggle each one independently with live validation.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        </div>
+        <h3 class="feature-title">System Monitor</h3>
+        <p class="feature-desc">Real-time stats for <strong>SoC</strong>, <strong>RAM</strong>, <strong>CPU/GPU frequency</strong>, <strong>temperature</strong>, and <strong>uptime</strong> all updated live without draining your battery.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="8" height="10" rx="1"/><rect x="14" y="2" width="8" height="8" rx="1"/><rect x="14" y="14" width="8" height="8" rx="1"/><path d="M10 11h4M10 16h4"/></svg>
+        </div>
+        <h3 class="feature-title">App Profile</h3>
+        <p class="feature-desc">Per-app optimization with <strong>automatic CPU governor</strong>, <strong>refresh rate</strong>, and system tweak switching. Game differently, browse efficiently.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <h3 class="feature-title">Magisk & KernelSU</h3>
+        <p class="feature-desc">First-class support for <strong>Magisk</strong>, <strong>KernelSU</strong>, and <strong>APatch</strong>. Automatic root manager detection with graceful fallback handling.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── PREVIEW ─── -->
+<section id="preview" style="content-visibility:auto;contain-intrinsic-size:0 600px;">
+  <div class="container">
+    <div class="section-header center reveal">
+      <div class="section-eyebrow">Screenshots</div>
+      <h2 class="section-title">See it in action</h2>
+      <p class="section-desc">Swipe or drag to explore all screens.</p>
+    </div>
+  </div>
+  <div class="reveal" style="padding: 0 20px;">
+    <div class="carousel-wrapper">
+      <div class="carousel-outer">
+        <div class="carousel-viewport" id="carouselViewport">
+          <div class="carousel-track" id="carouselTrack">
+            <div class="carousel-slide is-active" data-idx="0"><img src="preview/p1.jpg" alt="Home screen" loading="eager" fetchpriority="high" width="200" height="433"/></div>
+            <div class="carousel-slide" data-idx="1"><img src="preview/p2.jpg" alt="Performance profiles" loading="lazy" width="200" height="433"/></div>
+            <div class="carousel-slide" data-idx="2"><img src="preview/p3.jpg" alt="Kernel tweaks" loading="lazy" width="200" height="433"/></div>
+            <div class="carousel-slide" data-idx="3"><img src="preview/p4.jpg" alt="System monitor" loading="lazy" width="200" height="433"/></div>
+            <div class="carousel-slide" data-idx="4"><img src="preview/p5.jpg" alt="App profile" loading="lazy" width="200" height="433"/></div>
+            <div class="carousel-slide" data-idx="5"><img src="preview/p6.jpg" alt="Settings" loading="lazy" width="200" height="433"/></div>
+            <div class="carousel-slide" data-idx="6"><img src="preview/p7.jpg" alt="Tweaks detail" loading="lazy" width="200" height="433"/></div>
+            <div class="carousel-slide" data-idx="7"><img src="preview/p8.jpg" alt="Log viewer" loading="lazy" width="200" height="433"/></div>
+            <div class="carousel-slide" data-idx="8"><img src="preview/p9.jpg" alt="About" loading="lazy" width="200" height="433"/></div>
+          </div>
+        </div>
+        <div class="carousel-controls">
+          <span class="carousel-counter" id="carouselCounter">1</span>
+          <div class="carousel-dots" id="carouselDots">
+            <button class="carousel-dot active" aria-label="Slide 1"></button>
+            <button class="carousel-dot" aria-label="Slide 2"></button>
+            <button class="carousel-dot" aria-label="Slide 3"></button>
+            <button class="carousel-dot" aria-label="Slide 4"></button>
+            <button class="carousel-dot" aria-label="Slide 5"></button>
+            <button class="carousel-dot" aria-label="Slide 6"></button>
+            <button class="carousel-dot" aria-label="Slide 7"></button>
+            <button class="carousel-dot" aria-label="Slide 8"></button>
+            <button class="carousel-dot" aria-label="Slide 9"></button>
+          </div>
+          <span class="carousel-counter">/ 9</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── REQUIREMENTS ─── -->
+<section id="requirements" style="content-visibility:auto;contain-intrinsic-size:0 400px;">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-eyebrow">Requirements</div>
+      <h2 class="section-title">What you need</h2>
+      <p class="section-desc">Aether Manager targets modern rooted Android devices. Make sure your setup matches below.</p>
+    </div>
+    <div class="specs-grid reveal-stagger">
+      <div class="spec-card">
+        <div class="spec-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+        <div>
+          <div class="spec-label">Root Manager</div>
+          <div class="spec-value">Magisk · KernelSU · APatch</div>
+        </div>
+      </div>
+      <div class="spec-card">
+        <div class="spec-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg></div>
+        <div>
+          <div class="spec-label">Android Version</div>
+          <div class="spec-value">8.0+ (API 26 – 36)</div>
+        </div>
+      </div>
+      <div class="spec-card">
+        <div class="spec-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg></div>
+        <div>
+          <div class="spec-label">Architecture</div>
+          <div class="spec-value">ARM · ARM64</div>
+        </div>
+      </div>
+      <div class="spec-card">
+        <div class="spec-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+        <div>
+          <div class="spec-label">Target SDK</div>
+          <div class="spec-value">Android 16 (API 36)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── DOWNLOAD ─── -->
+<section id="download" style="content-visibility:auto;contain-intrinsic-size:0 400px;">
+  <div class="container">
+    <div class="download-card reveal">
+      <h2 class="download-title">Ready to install?</h2>
+      <p class="download-desc">GitHub Releases is the only official source. All APKs are signed by AetherDev. Join the Telegram channel for update notifications.</p>
+      <div class="download-actions">
+        <a href="https://github.com/aetherdev01/aether-manager/releases" target="_blank" rel="noopener" class="btn-primary-dark">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 17V3M5 10l7 7 7-7M3 21h18"/></svg>
+          GitHub Releases
+        </a>
+        <a href="https://saweria.co/AetherDev" target="_blank" rel="noopener" class="btn-ghost">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 8h1a4 4 0 0 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V8z"/></svg>
+          Support Dev
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── BUG REPORTS ─── -->
+<section id="bugs" style="content-visibility:auto;contain-intrinsic-size:0 400px;">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-eyebrow">Bug Reports</div>
+      <h2 class="section-title">Found an issue?</h2>
+      <p class="section-desc">Only reports with full logs will be accepted. Include the right info based on issue type below.</p>
+    </div>
+    <div class="bug-grid reveal-stagger">
+      <div class="bug-card">
+        <div class="bug-type"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Root / Permission</div>
+        <div class="bug-title">Root or permission issue</div>
+        <p class="bug-desc">Include root manager name &amp; version, Android version, and MIUI/OneUI/AOSP info.</p>
+      </div>
+      <div class="bug-card">
+        <div class="bug-type"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> App Crash</div>
+        <div class="bug-title">App crashes or force closes</div>
+        <p class="bug-desc">Record and upload a full logcat captured at the moment of the crash. Use <code>adb logcat</code> or Matlog.</p>
+      </div>
+      <div class="bug-card">
+        <div class="bug-type"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93A10 10 0 1 1 4.93 19.07"/></svg> Tweak Issue</div>
+        <div class="bug-title">Tweak not working correctly</div>
+        <p class="bug-desc">Include device model, SoC name (e.g. Snapdragon 778G), and a screenshot of the <strong>Log</strong> tab.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── DWYOR ─── -->
+<section id="dwyor" style="padding-top: 0;">
+  <div class="container">
+    <div class="dwyor-card reveal">
+      <div class="dwyor-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      </div>
+      <div class="dwyor-body">
+        <div class="dwyor-label">DWYOR</div>
+        <div class="dwyor-title">Do With Your Own Risk</div>
+        <p class="dwyor-desc">Aether Manager performs modifications at the kernel and root system level. Make sure you fully understand each tweak before enabling it. <strong>The developer is not responsible for any device damage, bootloops, data loss, or other system issues</strong> that arise from using this application. Misuse or incorrect configuration is entirely at your own risk. Use wisely.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── CONTRIBUTORS ─── -->
+<section id="contributors" style="content-visibility:auto;contain-intrinsic-size:0 300px;">
+  <div class="container">
+    <div class="section-header center reveal">
+      <div class="section-eyebrow">Credits</div>
+      <h2 class="section-title">Contributors</h2>
+    </div>
+    <div class="reveal">
+      <a href="https://t.me/AetherDev22" target="_blank" rel="noopener" class="contributor-card">
+        <img src="assets/pr.png" alt="AetherDev22 profile photo" class="contributor-photo" width="72" height="72" loading="lazy"/>
+        <div>
+          <div class="contributor-handle">@AetherDev22</div>
+          <div class="contributor-role">Lead Developer</div>
+          <div class="contributor-bio">Creator and sole developer of Aether Manager — building powerful root tools for Android enthusiasts.</div>
+        </div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ─── APP INFO ─── -->
+<section id="appinfo" style="content-visibility:auto;contain-intrinsic-size:0 500px;">
+  <div class="container">
+    <div class="section-header center reveal">
+      <div class="section-eyebrow">App Info</div>
+      <h2 class="section-title">Built different.<br/><span class="accent">Designed for you.</span></h2>
+      <p class="section-desc">Engineered with Material Design 3, delivering a smooth, native Android experience with zero compromise.</p>
+    </div>
+    <div class="appinfo-grid reveal-stagger">
+      <div class="appinfo-card">
+        <div class="appinfo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg></div>
+        <div class="appinfo-lbl">Material You</div>
+        <h3 class="appinfo-title">Material Design 3</h3>
+        <p class="appinfo-desc">Built entirely on Google's latest design system dynamic color theming, expressive motion, and adaptive layouts that feel right at home on any Android device.</p>
+        <div class="appinfo-chips">
+          <span class="appinfo-chip">Dynamic Color</span>
+          <span class="appinfo-chip">Monet Theme</span>
+          <span class="appinfo-chip">Dark Mode</span>
+        </div>
+      </div>
+      <div class="appinfo-card">
+        <div class="appinfo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div>
+        <div class="appinfo-lbl">Performance</div>
+        <h3 class="appinfo-title">Buttery Smooth</h3>
+        <p class="appinfo-desc">60–120 fps animations across every transition. Native C engine handles shell commands with zero JVM overhead.</p>
+      </div>
+      <div class="appinfo-card">
+        <div class="appinfo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+        <div class="appinfo-lbl">Experience</div>
+        <h3 class="appinfo-title">User Friendly</h3>
+        <p class="appinfo-desc">Designed for real users, not just developers. Clear labels, intuitive gestures, and contextual help.</p>
+      </div>
+    </div>
+  </div>
+</section>
+</main>
+
+<!-- ─── FOOTER ─── -->
+<footer>
+  <div class="footer-inner">
+    <div>
+      <div class="footer-brand"><span>Aether</span>Manager</div>
+      <p class="footer-copy">Copyright © 2026 AetherDev22</p>
+    </div>
+    <ul class="footer-links">
+      <li><a href="https://github.com/aetherdev01/aether-manager/releases" target="_blank" rel="noopener">Releases</a></li>
+      <li><a href="https://github.com/aetherdev01/aether-manager" target="_blank" rel="noopener">GitHub</a></li>
+      <li><a href="https://t.me/get01projects" target="_blank" rel="noopener">Telegram</a></li>
+      <li><a href="https://saweria.co/AetherDev" target="_blank" rel="noopener">Donate</a></li>
+    </ul>
+  </div>
+</footer>
+
+<script>
+'use strict';
+(function(){
+  // Navbar scroll
+  const navbar = document.getElementById('navbar');
+  window.addEventListener('scroll', () => {
+    navbar.classList.toggle('scrolled', window.scrollY > 20);
+  }, { passive: true });
+
+  // Active nav link
+  const sections = document.querySelectorAll('section[id]');
+  const navLinks = document.querySelectorAll('.nav-links a[href^="#"]');
+  const io0 = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        navLinks.forEach(a => a.classList.remove('active'));
+        const a = document.querySelector(`.nav-links a[href="#${e.target.id}"]`);
+        if (a) a.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-40% 0px -55% 0px' });
+  sections.forEach(s => io0.observe(s));
+})();
+
+(function(){
+  // Mobile menu
+  const btn = document.getElementById('hamburgerBtn');
+  const menu = document.getElementById('mobileMenu');
+  const scrim = document.getElementById('mmScrim');
+  let isOpen = false;
+
+  function openMenu() {
+    isOpen = true;
+    menu.classList.add('open');
+    scrim.classList.add('open');
+    btn.setAttribute('aria-expanded', 'true');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeMenu() {
+    isOpen = false;
+    menu.classList.remove('open');
+    scrim.classList.remove('open');
+    btn.setAttribute('aria-expanded', 'false');
+    document.body.style.overflow = '';
+  }
+  function toggleMenu() {
+    isOpen ? closeMenu() : openMenu();
+  }
+
+  btn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    toggleMenu();
+  });
+  scrim.addEventListener('click', closeMenu);
+  menu.querySelectorAll('a').forEach(a => a.addEventListener('click', closeMenu));
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeMenu(); });
+})();
+
+(function(){
+  // Carousel
+  const track = document.getElementById('carouselTrack');
+  const viewport = document.getElementById('carouselViewport');
+  const dots = document.querySelectorAll('.carousel-dot');
+  const slides = document.querySelectorAll('.carousel-slide');
+  const counter = document.getElementById('carouselCounter');
+  const TOTAL = slides.length;
+  let current = 0, startX = 0, startY = 0, dragDx = 0, dragging = false, lockScroll = false;
+
+  function slideWidth() { return slides[0].offsetWidth + 20; }
+  function setTrackX(extra = 0) {
+    const centerOffset = (viewport.offsetWidth / 2) - (slides[0].offsetWidth / 2);
+    const x = -(current * slideWidth()) + centerOffset + extra;
+    track.style.transform = `translateX(${x}px)`;
+  }
+  function updateUI() {
+    slides.forEach((s, i) => s.classList.toggle('is-active', i === current));
+    dots.forEach((d, i) => d.classList.toggle('active', i === current));
+    if (counter) counter.textContent = current + 1;
+  }
+  function goTo(idx, animate = true) {
+    current = Math.max(0, Math.min(TOTAL - 1, idx));
+    dragDx = 0;
+    track.style.transition = animate ? 'transform 0.5s cubic-bezier(0.22,1,0.36,1)' : 'none';
+    setTrackX();
+    updateUI();
+  }
+  goTo(0, false);
+  dots.forEach((d, i) => d.addEventListener('click', () => goTo(i)));
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowLeft') goTo(current - 1);
+    if (e.key === 'ArrowRight') goTo(current + 1);
+  });
+  viewport.addEventListener('touchstart', e => {
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    dragging = true; dragDx = 0; lockScroll = false;
+    track.style.transition = 'none';
+  }, { passive: true });
+  viewport.addEventListener('touchmove', e => {
+    if (!dragging) return;
+    const dx = e.touches[0].clientX - startX;
+    const dy = e.touches[0].clientY - startY;
+    if (!lockScroll && Math.abs(dx) < 5 && Math.abs(dy) < 5) return;
+    if (!lockScroll) lockScroll = Math.abs(dx) > Math.abs(dy);
+    if (!lockScroll) return;
+    e.preventDefault();
+    dragDx = dx;
+    setTrackX(dragDx);
+  }, { passive: false });
+  viewport.addEventListener('touchend', () => {
+    if (!dragging) return; dragging = false; lockScroll = false;
+    const th = viewport.offsetWidth * 0.18;
+    if (dragDx < -th) goTo(current + 1);
+    else if (dragDx > th) goTo(current - 1);
+    else goTo(current);
+  });
+  viewport.addEventListener('mousedown', e => {
+    e.preventDefault(); startX = e.clientX; dragging = true; dragDx = 0;
+    track.style.transition = 'none';
+  });
+  window.addEventListener('mousemove', e => {
+    if (!dragging) return;
+    dragDx = e.clientX - startX;
+    setTrackX(dragDx);
+  });
+  window.addEventListener('mouseup', () => {
+    if (!dragging) return; dragging = false;
+    const th = viewport.offsetWidth * 0.18;
+    if (dragDx < -th) goTo(current + 1);
+    else if (dragDx > th) goTo(current - 1);
+    else goTo(current);
+  });
+})();
+
+(function(){
+  // Scroll reveal
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) { e.target.classList.add('visible'); io.unobserve(e.target); }
+    });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.reveal, .reveal-stagger').forEach(el => io.observe(el));
+})();
+</script>
+</body>
+</html>
