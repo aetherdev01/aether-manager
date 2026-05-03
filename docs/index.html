@@ -19,26 +19,26 @@
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <style>
 :root {
-  --bg: #f5f0eb;
-  --bg-card: #ede8e1;
-  --bg-card2: #e8e2da;
-  --surface: #faf7f3;
+  --bg: #f7f3ee;
+  --bg-card: #f0ebe4;
+  --bg-card2: #e9e1d8;
+  --surface: rgba(255, 252, 248, 0.92);
   --amber: #8B5E08;
-  --amber-light: #b07a1a;
-  --amber-muted: rgba(139,94,8,0.12);
-  --amber-border: rgba(139,94,8,0.25);
-  --text: #1a1410;
-  --text-2: #4a3f33;
-  --text-3: #7a6e62;
-  --border: rgba(26,20,16,0.1);
-  --border-soft: rgba(26,20,16,0.06);
+  --amber-light: #ad7818;
+  --amber-muted: rgba(139,94,8,0.10);
+  --amber-border: rgba(139,94,8,0.22);
+  --text: #17120e;
+  --text-2: #4a4036;
+  --text-3: #786e64;
+  --border: rgba(23,18,14,0.085);
+  --border-soft: rgba(23,18,14,0.055);
   --radius-sm: 12px;
   --radius: 20px;
   --radius-lg: 28px;
   --radius-xl: 36px;
-  --shadow-sm: 0 2px 12px rgba(26,20,16,0.06);
-  --shadow: 0 4px 24px rgba(26,20,16,0.08);
-  --shadow-lg: 0 12px 48px rgba(26,20,16,0.12);
+  --shadow-sm: 0 8px 22px rgba(26,20,16,0.055);
+  --shadow: 0 14px 38px rgba(26,20,16,0.08);
+  --shadow-lg: 0 24px 70px rgba(26,20,16,0.115);
   --font-head: 'Unbounded', sans-serif;
   --font-body: 'DM Sans', sans-serif;
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
@@ -66,7 +66,8 @@ body::before {
   background-image:
     linear-gradient(rgba(26,20,16,0.045) 1px, transparent 1px),
     linear-gradient(90deg, rgba(26,20,16,0.045) 1px, transparent 1px);
-  background-size: 40px 40px;
+  background-size: 44px 44px;
+  opacity: .55;
   pointer-events: none;
   z-index: 0;
 }
@@ -84,17 +85,17 @@ a { text-decoration: none; color: inherit; }
   transform: translateX(-50%);
   width: calc(100% - 32px);
   max-width: 900px;
-  background: rgba(245,240,235,0.88);
+  background: rgba(255,252,248,0.82);
   backdrop-filter: blur(20px) saturate(1.4);
   -webkit-backdrop-filter: blur(20px) saturate(1.4);
   border: 1px solid var(--border);
   border-radius: 999px;
-  padding: 10px 16px 10px 20px;
+  padding: 9px 14px 9px 18px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   z-index: 1100;
-  transition: box-shadow 0.3s var(--ease);
+  transition: box-shadow 0.35s var(--ease), transform 0.35s var(--ease), background 0.35s var(--ease);
 }
 .navbar.scrolled { box-shadow: var(--shadow); }
 .brand {
@@ -237,10 +238,10 @@ a { text-decoration: none; color: inherit; }
 
 .hero-title {
   font-family: var(--font-head);
-  font-size: clamp(28px, 5vw, 48px);
-  font-weight: 800;
-  line-height: 1.12;
-  letter-spacing: -0.5px;
+  font-size: clamp(30px, 5vw, 50px);
+  font-weight: 900;
+  line-height: 1.08;
+  letter-spacing: -0.8px;
   color: var(--text);
   margin-bottom: 20px;
 }
@@ -271,7 +272,7 @@ a { text-decoration: none; color: inherit; }
   font-weight: 600;
   padding: 13px 24px;
   border-radius: 999px;
-  transition: background 0.2s var(--ease), transform 0.2s var(--ease), box-shadow 0.2s;
+  transition: background 0.28s var(--ease), transform 0.32s var(--ease), box-shadow 0.32s var(--ease);
   cursor: pointer;
 }
 .btn-primary:hover {
@@ -291,7 +292,7 @@ a { text-decoration: none; color: inherit; }
   padding: 13px 24px;
   border-radius: 999px;
   border: 1px solid var(--border);
-  transition: background 0.2s, transform 0.2s, border-color 0.2s;
+  transition: background 0.28s var(--ease), transform 0.32s var(--ease), border-color 0.28s var(--ease), box-shadow 0.32s var(--ease);
 }
 .btn-secondary:hover {
   background: var(--bg-card2);
@@ -383,12 +384,16 @@ section { padding: 80px 20px; }
 }
 .section-title {
   font-family: var(--font-head);
-  font-size: clamp(20px, 3.2vw, 30px);
-  font-weight: 800;
-  line-height: 1.18;
-  letter-spacing: -0.3px;
+  font-size: clamp(22px, 3.2vw, 32px);
+  font-weight: 900;
+  line-height: 30px;
+  letter-spacing: -0.45px;
   color: var(--text);
   margin-bottom: 14px;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: clip;
 }
 .mm-scrim {
   display: none;
@@ -407,7 +412,7 @@ section { padding: 80px 20px; }
   color: var(--text-2);
   max-width: 520px;
 }
-.section-header { margin-bottom: 48px; }
+.section-header { margin-bottom: 42px; }
 .section-header.center { text-align: center; }
 .section-header.center .section-desc { margin: 0 auto; }
 
@@ -432,18 +437,67 @@ section { padding: 80px 20px; }
 }
 .badge svg { width: 15px; height: 15px; stroke: var(--amber); fill: none; }
 
+
+/* ─── TECH LOGO MARQUEE ─── */
+.tech-marquee {
+  width: 100%;
+  overflow: hidden;
+  margin: 0 0 18px;
+  padding: 4px 0;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
+}
+.tech-marquee-track {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: max-content;
+  animation: tech-marquee-left 24s linear infinite;
+  will-change: transform;
+}
+.tech-marquee:hover .tech-marquee-track { animation-play-state: paused; }
+.tech-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: max-content;
+  padding: 9px 14px;
+  border-radius: 999px;
+  background: rgba(255,252,248,0.78);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  color: var(--text-2);
+  font-size: 12.5px;
+  font-weight: 800;
+  letter-spacing: -0.1px;
+}
+.tech-pill svg {
+  width: 18px;
+  height: 18px;
+  stroke: var(--amber);
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.tech-pill.cpp { font-family: var(--font-head); font-size: 12px; }
+@keyframes tech-marquee-left {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
 /* ─── FEATURES ─── */
 .features-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 14px;
 }
 .feature-card {
-  background: var(--surface);
+  background: linear-gradient(180deg, rgba(255,252,248,0.96), rgba(250,246,240,0.92));
   border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 28px 24px;
-  transition: transform 0.3s var(--ease), border-color 0.2s, box-shadow 0.3s;
+  border-radius: 24px;
+  padding: 24px 22px;
+  transition: transform 0.42s var(--ease), border-color 0.28s var(--ease), box-shadow 0.42s var(--ease), background 0.42s var(--ease);
   position: relative;
   overflow: hidden;
 }
@@ -457,16 +511,16 @@ section { padding: 80px 20px; }
   transition: opacity 0.3s;
 }
 .feature-card:hover {
-  transform: translateY(-4px);
+  transform: translateY(-6px);
   border-color: var(--amber-border);
   box-shadow: var(--shadow-lg);
 }
 .feature-card:hover::before { opacity: 1; }
 
 .feature-icon {
-  width: 44px; height: 44px;
-  background: var(--amber-muted);
-  border-radius: 14px;
+  width: 46px; height: 46px;
+  background: linear-gradient(135deg, rgba(139,94,8,0.14), rgba(139,94,8,0.06));
+  border-radius: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -475,8 +529,8 @@ section { padding: 80px 20px; }
 .feature-icon svg { width: 20px; height: 20px; stroke: var(--amber); fill: none; }
 .feature-title {
   font-family: var(--font-body);
-  font-size: 15px;
-  font-weight: 700;
+  font-size: 15.5px;
+  font-weight: 900;
   color: var(--text);
   margin-bottom: 8px;
   letter-spacing: -0.2px;
@@ -959,6 +1013,11 @@ footer {
   to { opacity: 1; transform: none; }
 }
 
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; scroll-behavior: auto !important; }
+}
+
 /* ─── RESPONSIVE ─── */
 @media (max-width: 680px) {
   .nav-links { display: none; }
@@ -972,7 +1031,7 @@ footer {
 }
 @media (max-width: 480px) {
   .hero-title { font-size: 32px; letter-spacing: -1px; }
-  .section-title { font-size: 24px; }
+  .section-title { font-size: 24px; line-height: 30px; white-space: normal; }
   section { padding: 60px 16px; }
 }
 </style>
@@ -1078,6 +1137,22 @@ footer {
 <section id="features" style="content-visibility:auto;contain-intrinsic-size:0 600px;">
   <div class="container">
     <div class="section-header reveal">
+      <div class="tech-marquee" aria-label="Technology stack">
+        <div class="tech-marquee-track">
+          <span class="tech-pill"><svg viewBox="0 0 24 24"><path d="M7 8h10M7 17h10M8 8l-2-3M16 8l2-3"/><rect x="5" y="8" width="14" height="10" rx="3"/><circle cx="9" cy="13" r=".6"/><circle cx="15" cy="13" r=".6"/></svg>Android</span>
+          <span class="tech-pill cpp"><svg viewBox="0 0 24 24"><path d="M12 2 3 7v10l9 5 9-5V7l-9-5z"/><path d="M15 9.5a4 4 0 1 0 0 5"/><path d="M17 11h4M19 9v4"/></svg>C++</span>
+          <span class="tech-pill"><svg viewBox="0 0 24 24"><path d="M8 18h8a3 3 0 0 0 3-3H5a3 3 0 0 0 3 3z"/><path d="M8 15V4M13 15V4M17 8c1 1 1 2 0 3"/><path d="M6 21h12"/></svg>Java</span>
+          <span class="tech-pill"><svg viewBox="0 0 24 24"><path d="M4 18 12 4l8 14H4z"/><path d="M9 18h6l-3-5-3 5z"/></svg>Android Studio</span>
+          <span class="tech-pill"><svg viewBox="0 0 24 24"><path d="M12 3v18M5 8h14M7 16h10"/><path d="M8 5 5 8l3 3M16 5l3 3-3 3"/></svg>Kotlin</span>
+          <span class="tech-pill"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M9 9h6v6H9zM2 9h2M2 15h2M20 9h2M20 15h2M9 2v2M15 2v2M9 20v2M15 20v2"/></svg>NDK</span>
+          <span class="tech-pill"><svg viewBox="0 0 24 24"><path d="M7 8h10M7 17h10M8 8l-2-3M16 8l2-3"/><rect x="5" y="8" width="14" height="10" rx="3"/><circle cx="9" cy="13" r=".6"/><circle cx="15" cy="13" r=".6"/></svg>Android</span>
+          <span class="tech-pill cpp"><svg viewBox="0 0 24 24"><path d="M12 2 3 7v10l9 5 9-5V7l-9-5z"/><path d="M15 9.5a4 4 0 1 0 0 5"/><path d="M17 11h4M19 9v4"/></svg>C++</span>
+          <span class="tech-pill"><svg viewBox="0 0 24 24"><path d="M8 18h8a3 3 0 0 0 3-3H5a3 3 0 0 0 3 3z"/><path d="M8 15V4M13 15V4M17 8c1 1 1 2 0 3"/><path d="M6 21h12"/></svg>Java</span>
+          <span class="tech-pill"><svg viewBox="0 0 24 24"><path d="M4 18 12 4l8 14H4z"/><path d="M9 18h6l-3-5-3 5z"/></svg>Android Studio</span>
+          <span class="tech-pill"><svg viewBox="0 0 24 24"><path d="M12 3v18M5 8h14M7 16h10"/><path d="M8 5 5 8l3 3M16 5l3 3-3 3"/></svg>Kotlin</span>
+          <span class="tech-pill"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M9 9h6v6H9zM2 9h2M2 15h2M20 9h2M20 15h2M9 2v2M15 2v2M9 20v2M15 20v2"/></svg>NDK</span>
+        </div>
+      </div>
       <div class="section-eyebrow">Features</div>
       <h2 class="section-title">Everything you need.<br/>Nothing you don't.</h2>
       <p class="section-desc">Built from the ground up for rooted Android devices deep system access, real-time data, and fine-grained control.</p>
