@@ -1293,6 +1293,176 @@ body::after {
   .section-title { font-size: 24px; line-height: 30px; white-space: normal; }
   section { padding: 60px 16px; }
 }
+
+
+/* ─── MOBILE PERFORMANCE PASS ─── */
+:root { --motion-fast: 220ms; --motion-med: 360ms; }
+
+html { text-rendering: optimizeLegibility; }
+body { min-height: 100%; }
+
+img, svg { transform: translateZ(0); }
+img { height: auto; }
+
+.navbar,
+.mobile-menu,
+.feature-card,
+.spec-card,
+.bug-card,
+.contributor-card,
+.appinfo-card,
+.dwyor-card,
+.download-card,
+.carousel-slide,
+.tech-pill {
+  contain: layout paint style;
+}
+
+.feature-card,
+.spec-card,
+.bug-card,
+.contributor-card,
+.appinfo-card,
+.dwyor-card,
+.carousel-slide,
+.btn-primary,
+.btn-secondary,
+.btn-primary-dark,
+.btn-ghost,
+.nav-btn {
+  will-change: transform;
+  transform: translate3d(0,0,0);
+}
+
+.reveal {
+  transform: translate3d(0,18px,0);
+  transition: opacity var(--motion-med) var(--ease), transform var(--motion-med) var(--ease);
+  filter: none !important;
+}
+.reveal.visible { transform: translate3d(0,0,0); }
+
+.reveal-stagger .feature-card,
+.reveal-stagger .spec-card,
+.reveal-stagger .bug-card,
+.team-grid .contributor-card-team {
+  transform: translate3d(0,14px,0);
+  transition-duration: var(--motion-med);
+}
+
+.carousel-track {
+  transform: translate3d(0,0,0);
+  backface-visibility: hidden;
+  touch-action: pan-y;
+}
+.carousel-slide {
+  backface-visibility: hidden;
+  transition: transform 320ms var(--ease), opacity 320ms var(--ease), box-shadow 320ms var(--ease);
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .feature-card:hover,
+  .spec-card:hover,
+  .bug-card:hover,
+  .contributor-card:hover,
+  .appinfo-card:hover,
+  .dwyor-card:hover,
+  .btn-primary:hover,
+  .btn-secondary:hover,
+  .btn-primary-dark:hover,
+  .btn-ghost:hover,
+  .nav-btn:hover {
+    transform: translate3d(0,0,0) !important;
+    box-shadow: var(--shadow-sm) !important;
+  }
+}
+
+@media (max-width: 680px) {
+  html { scroll-behavior: auto; }
+  body::before { opacity: .22; background-size: 56px 56px; }
+  body::after,
+  .hero::before,
+  .hero::after,
+  .phone-glow { display: none !important; }
+
+  .navbar,
+  .mobile-menu {
+    backdrop-filter: blur(12px) saturate(1.12);
+    -webkit-backdrop-filter: blur(12px) saturate(1.12);
+  }
+
+  .feature-card,
+  .spec-card,
+  .bug-card,
+  .contributor-card,
+  .appinfo-card,
+  .dwyor-card,
+  .download-card,
+  .carousel-slide,
+  .tech-pill,
+  .btn-secondary,
+  .btn-ghost {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  .feature-card,
+  .spec-card,
+  .bug-card,
+  .contributor-card,
+  .appinfo-card,
+  .dwyor-card {
+    background: rgba(255,252,248,0.92) !important;
+    box-shadow: 0 8px 22px rgba(26,20,16,0.055), inset 0 1px 0 rgba(255,255,255,0.62) !important;
+  }
+
+  .feature-card::after,
+  .appinfo-card::after,
+  .spec-card::after,
+  .bug-card::after,
+  .contributor-card::after,
+  .dwyor-card::after,
+  .feature-card::before {
+    display: none !important;
+  }
+
+  .tech-marquee-track { animation-duration: 38s; }
+  .hero-content > * { animation-duration: 480ms; }
+  .hero-stats { margin-top: 30px; padding-top: 22px; }
+  #features { padding-top: 34px; }
+  .features-grid, .specs-grid, .bug-grid { gap: 12px; }
+  .carousel-slide { box-shadow: 0 6px 18px rgba(26,20,16,0.10); }
+  .carousel-slide.is-active { box-shadow: 0 10px 30px rgba(26,20,16,0.15); }
+}
+
+@media (max-width: 430px) {
+  .navbar { top: 10px; width: calc(100% - 22px); padding: 8px 12px 8px 14px; }
+  .hero { padding-top: 84px; }
+  .hero-actions .btn-primary,
+  .hero-actions .btn-secondary { width: 100%; justify-content: center; }
+  .hero-stats { gap: 14px; }
+  .hero-stat-val { font-size: 23px; }
+  .hero-stat-lbl { font-size: 11px; }
+  .feature-card { padding: 20px 18px; border-radius: 22px; }
+  .section-header { margin-bottom: 32px; }
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .navbar, .mobile-menu { background: rgba(255,252,248,0.96) !important; }
+}
+
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+  .reveal, .reveal-stagger .feature-card, .reveal-stagger .spec-card, .reveal-stagger .bug-card {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -1383,7 +1553,7 @@ body::after {
       <div class="phone-mockup">
         <div class="phone-frame">
           <div class="phone-screen">
-            <img src="preview/p1.jpg" alt="Aether Manager screenshot" loading="eager" fetchpriority="high" width="200" height="433"/>
+            <img src="preview/p1.jpg" alt="Aether Manager screenshot" loading="eager" fetchpriority="high" decoding="async" width="200" height="433"/>
           </div>
         </div>
         <div class="phone-glow"></div>
@@ -1471,15 +1641,15 @@ body::after {
       <div class="carousel-outer">
         <div class="carousel-viewport" id="carouselViewport">
           <div class="carousel-track" id="carouselTrack">
-            <div class="carousel-slide is-active" data-idx="0"><img src="preview/p1.jpg" alt="Home screen" loading="eager" fetchpriority="high" width="200" height="433"/></div>
-            <div class="carousel-slide" data-idx="1"><img src="preview/p2.jpg" alt="Performance profiles" loading="lazy" width="200" height="433"/></div>
-            <div class="carousel-slide" data-idx="2"><img src="preview/p3.jpg" alt="Kernel tweaks" loading="lazy" width="200" height="433"/></div>
-            <div class="carousel-slide" data-idx="3"><img src="preview/p4.jpg" alt="System monitor" loading="lazy" width="200" height="433"/></div>
-            <div class="carousel-slide" data-idx="4"><img src="preview/p5.jpg" alt="App profile" loading="lazy" width="200" height="433"/></div>
-            <div class="carousel-slide" data-idx="5"><img src="preview/p6.jpg" alt="Settings" loading="lazy" width="200" height="433"/></div>
-            <div class="carousel-slide" data-idx="6"><img src="preview/p7.jpg" alt="Tweaks detail" loading="lazy" width="200" height="433"/></div>
-            <div class="carousel-slide" data-idx="7"><img src="preview/p8.jpg" alt="Log viewer" loading="lazy" width="200" height="433"/></div>
-            <div class="carousel-slide" data-idx="8"><img src="preview/p9.jpg" alt="About" loading="lazy" width="200" height="433"/></div>
+            <div class="carousel-slide is-active" data-idx="0"><img src="preview/p1.jpg" decoding="async" alt="Home screen" loading="lazy" width="200" height="433"/></div>
+            <div class="carousel-slide" data-idx="1"><img src="preview/p2.jpg" decoding="async" alt="Performance profiles" loading="lazy" width="200" height="433"/></div>
+            <div class="carousel-slide" data-idx="2"><img src="preview/p3.jpg" decoding="async" alt="Kernel tweaks" loading="lazy" width="200" height="433"/></div>
+            <div class="carousel-slide" data-idx="3"><img src="preview/p4.jpg" decoding="async" alt="System monitor" loading="lazy" width="200" height="433"/></div>
+            <div class="carousel-slide" data-idx="4"><img src="preview/p5.jpg" decoding="async" alt="App profile" loading="lazy" width="200" height="433"/></div>
+            <div class="carousel-slide" data-idx="5"><img src="preview/p6.jpg" decoding="async" alt="Settings" loading="lazy" width="200" height="433"/></div>
+            <div class="carousel-slide" data-idx="6"><img src="preview/p7.jpg" decoding="async" alt="Tweaks detail" loading="lazy" width="200" height="433"/></div>
+            <div class="carousel-slide" data-idx="7"><img src="preview/p8.jpg" decoding="async" alt="Log viewer" loading="lazy" width="200" height="433"/></div>
+            <div class="carousel-slide" data-idx="8"><img src="preview/p9.jpg" decoding="async" alt="About" loading="lazy" width="200" height="433"/></div>
           </div>
         </div>
         <div class="carousel-controls">
@@ -1682,146 +1852,161 @@ body::after {
 
 <script>
 'use strict';
-(function(){
-  // Navbar scroll
-  const navbar = document.getElementById('navbar');
-  window.addEventListener('scroll', () => {
-    navbar.classList.toggle('scrolled', window.scrollY > 20);
-  }, { passive: true });
 
-  // Active nav link
+(function () {
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const isCoarse = window.matchMedia('(hover: none) and (pointer: coarse)').matches;
+  const navbar = document.getElementById('navbar');
+  let lastScrolled = false;
+  let ticking = false;
+
+  function updateNavbar() {
+    const scrolled = window.scrollY > 20;
+    if (scrolled !== lastScrolled) {
+      navbar.classList.toggle('scrolled', scrolled);
+      lastScrolled = scrolled;
+    }
+    ticking = false;
+  }
+
+  window.addEventListener('scroll', () => {
+    if (!ticking) {
+      requestAnimationFrame(updateNavbar);
+      ticking = true;
+    }
+  }, { passive: true });
+  updateNavbar();
+
   const sections = document.querySelectorAll('section[id]');
   const navLinks = document.querySelectorAll('.nav-links a[href^="#"]');
-  const io0 = new IntersectionObserver(entries => {
-    entries.forEach(e => {
-      if (e.isIntersecting) {
+  if ('IntersectionObserver' in window && navLinks.length) {
+    const navObserver = new IntersectionObserver(entries => {
+      for (const entry of entries) {
+        if (!entry.isIntersecting) continue;
         navLinks.forEach(a => a.classList.remove('active'));
-        const a = document.querySelector(`.nav-links a[href="#${e.target.id}"]`);
-        if (a) a.classList.add('active');
+        const active = document.querySelector(`.nav-links a[href="#${entry.target.id}"]`);
+        if (active) active.classList.add('active');
       }
-    });
-  }, { rootMargin: '-40% 0px -55% 0px' });
-  sections.forEach(s => io0.observe(s));
-})();
+    }, { rootMargin: '-42% 0px -54% 0px', threshold: 0.01 });
+    sections.forEach(section => navObserver.observe(section));
+  }
 
-(function(){
-  // Mobile menu
   const btn = document.getElementById('hamburgerBtn');
   const menu = document.getElementById('mobileMenu');
   const scrim = document.getElementById('mmScrim');
-  let isOpen = false;
+  let menuOpen = false;
 
-  function openMenu() {
-    isOpen = true;
-    menu.classList.add('open');
-    scrim.classList.add('open');
-    btn.setAttribute('aria-expanded', 'true');
-    document.body.style.overflow = 'hidden';
-  }
-  function closeMenu() {
-    isOpen = false;
-    menu.classList.remove('open');
-    scrim.classList.remove('open');
-    btn.setAttribute('aria-expanded', 'false');
-    document.body.style.overflow = '';
-  }
-  function toggleMenu() {
-    isOpen ? closeMenu() : openMenu();
+  function setMenu(open) {
+    menuOpen = open;
+    menu.classList.toggle('open', open);
+    scrim.classList.toggle('open', open);
+    btn.setAttribute('aria-expanded', String(open));
+    document.body.style.overflow = open ? 'hidden' : '';
   }
 
-  btn.addEventListener('click', function(e) {
-    e.stopPropagation();
-    toggleMenu();
+  btn.addEventListener('click', event => {
+    event.stopPropagation();
+    setMenu(!menuOpen);
   });
-  scrim.addEventListener('click', closeMenu);
-  menu.querySelectorAll('a').forEach(a => a.addEventListener('click', closeMenu));
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeMenu(); });
-})();
+  scrim.addEventListener('click', () => setMenu(false));
+  menu.querySelectorAll('a').forEach(link => link.addEventListener('click', () => setMenu(false)));
+  document.addEventListener('keydown', event => { if (event.key === 'Escape') setMenu(false); });
 
-(function(){
-  // Carousel
   const track = document.getElementById('carouselTrack');
   const viewport = document.getElementById('carouselViewport');
-  const dots = document.querySelectorAll('.carousel-dot');
-  const slides = document.querySelectorAll('.carousel-slide');
+  const dots = Array.from(document.querySelectorAll('.carousel-dot'));
+  const slides = Array.from(document.querySelectorAll('.carousel-slide'));
   const counter = document.getElementById('carouselCounter');
-  const TOTAL = slides.length;
-  let current = 0, startX = 0, startY = 0, dragDx = 0, dragging = false, lockScroll = false;
+  const total = slides.length;
+  let current = 0;
+  let startX = 0;
+  let startY = 0;
+  let dragX = 0;
+  let dragging = false;
+  let horizontal = false;
+  let pointerId = null;
+  let carouselRaf = 0;
 
-  function slideWidth() { return slides[0].offsetWidth + 20; }
-  function setTrackX(extra = 0) {
-    const centerOffset = (viewport.offsetWidth / 2) - (slides[0].offsetWidth / 2);
-    const x = -(current * slideWidth()) + centerOffset + extra;
-    track.style.transform = `translateX(${x}px)`;
+  function gap() { return isCoarse ? 18 : 20; }
+  function slideWidth() { return (slides[0]?.offsetWidth || 200) + gap(); }
+  function baseX() {
+    const slide = slides[0]?.offsetWidth || 200;
+    return -(current * slideWidth()) + ((viewport.offsetWidth / 2) - (slide / 2));
+  }
+  function applyX(extra) {
+    track.style.transform = `translate3d(${baseX() + extra}px,0,0)`;
+  }
+  function requestX(extra) {
+    cancelAnimationFrame(carouselRaf);
+    carouselRaf = requestAnimationFrame(() => applyX(extra));
   }
   function updateUI() {
-    slides.forEach((s, i) => s.classList.toggle('is-active', i === current));
-    dots.forEach((d, i) => d.classList.toggle('active', i === current));
+    slides.forEach((slide, index) => slide.classList.toggle('is-active', index === current));
+    dots.forEach((dot, index) => dot.classList.toggle('active', index === current));
     if (counter) counter.textContent = current + 1;
   }
-  function goTo(idx, animate = true) {
-    current = Math.max(0, Math.min(TOTAL - 1, idx));
-    dragDx = 0;
-    track.style.transition = animate ? 'transform 0.5s cubic-bezier(0.22,1,0.36,1)' : 'none';
-    setTrackX();
+  function goTo(index, animate = true) {
+    current = Math.max(0, Math.min(total - 1, index));
+    dragX = 0;
+    track.style.transition = animate && !reduceMotion ? 'transform 360ms cubic-bezier(0.22,1,0.36,1)' : 'none';
+    requestX(0);
     updateUI();
   }
-  goTo(0, false);
-  dots.forEach((d, i) => d.addEventListener('click', () => goTo(i)));
-  document.addEventListener('keydown', e => {
-    if (e.key === 'ArrowLeft') goTo(current - 1);
-    if (e.key === 'ArrowRight') goTo(current + 1);
-  });
-  viewport.addEventListener('touchstart', e => {
-    startX = e.touches[0].clientX;
-    startY = e.touches[0].clientY;
-    dragging = true; dragDx = 0; lockScroll = false;
-    track.style.transition = 'none';
-  }, { passive: true });
-  viewport.addEventListener('touchmove', e => {
-    if (!dragging) return;
-    const dx = e.touches[0].clientX - startX;
-    const dy = e.touches[0].clientY - startY;
-    if (!lockScroll && Math.abs(dx) < 5 && Math.abs(dy) < 5) return;
-    if (!lockScroll) lockScroll = Math.abs(dx) > Math.abs(dy);
-    if (!lockScroll) return;
-    e.preventDefault();
-    dragDx = dx;
-    setTrackX(dragDx);
-  }, { passive: false });
-  viewport.addEventListener('touchend', () => {
-    if (!dragging) return; dragging = false; lockScroll = false;
-    const th = viewport.offsetWidth * 0.18;
-    if (dragDx < -th) goTo(current + 1);
-    else if (dragDx > th) goTo(current - 1);
-    else goTo(current);
-  });
-  viewport.addEventListener('mousedown', e => {
-    e.preventDefault(); startX = e.clientX; dragging = true; dragDx = 0;
-    track.style.transition = 'none';
-  });
-  window.addEventListener('mousemove', e => {
-    if (!dragging) return;
-    dragDx = e.clientX - startX;
-    setTrackX(dragDx);
-  });
-  window.addEventListener('mouseup', () => {
-    if (!dragging) return; dragging = false;
-    const th = viewport.offsetWidth * 0.18;
-    if (dragDx < -th) goTo(current + 1);
-    else if (dragDx > th) goTo(current - 1);
-    else goTo(current);
-  });
-})();
 
-(function(){
-  // Scroll reveal
-  const io = new IntersectionObserver(entries => {
-    entries.forEach(e => {
-      if (e.isIntersecting) { e.target.classList.add('visible'); io.unobserve(e.target); }
-    });
-  }, { threshold: 0.1 });
-  document.querySelectorAll('.reveal, .reveal-stagger').forEach(el => io.observe(el));
+  if (track && viewport && slides.length) {
+    goTo(0, false);
+    dots.forEach((dot, index) => dot.addEventListener('click', () => goTo(index)));
+
+    viewport.addEventListener('pointerdown', event => {
+      pointerId = event.pointerId;
+      viewport.setPointerCapture(pointerId);
+      startX = event.clientX;
+      startY = event.clientY;
+      dragX = 0;
+      dragging = true;
+      horizontal = false;
+      track.style.transition = 'none';
+    }, { passive: true });
+
+    viewport.addEventListener('pointermove', event => {
+      if (!dragging || event.pointerId !== pointerId) return;
+      const dx = event.clientX - startX;
+      const dy = event.clientY - startY;
+      if (!horizontal && Math.abs(dx) < 7 && Math.abs(dy) < 7) return;
+      if (!horizontal) horizontal = Math.abs(dx) > Math.abs(dy);
+      if (!horizontal) return;
+      event.preventDefault();
+      dragX = dx;
+      requestX(dragX);
+    }, { passive: false });
+
+    function endDrag() {
+      if (!dragging) return;
+      dragging = false;
+      horizontal = false;
+      const threshold = Math.min(96, Math.max(44, viewport.offsetWidth * 0.17));
+      if (dragX < -threshold) goTo(current + 1);
+      else if (dragX > threshold) goTo(current - 1);
+      else goTo(current);
+    }
+
+    viewport.addEventListener('pointerup', endDrag, { passive: true });
+    viewport.addEventListener('pointercancel', endDrag, { passive: true });
+    window.addEventListener('resize', () => goTo(current, false), { passive: true });
+  }
+
+  if ('IntersectionObserver' in window) {
+    const revealObserver = new IntersectionObserver(entries => {
+      for (const entry of entries) {
+        if (!entry.isIntersecting) continue;
+        entry.target.classList.add('visible');
+        revealObserver.unobserve(entry.target);
+      }
+    }, { rootMargin: '0px 0px -8% 0px', threshold: 0.08 });
+    document.querySelectorAll('.reveal, .reveal-stagger, .team-grid').forEach(el => revealObserver.observe(el));
+  } else {
+    document.querySelectorAll('.reveal, .reveal-stagger, .team-grid').forEach(el => el.classList.add('visible'));
+  }
 })();
 </script>
 </body>
