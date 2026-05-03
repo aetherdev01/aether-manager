@@ -200,7 +200,7 @@ a { text-decoration: none; color: inherit; }
 .hero {
   display: flex;
   align-items: center;
-  padding: 120px 20px 80px;
+  padding: 120px 20px 52px;
 }
 .container {
   width: 100%;
@@ -374,6 +374,7 @@ a { text-decoration: none; color: inherit; }
 
 /* ─── SECTION COMMON ─── */
 section { padding: 80px 20px; }
+#features { padding-top: 34px; }
 .section-eyebrow {
   font-size: 11.5px;
   font-weight: 700;
@@ -442,8 +443,8 @@ section { padding: 80px 20px; }
 .tech-stack-header {
   display: flex;
   flex-direction: column;
-  gap: 18px;
-  margin-bottom: 22px;
+  gap: 0;
+  margin-bottom: 32px;
 }
 .tech-marquee {
   width: 100%;
@@ -491,6 +492,17 @@ section { padding: 80px 20px; }
 @keyframes tech-marquee-left {
   from { transform: translateX(0); }
   to { transform: translateX(-50%); }
+}
+
+#features {
+  padding-top: 34px;
+}
+#features .section-header {
+  margin-bottom: 42px;
+}
+#features .tech-marquee,
+#features .tech-marquee-track {
+  pointer-events: none;
 }
 
 /* ─── FEATURES ─── */
@@ -1031,14 +1043,17 @@ footer {
   .hamburger { display: flex; }
   .hero-inner { grid-template-columns: 1fr; }
   .phone-mockup { display: none; }
-  .hero { padding-top: 88px; padding-bottom: 48px; }
+  .hero { padding-top: 88px; padding-bottom: 36px; }
+  #features { padding-top: 22px; }
+  .tech-marquee { margin: 0 0 24px; }
   .hero-stats { flex-wrap: wrap; gap: 16px; }
   .appinfo-grid { grid-template-columns: 1fr; }
   .download-card { padding: 36px 24px; }
 }
 @media (max-width: 480px) {
   .hero-title { font-size: 32px; letter-spacing: -1px; }
-  .tech-stack-header { gap: 16px; margin-bottom: 24px; }
+  #features { padding-top: 28px; }
+  .tech-stack-header { gap: 0; margin-bottom: 28px; }
   .section-title { font-size: 24px; line-height: 30px; white-space: normal; }
   section { padding: 60px 16px; }
 }
@@ -1146,7 +1161,6 @@ footer {
   <div class="container">
     <div class="section-header reveal">
       <div class="tech-stack-header">
-        <div class="section-eyebrow">Android 8.0</div>
         <div class="tech-marquee" aria-label="Technology stack">
           <div class="tech-marquee-track">
           <span class="tech-pill"><svg viewBox="0 0 24 24"><path d="M7 8h10M7 17h10M8 8l-2-3M16 8l2-3"/><rect x="5" y="8" width="14" height="10" rx="3"/><circle cx="9" cy="13" r=".6"/><circle cx="15" cy="13" r=".6"/></svg>Android</span>
