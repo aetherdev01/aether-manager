@@ -439,11 +439,17 @@ section { padding: 80px 20px; }
 
 
 /* ─── TECH LOGO MARQUEE ─── */
+.tech-stack-header {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  margin-bottom: 22px;
+}
 .tech-marquee {
   width: 100%;
   overflow: hidden;
-  margin: 0 0 18px;
-  padding: 4px 0;
+  margin: 0;
+  padding: 6px 0;
   -webkit-mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
   mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
 }
@@ -454,8 +460,8 @@ section { padding: 80px 20px; }
   width: max-content;
   animation: tech-marquee-left 24s linear infinite;
   will-change: transform;
+  pointer-events: none;
 }
-.tech-marquee:hover .tech-marquee-track { animation-play-state: paused; }
 .tech-pill {
   display: inline-flex;
   align-items: center;
@@ -470,6 +476,7 @@ section { padding: 80px 20px; }
   font-size: 12.5px;
   font-weight: 800;
   letter-spacing: -0.1px;
+  user-select: none;
 }
 .tech-pill svg {
   width: 18px;
@@ -1031,6 +1038,7 @@ footer {
 }
 @media (max-width: 480px) {
   .hero-title { font-size: 32px; letter-spacing: -1px; }
+  .tech-stack-header { gap: 16px; margin-bottom: 24px; }
   .section-title { font-size: 24px; line-height: 30px; white-space: normal; }
   section { padding: 60px 16px; }
 }
@@ -1137,8 +1145,10 @@ footer {
 <section id="features" style="content-visibility:auto;contain-intrinsic-size:0 600px;">
   <div class="container">
     <div class="section-header reveal">
-      <div class="tech-marquee" aria-label="Technology stack">
-        <div class="tech-marquee-track">
+      <div class="tech-stack-header">
+        <div class="section-eyebrow">Android 8.0</div>
+        <div class="tech-marquee" aria-label="Technology stack">
+          <div class="tech-marquee-track">
           <span class="tech-pill"><svg viewBox="0 0 24 24"><path d="M7 8h10M7 17h10M8 8l-2-3M16 8l2-3"/><rect x="5" y="8" width="14" height="10" rx="3"/><circle cx="9" cy="13" r=".6"/><circle cx="15" cy="13" r=".6"/></svg>Android</span>
           <span class="tech-pill cpp"><svg viewBox="0 0 24 24"><path d="M12 2 3 7v10l9 5 9-5V7l-9-5z"/><path d="M15 9.5a4 4 0 1 0 0 5"/><path d="M17 11h4M19 9v4"/></svg>C++</span>
           <span class="tech-pill"><svg viewBox="0 0 24 24"><path d="M8 18h8a3 3 0 0 0 3-3H5a3 3 0 0 0 3 3z"/><path d="M8 15V4M13 15V4M17 8c1 1 1 2 0 3"/><path d="M6 21h12"/></svg>Java</span>
@@ -1151,10 +1161,10 @@ footer {
           <span class="tech-pill"><svg viewBox="0 0 24 24"><path d="M4 18 12 4l8 14H4z"/><path d="M9 18h6l-3-5-3 5z"/></svg>Android Studio</span>
           <span class="tech-pill"><svg viewBox="0 0 24 24"><path d="M12 3v18M5 8h14M7 16h10"/><path d="M8 5 5 8l3 3M16 5l3 3-3 3"/></svg>Kotlin</span>
           <span class="tech-pill"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M9 9h6v6H9zM2 9h2M2 15h2M20 9h2M20 15h2M9 2v2M15 2v2M9 20v2M15 20v2"/></svg>NDK</span>
+          </div>
         </div>
       </div>
-      <div class="section-eyebrow">Features</div>
-      <h2 class="section-title">Everything you need.<br/>Nothing you don't.</h2>
+      <h2 class="section-title">Features</h2>
       <p class="section-desc">Built from the ground up for rooted Android devices deep system access, real-time data, and fine-grained control.</p>
     </div>
     <div class="features-grid reveal-stagger">
