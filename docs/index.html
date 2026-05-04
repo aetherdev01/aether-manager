@@ -1463,9 +1463,175 @@ img { height: auto; }
   }
 }
 
+
+
+/* ─── SMOOTH SCROLL + BOX BACKGROUND RESTORE ─── */
+:root {
+  --scroll-pad: 92px;
+  --box-line: rgba(26,20,16,0.060);
+  --box-line-soft: rgba(139,94,8,0.045);
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: var(--scroll-pad);
+}
+
+body::before {
+  background-image:
+    linear-gradient(var(--box-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--box-line) 1px, transparent 1px),
+    linear-gradient(var(--box-line-soft) 1px, transparent 1px),
+    linear-gradient(90deg, var(--box-line-soft) 1px, transparent 1px);
+  background-size: 42px 42px, 42px 42px, 168px 168px, 168px 168px;
+  background-position: 0 0, 0 0, -1px -1px, -1px -1px;
+  opacity: .72;
+  mask-image: linear-gradient(180deg, #000 0%, rgba(0,0,0,.85) 68%, rgba(0,0,0,.54) 100%);
+  -webkit-mask-image: linear-gradient(180deg, #000 0%, rgba(0,0,0,.85) 68%, rgba(0,0,0,.54) 100%);
+}
+
+.navbar::after {
+  content: '';
+  position: absolute;
+  left: 18px;
+  right: 18px;
+  bottom: -7px;
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, rgba(139,94,8,.42), transparent);
+  transform: scaleX(0);
+  opacity: 0;
+  transform-origin: center;
+  transition: transform .55s var(--ease), opacity .55s var(--ease);
+}
+.navbar.scrolled::after { transform: scaleX(1); opacity: 1; }
+
+.nav-links a[href^="#"] {
+  position: relative;
+  overflow: hidden;
+}
+.nav-links a[href^="#"]::before,
+.mobile-menu a[href^="#"]::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(circle at var(--x,50%) var(--y,50%), rgba(139,94,8,.18), transparent 42%);
+  opacity: 0;
+  transform: scale(.82);
+  transition: opacity .32s var(--ease), transform .42s var(--ease);
+  pointer-events: none;
+}
+.nav-links a[href^="#"]:hover::before,
+.nav-links a[href^="#"].active::before,
+.mobile-menu a[href^="#"]:hover::before,
+.mobile-menu a[href^="#"].mm-active::before {
+  opacity: 1;
+  transform: scale(1);
+}
+.nav-links a.is-jumping,
+.mobile-menu a.is-jumping {
+  animation: nav-pop .54s var(--ease);
+}
+@keyframes nav-pop {
+  0% { transform: translateY(0) scale(1); }
+  42% { transform: translateY(-2px) scale(1.045); }
+  100% { transform: translateY(0) scale(1); }
+}
+
+.scroll-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  z-index: 1500;
+  pointer-events: none;
+  transform-origin: left;
+  transform: scaleX(0);
+  background: linear-gradient(90deg, rgba(139,94,8,.12), rgba(139,94,8,.74), rgba(173,120,24,.44));
+  box-shadow: 0 0 24px rgba(139,94,8,.26);
+}
+
+.reveal,
+.reveal-stagger .feature-card,
+.reveal-stagger .spec-card,
+.reveal-stagger .bug-card,
+.team-grid .contributor-card-team,
+.appinfo-card,
+.contributor-card,
+.download-card,
+.dwyor-card {
+  transition-timing-function: var(--ease);
+}
+
+.reveal.visible .section-eyebrow,
+.reveal.visible .section-title,
+.reveal.visible .section-desc,
+.reveal.visible .tech-stack-header {
+  animation: soft-rise .72s var(--ease) both;
+}
+.reveal.visible .section-title { animation-delay: .04s; }
+.reveal.visible .section-desc { animation-delay: .09s; }
+@keyframes soft-rise {
+  from { opacity: 0; transform: translate3d(0,18px,0); }
+  to { opacity: 1; transform: translate3d(0,0,0); }
+}
+
+.feature-card,
+.spec-card,
+.bug-card,
+.appinfo-card,
+.contributor-card,
+.download-card,
+.dwyor-card {
+  transition-duration: .48s;
+}
+.feature-card:active,
+.spec-card:active,
+.bug-card:active,
+.appinfo-card:active,
+.contributor-card:active,
+.btn-primary:active,
+.btn-secondary:active,
+.btn-primary-dark:active,
+.btn-ghost:active,
+.nav-btn:active {
+  transform: translate3d(0,1px,0) scale(.985) !important;
+}
+
+@supports (animation-timeline: view()) {
+  .feature-card,
+  .spec-card,
+  .bug-card,
+  .appinfo-card,
+  .contributor-card,
+  .download-card,
+  .dwyor-card {
+    animation: view-lift both linear;
+    animation-timeline: view();
+    animation-range: entry 0% cover 28%;
+  }
+  @keyframes view-lift {
+    from { opacity: .55; transform: translate3d(0,24px,0) scale(.985); }
+    to { opacity: 1; transform: translate3d(0,0,0) scale(1); }
+  }
+}
+
+@media (max-width: 680px) {
+  html { scroll-behavior: smooth; scroll-padding-top: 82px; }
+  body::before {
+    opacity: .52 !important;
+    background-size: 46px 46px, 46px 46px, 184px 184px, 184px 184px !important;
+  }
+  .scroll-progress { height: 2px; }
+  .mobile-menu a { position: relative; overflow: hidden; }
+}
+
 </style>
 </head>
 <body>
+<div class="scroll-progress" id="scrollProgress" aria-hidden="true"></div>
 
 <!-- NAVBAR -->
 <header>
@@ -1871,7 +2037,10 @@ img { height: auto; }
 
   window.addEventListener('scroll', () => {
     if (!ticking) {
-      requestAnimationFrame(updateNavbar);
+      requestAnimationFrame(() => {
+        updateNavbar();
+        updateProgress();
+      });
       ticking = true;
     }
   }, { passive: true });
@@ -1879,17 +2048,61 @@ img { height: auto; }
 
   const sections = document.querySelectorAll('section[id]');
   const navLinks = document.querySelectorAll('.nav-links a[href^="#"]');
+  const mobileLinks = document.querySelectorAll('.mobile-menu a[href^="#"]');
+  const allAnchorLinks = document.querySelectorAll('a[href^="#"]');
+  const progress = document.getElementById('scrollProgress');
+
+  function setActiveSection(id) {
+    navLinks.forEach(a => a.classList.toggle('active', a.getAttribute('href') === `#${id}`));
+    mobileLinks.forEach(a => a.classList.toggle('mm-active', a.getAttribute('href') === `#${id}`));
+  }
+
+  function smoothJump(target, link) {
+    if (!target || reduceMotion) return;
+    const navOffset = Math.max(76, (navbar?.offsetHeight || 64) + 28);
+    const top = target.getBoundingClientRect().top + window.pageYOffset - navOffset;
+    link?.classList.add('is-jumping');
+    window.scrollTo({ top, behavior: 'smooth' });
+    window.setTimeout(() => link?.classList.remove('is-jumping'), 560);
+  }
+
+  allAnchorLinks.forEach(link => {
+    link.addEventListener('pointermove', event => {
+      const rect = link.getBoundingClientRect();
+      link.style.setProperty('--x', `${event.clientX - rect.left}px`);
+      link.style.setProperty('--y', `${event.clientY - rect.top}px`);
+    }, { passive: true });
+
+    link.addEventListener('click', event => {
+      const id = link.getAttribute('href');
+      if (!id || id === '#') return;
+      const target = document.querySelector(id);
+      if (!target) return;
+      event.preventDefault();
+      history.pushState(null, '', id);
+      setActiveSection(target.id);
+      setMenu(false);
+      smoothJump(target, link);
+    });
+  });
+
+  function updateProgress() {
+    if (!progress) return;
+    const max = document.documentElement.scrollHeight - window.innerHeight;
+    const amount = max <= 0 ? 0 : Math.min(1, Math.max(0, window.scrollY / max));
+    progress.style.transform = `scaleX(${amount})`;
+  }
+
   if ('IntersectionObserver' in window && navLinks.length) {
     const navObserver = new IntersectionObserver(entries => {
-      for (const entry of entries) {
-        if (!entry.isIntersecting) continue;
-        navLinks.forEach(a => a.classList.remove('active'));
-        const active = document.querySelector(`.nav-links a[href="#${entry.target.id}"]`);
-        if (active) active.classList.add('active');
-      }
-    }, { rootMargin: '-42% 0px -54% 0px', threshold: 0.01 });
+      const visible = entries
+        .filter(entry => entry.isIntersecting)
+        .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+      if (visible) setActiveSection(visible.target.id);
+    }, { rootMargin: '-38% 0px -52% 0px', threshold: [0.01, 0.25, 0.55] });
     sections.forEach(section => navObserver.observe(section));
   }
+  updateProgress();
 
   const btn = document.getElementById('hamburgerBtn');
   const menu = document.getElementById('mobileMenu');
